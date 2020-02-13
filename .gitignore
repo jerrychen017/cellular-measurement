@@ -35,6 +35,8 @@
 *.i*86
 *.x86_64
 *.hex
+echo_client
+echo_server
 
 # Debug files
 *.dSYM/
@@ -53,3 +55,6 @@ dkms.conf
 
 # example code from my other projects
 /ex1
+
+# IDEs 
+.vscode
