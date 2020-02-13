@@ -66,6 +66,12 @@ for (;;) {
         recvfrom(sk, &init_packet, sizeof(init_packet), 0,
                 (struct sockaddr*) &sockaddr_client_pac, &sockaddr_client_pac_len);
         int client_ip = sockaddr_client_pac.sin_addr.s_addr;
+
+        printf("Echo packet sending to address (%d.%d.%d.%d)\n",
+                 (htonl(sockaddr_client_pac.sin_addr.s_addr) & 0xff000000) >> 24,
+                 (htonl(sockaddr_client_pac.sin_addr.s_addr) & 0x00ff0000) >> 16,
+                 (htonl(sockaddr_client_pac.sin_addr.s_addr) & 0x0000ff00) >> 8,
+                 (htonl(sockaddr_client_pac.sin_addr.s_addr) & 0x000000ff));
         // send back echo packet
         sendto(sk, (char *) &echo_packet, sizeof(echo_packet), 0,
                             (struct sockaddr*) &sockaddr_client_pac, sizeof(sockaddr_client_pac));
