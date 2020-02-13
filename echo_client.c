@@ -105,6 +105,8 @@ for (;;) {
             double msec = diff_time.tv_sec * 1000 + ((double) diff_time.tv_usec) / 1000;
             printf("Report: RTT of a UDP packet is %f ms\n", msec);
             last_time = current_time;
+
+            return 0; // terminate after report
         }
     } else {
         printf("Haven't heard response for over %d seconds, timeout!\n", TIMEOUT_SEC);
