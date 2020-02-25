@@ -25,5 +25,4 @@ utils.o: utils.c utils.h include/net_include.h
 clean:
 	rm *.o
 	rm echo_server
-	rm echo_client
 	rm client_main
