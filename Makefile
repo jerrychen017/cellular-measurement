@@ -1,11 +1,13 @@
 CC=gcc
 
-CFLAGS = -g -c -Wall -pedantic
+CFLAGS = -std=c99 -g -c -Wall -pedantic #-D_POSIX_SOURCE -D_GNU_SOURCE
+LDFLAGS = -lpthread -lrt
+# when running on rain1 server, add LDFLAGS to echo_server and echo_client
 
 all: client_main echo_server
 
 echo_server: echo_server.o utils.o
-	    $(CC) -o echo_server echo_server.o utils.o
+	    $(CC) -o echo_server echo_server.o utils.o 
 
 client_main: client_main.o utils.o echo_client.o
 	    $(CC) -o client_main echo_client.o utils.o client_main.o

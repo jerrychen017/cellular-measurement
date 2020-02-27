@@ -73,7 +73,7 @@ void compute_bandwidth(int s, struct sockaddr_in send_addr, int delay)
                 if(next_num == 0){
                     clock_gettime(CLOCK_MONOTONIC, &ts_start);
                 }
-                if(next_num == 99){
+                if(next_num == NUM_SEND - 1){
                     clock_gettime(CLOCK_MONOTONIC, &ts_end);
                 }
                 clock_gettime(CLOCK_MONOTONIC, &ts_curr);
@@ -138,7 +138,7 @@ void compute_bandwidth(int s, struct sockaddr_in send_addr, int delay)
                     exit(1);
                 }
                 double s = ts_diff.tv_sec + ((double) ts_diff.tv_nsec) / 1000000000;
-                printf("Coarse bandwith calculation %f Mbps\n", (size*8*99.0/1024/1024)/s);
+                printf("Coarse bandwith calculation %f Mbps\n", (size*8*(NUM_SEND-1)/1024.0/1024)/s);
 
                 
             }

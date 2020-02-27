@@ -22,7 +22,7 @@
 #define TIMEOUT_SEC 5
 #define TIMEOUT_USEC 0
 #define PACKET_SIZE 1400
-#define NUM_SEND 100
+#define NUM_SEND 10
 
 enum PacketType {
     TIMING,
@@ -37,7 +37,7 @@ typedef struct Packet {
 typedef struct TimingPacket {
     int type;
     int seq;
-    char buffer[PACKET_SIZE]
+    char buffer[PACKET_SIZE];
 } TimingPacket;
 
 typedef struct ReportPacket {
