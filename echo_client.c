@@ -43,6 +43,9 @@ void compute_bandwidth(int s, struct sockaddr_in send_addr, int delay)
     struct timespec ts_curr;
     struct timespec ts_prev;
 
+    struct timespec ts_start;
+    struct timespec ts_end;
+
     struct timeval timeout;
 
     double avg_interarrival = 0;
@@ -67,6 +70,12 @@ void compute_bandwidth(int s, struct sockaddr_in send_addr, int delay)
                     recvReport = (ReportPacket *) packet;
                 }
                 //interarrival computation
+                if(next_num == 0){
+                    clock_gettime(CLOCK_MONOTONIC, &ts_start);
+                }
+                if(next_num == 99){
+                    clock_gettime(CLOCK_MONOTONIC, &ts_end);
+                }
                 clock_gettime(CLOCK_MONOTONIC, &ts_curr);
                 if (next_num != recvTiming->seq){
                     printf("UNEXPECTED SEQUENCE NUMBER, EXITING...%d %d\n", next_num, recvTiming->seq);
@@ -107,6 +116,31 @@ void compute_bandwidth(int s, struct sockaddr_in send_addr, int delay)
                 float avg = avg_interarrival/count;
                 float throughput = ((1400.0*8)/(1024*1024))/(avg/1000);
                 printf("Computed Throughput %f Mbps\n", throughput);
+
+                //Compute with start -> end
+
+                // Trying and formatting new timer
+                struct timespec ts_diff;
+                int size = sizeof(Packet);
+                ts_diff.tv_sec = ts_end.tv_sec - ts_start.tv_sec;
+                ts_diff.tv_nsec = ts_end.tv_nsec - ts_start.tv_nsec;
+                while (ts_diff.tv_nsec > 1000000000) {
+                        ts_diff.tv_sec++;
+                        ts_diff.tv_nsec -= 1000000000;
+                }
+                while (ts_diff.tv_nsec < 0) {
+                        ts_diff.tv_sec--;
+                        ts_diff.tv_nsec += 1000000000;
+                }
+
+                if (ts_diff.tv_sec < 0) {
+                    printf("NEGATIVE TIME\n");
+                    exit(1);
+                }
+                double s = ts_diff.tv_sec + ((double) ts_diff.tv_nsec) / 1000000000;
+                printf("Coarse bandwith calculation %f Mbps\n", (size*8*99.0/1024/1024)/s);
+
+                
             }
             // printf("Haven't heard response for over %d seconds, timeout!\n", TIMEOUT_SEC*2);
             fflush(0);
