@@ -47,6 +47,9 @@ void compute_bandwidth(int s, struct sockaddr_in m, int delay)
     double avg_interarrival = 0;
     int count = 0;
     int next_num = 0;
+    int dropped = 0;
+    double min_time = DBL_MAX;
+    double max_time = 0;
 
     for (;;) { 
         read_mask = mask;
@@ -77,7 +80,8 @@ void compute_bandwidth(int s, struct sockaddr_in m, int delay)
                 clock_gettime(CLOCK_MONOTONIC, &ts_curr);
                 if (next_num != recvTiming->seq){
                     printf("UNEXPECTED SEQUENCE NUMBER, EXITING...%d %d\n", next_num, recvTiming->seq);
-                    exit(1);
+                    dropped += recvTiming->seq - next_num;
+                    next_num = recvTiming->seq;
                 }
                 if (next_num != 0) {
                     // Trying and formatting new timer
@@ -98,6 +102,12 @@ void compute_bandwidth(int s, struct sockaddr_in m, int delay)
                         exit(1);
                     }
                     double msec = ts_diff.tv_sec * 1000 + ((double) ts_diff.tv_nsec) / 1000000;
+                    if(msec < min_time){
+                        min_time = msec;
+                    }
+                    if(msec > max_time){
+                        max_time = msec;
+                    }
 
                     // Skip first few packets due to start up costs
                     if(next_num > 0){
@@ -112,7 +122,10 @@ void compute_bandwidth(int s, struct sockaddr_in m, int delay)
         } else {
             // wait the timer out
             if(count > 0){
+                printf("Dropped packets: %d\n", dropped);
+                printf("Min Interarrival time %.5f ms\n", min_time);
                 printf("Average Interarrival time %.5f ms\n", avg_interarrival/count);
+                printf("Max Interarrival time %.5f ms\n", max_time);
                 float avg = avg_interarrival/count;
                 float throughput = ((1400.0*8)/(1024*1024))/(avg/1000);
                 printf("Computed Throughput %f Mbps\n", throughput);
@@ -136,7 +149,7 @@ void compute_bandwidth(int s, struct sockaddr_in m, int delay)
                     exit(1);
                 }
                 double sec = ts_diff.tv_sec + ((double) ts_diff.tv_nsec) / 1000000000;
-                printf("Coarse bandwith calculation %f Mbps\n", (size*8*(NUM_SEND-1)/1024.0/1024)/sec);
+                printf("Coarse bandwidth calculation %f Mbps\n", (size*8*(NUM_SEND-1)/1024.0/1024)/sec);
                 send_timing_packets(s, sockaddr_client_pac);
             }
             else{
@@ -146,6 +159,9 @@ void compute_bandwidth(int s, struct sockaddr_in m, int delay)
             avg_interarrival = 0;
             count = 0;
             next_num = 0;
+            dropped = 0;
+            min_time = DBL_MAX;
+            max_time = 0;
             // return;
         }
     }
