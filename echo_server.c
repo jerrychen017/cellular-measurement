@@ -3,6 +3,7 @@
 
 static TimingPacket timing, *recvTiming;
 static ReportPacket report, *recvReport;
+static EchoPacket echo, * recvEcho;
 static Packet pack, *packet = &pack;
 
 
@@ -62,11 +63,18 @@ void compute_bandwidth(int s, struct sockaddr_in m, int delay)
             if (FD_ISSET(s, &read_mask)) {
                 sockaddr_client_pac_len = sizeof(sockaddr_client_pac);
                 recvfrom(s, &pack, sizeof(Packet), 0, (struct sockaddr*) &sockaddr_client_pac, &sockaddr_client_pac_len);
-                if(packet->type == 0){
+                if(packet->type == 0){ // Timing packet 
                     recvTiming = (TimingPacket *) packet;
                 }
-                else{
+                else if (packet->type == 1) { // Report packet  
                     recvReport = (ReportPacket *) packet;
+                } else { // Echo packet 
+                    recvEcho = (EchoPacket *) packet;
+                    echo.type = ECHO; 
+                    echo.seq = recvEcho->seq;
+                    sendto(s, &echo, sizeof(echo), 0, 
+                        (struct sockaddr*)&send_addr, sizeof(send_addr));
+                    continue; // next packet
                 }
 
                 //interarrival computation
