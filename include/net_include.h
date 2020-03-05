@@ -33,13 +33,13 @@ enum PacketType {
 
 typedef struct Packet {
     int type;
-    char buffer[PACKET_SIZE + 8];
+    char buffer[PACKET_SIZE - sizeof(int)];
 } Packet;
 
 typedef struct TimingPacket {
     int type;
     int seq;
-    char buffer[PACKET_SIZE];
+    char buffer[PACKET_SIZE - sizeof(int)*2];
 } TimingPacket;
 
 typedef struct ReportPacket {
