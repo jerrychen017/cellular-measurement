@@ -5,5 +5,5 @@
  * In case of negative result (right > left), zero elapsed time is returned
  */
 struct timeval diffTime(struct timeval left, struct timeval right);
-
+void send_timing_packets(int s, struct sockaddr_in send_addr, int num_send); 
 #endif
