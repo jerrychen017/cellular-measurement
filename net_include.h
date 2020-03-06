@@ -24,6 +24,7 @@
 #define TIMEOUT_USEC 0
 #define PACKET_SIZE 1400
 #define NUM_SEND 100
+#define NUM_REPROT 5 // number of report packets the server sends to client
 
 enum PacketType {
     TIMING,
@@ -38,7 +39,7 @@ typedef struct Packet {
 
 typedef struct TimingPacket {
     int type;
-    int seq;
+    int seq; // last packet has a squence number -1
     char buffer[PACKET_SIZE - sizeof(int)*2];
 } TimingPacket;
 
