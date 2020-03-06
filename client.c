@@ -1,23 +1,75 @@
-#include "echo_client.h"
+#include "client.h"
 
 static TimingPacket timing, *recvTiming;
 static ReportPacket report, *recvReport;
 static Packet pack, *packet = &pack;
 
 
-/* Sends NUM_SEND ~MTU packets
- *
- */
 
-void send_timing_packets(int s, struct sockaddr_in send_addr)
+/**
+ * bind port with address
+ * returns 1 if an error occurred or 0 if binding was successful
+ */
+int client_bind(const char* address, int port) {
+    // server socket address
+    struct sockaddr_in server_addr;
+
+    // socket both for sending and receiving
+    int sk = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sk < 0) {
+        printf("echo_client: socket error\n");
+        return 1;
+    }
+
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_addr.sin_port = htons(port);
+
+    // bind socket with port
+    if (bind(sk, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+        printf("echo_client: bind error\n"); // prints a warning but don't exit.
+        // we can still send since it's already binded
+        return 1;
+    }
+    return 0;
+}
+
+// send bytes stream with the given speed
+// speed n is in Mbits per second
+void send_bytes_stream(int sk, struct sockaddr_in send_addr, double n)
 { 
+    // n Mbits = 125000*n bytes
+    // 1 / (125000*n) second = 8/n microseconds 
+    // we send a byte per 8/n microsecond 
+    // PACKET_SIZE bytes per 8*PACKET_SIZE/n microsend
+
+    fd_set mask;
+    fd_set read_mask;
+    int num;
+
+    FD_ZERO(&mask);
+    FD_SET(sk, &mask);
+
+    struct timeval timeout;
     int seq = 0;
-    for (int i = 0; i < NUM_SEND; i++) {
-        timing.type = 0;
-        timing.seq = seq;
-        sendto(s, &timing, sizeof(timing), 0, 
+    for (;;) { 
+        read_mask = mask;
+        // timeout limit
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 8 * PACKET_SIZE / n;
+
+        num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
+
+        if (num > 0) {
+            // if (FD_ISSET(sk, &read_mask)) {
+            // }
+        } else { //timeout 
+            timing.type = 0;
+            timing.seq = seq;
+            sendto(sk, &timing, sizeof(timing), 0, 
                 (struct sockaddr*)&send_addr, sizeof(send_addr));
-        seq++;
+            seq++;
+        }
     }
 }
 
@@ -29,7 +81,7 @@ void send_timing_packets(int s, struct sockaddr_in send_addr)
  *
  * Should report delay of each and avg delay
  */
-void compute_bandwidth(int s, struct sockaddr_in send_addr, int delay)
+void client_compute_bandwidth(int s, struct sockaddr_in send_addr, int delay)
 {
     fd_set mask;
     fd_set read_mask;
@@ -168,8 +220,7 @@ void compute_bandwidth(int s, struct sockaddr_in send_addr, int delay)
 }
 
 
-
-char * client_send(const char* address, int port) {
+char * client_send_interarrival(const char* address, int port, int num_send) {
     char * out = malloc(sizeof(char) * 300);
 
     // initialize starting packet and echo_packet
@@ -220,8 +271,23 @@ char * client_send(const char* address, int port) {
     echo_pac_addr.sin_addr.s_addr = server_fd;
     echo_pac_addr.sin_port = htons(port);
 
-    send_timing_packets(sk, echo_pac_addr);
+    send_timing_packets(sk, echo_pac_addr, num_send);
 
-    compute_bandwidth(sk, echo_pac_addr, 100);
+    client_compute_bandwidth(sk, echo_pac_addr, 100);
     return out;
+}
+
+/* Sends NUM_SEND ~MTU(Maximum transmission unit) packets 
+ * to calculate interarrival time
+ */
+void send_timing_packets(int s, struct sockaddr_in send_addr, int num_send)
+{ 
+    int seq = 0;
+    for (int i = 0; i < NUM_SEND; i++) {
+        timing.type = 0;
+        timing.seq = seq;
+        sendto(s, &timing, sizeof(timing), 0, 
+                (struct sockaddr*)&send_addr, sizeof(send_addr));
+        seq++;
+    }
 }

@@ -1,4 +1,4 @@
-#include "include/net_include.h"
+#include "net_include.h"
 #include "utils.h"
 
 static TimingPacket timing, *recvTiming;
