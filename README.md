@@ -1,5 +1,6 @@
 # udp_tools
-udp_echo measures RTT(round trip time) for a packet traveling between client and server over UDP. 
+UDP Tools are used to measure latency and capacity of cellular networks. 
+<Link here> is an android app that contains UDP Tools. 
 
 All packets except Report Packet are 1400 bytes. 
 
