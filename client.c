@@ -4,19 +4,19 @@ static TimingPacket timing, *recvTiming;
 static ReportPacket report, *recvReport;
 static Packet pack, *packet = &pack;
 
-
-
 /**
  * bind port with address
  * returns 1 if an error occurred or 0 if binding was successful
  */
-int client_bind(const char* address, int port) {
+int client_bind(const char *address, int port)
+{
     // server socket address
     struct sockaddr_in server_addr;
 
     // socket both for sending and receiving
     int sk = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sk < 0) {
+    if (sk < 0)
+    {
         printf("echo_client: socket error\n");
         return 1;
     }
@@ -26,7 +26,8 @@ int client_bind(const char* address, int port) {
     server_addr.sin_port = htons(port);
 
     // bind socket with port
-    if (bind(sk, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+    if (bind(sk, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
+    {
         printf("echo_client: bind error\n"); // prints a warning but don't exit.
         // we can still send since it's already binded
         return 1;
@@ -36,15 +37,15 @@ int client_bind(const char* address, int port) {
 
 // send bytes stream with the given speed
 // speed n is in Mbits per second
-void send_bytes_stream(int sk, struct sockaddr_in send_addr, double n)
-{ 
+// send for t seconds
+void send_bytes_stream(int sk, struct sockaddr_in send_addr, double n, double t)
+{
     // n Mbits = 125000*n bytes
-    // 1 / (125000*n) second = 8/n microseconds 
-    // we send a byte per 8/n microsecond 
+    // 1 / (125000*n) second = 8/n microseconds
+    // we send a byte per 8/n microsecond
     // PACKET_SIZE bytes per 8*PACKET_SIZE/n microsend
 
     fd_set mask;
-    fd_set read_mask;
     int num;
 
     FD_ZERO(&mask);
@@ -52,23 +53,33 @@ void send_bytes_stream(int sk, struct sockaddr_in send_addr, double n)
 
     struct timeval timeout;
     int seq = 0;
-    for (;;) { 
-        read_mask = mask;
+    double t_usec = t * 1000000;
+    for (;;)
+    {
         // timeout limit
         timeout.tv_sec = 0;
         timeout.tv_usec = 8 * PACKET_SIZE / n;
 
-        num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
+        num = select(FD_SETSIZE, NULL, NULL, NULL, &timeout);
 
-        if (num > 0) {
-            // if (FD_ISSET(sk, &read_mask)) {
-            // }
-        } else { //timeout 
-            timing.type = 0;
-            timing.seq = seq;
-            sendto(sk, &timing, sizeof(timing), 0, 
-                (struct sockaddr*)&send_addr, sizeof(send_addr));
-            seq++;
+        if (num > 0)
+        {
+        }
+        else
+        { //timeout
+            if (t_usec > 0)
+            {
+                timing.type = 0;
+                timing.seq = seq;
+                sendto(sk, &timing, sizeof(timing), 0,
+                       (struct sockaddr *)&send_addr, sizeof(send_addr));
+                seq++;
+                t_usec -= timeout.tv_usec;
+            }
+            else
+            {
+                return;
+            }
         }
     }
 }
@@ -81,12 +92,13 @@ void send_bytes_stream(int sk, struct sockaddr_in send_addr, double n)
  *
  * Should report delay of each and avg delay
  */
-void client_compute_bandwidth(int s, struct sockaddr_in send_addr, int delay)
+char *client_receive_timing_packets(int s, struct sockaddr_in send_addr, int delay)
 {
+    char *output = malloc(sizeof(char) * NUM_SEND * 200);
+
     fd_set mask;
     fd_set read_mask;
     int num;
-
     FD_ZERO(&mask);
     FD_SET(s, &mask);
 
@@ -107,78 +119,108 @@ void client_compute_bandwidth(int s, struct sockaddr_in send_addr, int delay)
     double min_time = DBL_MAX;
     double max_time = 0;
 
-    for (;;) { 
+    bool received_report = false;
+
+    for (;;)
+    {
         read_mask = mask;
         //Double timeout limit
-        timeout.tv_sec = TIMEOUT_SEC*2;
+        timeout.tv_sec = TIMEOUT_SEC * 2;
         timeout.tv_usec = TIMEOUT_USEC;
 
         num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
 
-        if (num > 0) {
-            if (FD_ISSET(s, &read_mask)) {
+        if (num > 0)
+        {
+            if (FD_ISSET(s, &read_mask))
+            {
                 recv(s, &pack, sizeof(Packet), 0);
-                if(packet->type == 0){
-                    recvTiming = (TimingPacket *) packet;
-                }
-                else{
-                    recvReport = (ReportPacket *) packet;
-                }
-                //interarrival computation
-                if(next_num == 0){
-                    clock_gettime(CLOCK_MONOTONIC, &ts_start);
-                }
-                if(next_num == NUM_SEND - 1){
-                    clock_gettime(CLOCK_MONOTONIC, &ts_end);
-                }
-                clock_gettime(CLOCK_MONOTONIC, &ts_curr);
-                if (next_num != recvTiming->seq){
-                    printf("UNEXPECTED SEQUENCE NUMBER, EXITING...%d %d\n", next_num, recvTiming->seq);
-                    dropped += recvTiming->seq - next_num;
-                    next_num = recvTiming->seq;
-                }
-                if (next_num != 0) {
+                if (packet->type == TIMING)
+                {
+                    recvTiming = (TimingPacket *)packet;
+                    //interarrival computation
+                    if (next_num == 0)
+                    {
+                        // if first packet, mark start time
+                        clock_gettime(CLOCK_MONOTONIC, &ts_start);
+                    }
+                    else if (recvTiming->seq == -1)
+                    {
+                        // if last packet, mark end time
+                        clock_gettime(CLOCK_MONOTONIC, &ts_end);
+
+                        /**
+                         * When last packet is lost, when timeout, we can use 
+                         * ts_cur as ts_end  
+                         */
+                    }
+
+                    // mark time current packet
+                    clock_gettime(CLOCK_MONOTONIC, &ts_curr);
+                    if (next_num != recvTiming->seq)
+                    {
+                        sprintf(output + strlen(output), "EXPECTED SEQUENCE NUMBER %d RECEIVED %d\n", next_num, recvTiming->seq);
+                        // dropped += recvTiming->seq - next_num; // TODO: shouldn't dropped be NUM_SEND - total num of received?
+                        // next_num = recvTiming->seq; // TODO: if we set next_num to current seq, all the following packets will be out of order
+                    }
+
                     // Trying and formatting new timer
                     struct timespec ts_diff;
                     ts_diff.tv_sec = ts_curr.tv_sec - ts_prev.tv_sec;
                     ts_diff.tv_nsec = ts_curr.tv_nsec - ts_prev.tv_nsec;
-                    while (ts_diff.tv_nsec > 1000000000) {
-                            ts_diff.tv_sec++;
-                            ts_diff.tv_nsec -= 1000000000;
+                    while (ts_diff.tv_nsec > 1000000000)
+                    {
+                        ts_diff.tv_sec++;
+                        ts_diff.tv_nsec -= 1000000000;
                     }
-                    while (ts_diff.tv_nsec < 0) {
-                            ts_diff.tv_sec--;
-                            ts_diff.tv_nsec += 1000000000;
+                    while (ts_diff.tv_nsec < 0)
+                    { // TODO: any reason using while loop here?
+                        ts_diff.tv_sec--;
+                        ts_diff.tv_nsec += 1000000000;
                     }
-
-                    if (ts_diff.tv_sec < 0) {
+                    if (ts_diff.tv_sec < 0)
+                    {
                         printf("NEGATIVE TIME\n");
                         exit(1);
                     }
-                    double msec = ts_diff.tv_sec * 1000 + ((double) ts_diff.tv_nsec) / 1000000;
-                    if(msec < min_time){
+                    double msec = ts_diff.tv_sec * 1000 + ((double)ts_diff.tv_nsec) / 1000000;
+                    if (msec < min_time)
+                    {
                         min_time = msec;
                     }
-                    if(msec > max_time){
+                    if (msec > max_time)
+                    {
                         max_time = msec;
                     }
                     // Skip first few packets due to start up costs
-                    if(next_num > 0){
+                    if (next_num > 0)
+                    {
                         avg_interarrival += msec;
                         count += 1;
                     }
-                    printf("%.5f ms interarrival time\n", msec);
+                    sprintf(output + strlen(output), "%.5f ms interarrival time\n", msec);
                 }
                 next_num += 1;
                 ts_prev = ts_curr;
             }
-        } else {
-            if(count > 0){
-                printf("Dropped packets: %d\n", dropped);
-                printf("Average Interarrival time %.5f ms\n", avg_interarrival/count);
-                float avg = avg_interarrival/count;
-                float throughput = ((1400.0*8)/(1024*1024))/(avg/1000);
-                printf("Computed Throughput %f Mbps\n", throughput);
+            else if (packet->type == REPORT)
+            {
+                // ignore report packet if already received one before
+                if (!received_report)
+                {
+                    recvReport = (ReportPacket *)packet;
+                }
+            }
+        }
+        else
+        {
+            if (count > 0)
+            {
+                sprintf(output + strlen(output), "Dropped packets: %d\n", dropped);
+                sprintf(output + strlen(output), "Average Interarrival time %.5f ms\n", avg_interarrival / count);
+                float avg = avg_interarrival / count;
+                float throughput = ((1400.0 * 8) / (1024 * 1024)) / (avg / 1000);
+                sprintf(output + strlen(output), "Computed Throughput %f Mbps\n", throughput);
 
                 //Compute with start -> end
 
@@ -187,23 +229,23 @@ void client_compute_bandwidth(int s, struct sockaddr_in send_addr, int delay)
                 int size = sizeof(Packet);
                 ts_diff.tv_sec = ts_end.tv_sec - ts_start.tv_sec;
                 ts_diff.tv_nsec = ts_end.tv_nsec - ts_start.tv_nsec;
-                while (ts_diff.tv_nsec > 1000000000) {
-                        ts_diff.tv_sec++;
-                        ts_diff.tv_nsec -= 1000000000;
+                while (ts_diff.tv_nsec > 1000000000)
+                {
+                    ts_diff.tv_sec++;
+                    ts_diff.tv_nsec -= 1000000000;
                 }
-                while (ts_diff.tv_nsec < 0) {
-                        ts_diff.tv_sec--;
-                        ts_diff.tv_nsec += 1000000000;
+                while (ts_diff.tv_nsec < 0)
+                {
+                    ts_diff.tv_sec--;
+                    ts_diff.tv_nsec += 1000000000;
                 }
 
-                if (ts_diff.tv_sec < 0) {
-                    printf("NEGATIVE TIME\n");
-                    exit(1);
+                if (ts_diff.tv_sec < 0)
+                {
+                    sprintf(output + strlen(output), "NEGATIVE TIME\n");
                 }
-                double s = ts_diff.tv_sec + ((double) ts_diff.tv_nsec) / 1000000000;
-                printf("Coarse bandwidth calculation %f Mbps\n", (size*8*(NUM_SEND-1)/1024.0/1024)/s);
-
-                
+                double s = ts_diff.tv_sec + ((double)ts_diff.tv_nsec) / 1000000000;
+                sprintf(output + strlen(output), "Coarse bandwidth calculation %f Mbps\n", (size * 8 * (NUM_SEND - 1) / 1024.0 / 1024) / s);
             }
             // printf("Haven't heard response for over %d seconds, timeout!\n", TIMEOUT_SEC*2);
             fflush(0);
@@ -213,18 +255,18 @@ void client_compute_bandwidth(int s, struct sockaddr_in send_addr, int delay)
             dropped = 0;
             min_time = DBL_MAX;
             max_time = 0;
-            return;
+
+            return output;
         }
     }
-
 }
 
-
-char * client_send_interarrival(const char* address, int port, int num_send) {
-    char * out = malloc(sizeof(char) * 300);
+char *client_send_interarrival(const char *address, int port, int num_send)
+{
+    char *out = malloc(sizeof(char) * 300);
 
     // initialize starting packet and echo_packet
-    char init_packet[BUFF_SIZE]; 
+    char init_packet[BUFF_SIZE];
     char echo_packet[BUFF_SIZE];
 
     // server socket address
@@ -237,8 +279,9 @@ char * client_send_interarrival(const char* address, int port, int num_send) {
 
     // socket both for sending and receiving
     int sk = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sk < 0) {
-        sprintf(out, "echo_client: socket error\n"); 
+    if (sk < 0)
+    {
+        sprintf(out + strlen(out), "echo_client: socket error\n");
         return out;
     }
 
@@ -246,20 +289,14 @@ char * client_send_interarrival(const char* address, int port, int num_send) {
     server_addr.sin_addr.s_addr = INADDR_ANY;
     server_addr.sin_port = htons(port);
 
-    // bind socket with port
-    if (bind(sk, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-        sprintf(out, "echo_client: bind error\n"); // prints a warning but don't exit. 
-        // we can still send since it's already binded
-        // exit(1); 
-    }
-
     // get server host address
-    struct hostent* server_name;
+    struct hostent *server_name;
     struct hostent server_name_copy;
     int server_fd;
     server_name = gethostbyname(address);
-    if (server_name == NULL) {
-        sprintf(out, "echo_client: invalid server address\n");
+    if (server_name == NULL)
+    {
+        sprintf(out + strlen(out), "echo_client: invalid server address\n");
         return out;
     }
 
@@ -273,21 +310,7 @@ char * client_send_interarrival(const char* address, int port, int num_send) {
 
     send_timing_packets(sk, echo_pac_addr, num_send);
 
-    client_compute_bandwidth(sk, echo_pac_addr, 100);
-    return out;
-}
-
-/* Sends NUM_SEND ~MTU(Maximum transmission unit) packets 
- * to calculate interarrival time
- */
-void send_timing_packets(int s, struct sockaddr_in send_addr, int num_send)
-{ 
-    int seq = 0;
-    for (int i = 0; i < NUM_SEND; i++) {
-        timing.type = 0;
-        timing.seq = seq;
-        sendto(s, &timing, sizeof(timing), 0, 
-                (struct sockaddr*)&send_addr, sizeof(send_addr));
-        seq++;
-    }
+    char *report = client_receive_timing_packets(sk, echo_pac_addr, 100);
+    free(out);
+    return report;
 }
