@@ -10,6 +10,7 @@
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/un.h>
 #include <unistd.h>
 #include <time.h>
 #include <float.h>
@@ -26,30 +27,19 @@
 #define NUM_SEND 100
 #define NUM_REPROT 5 // number of report packets the server sends to client
 
-enum PacketType {
-    TIMING,
-    REPORT, 
-    ECHO
+#define SOCK_PATH "/tmp/unix_socket"
+
+enum NetworkPacketType
+{
+    NETWORK_REPORT,
+    NETWORK_START,
+    NETWORK_PING,
+    NETWORK_PONG,
+    NETWORK_DATA
 };
 
-typedef struct Packet {
-    int type;
-    char buffer[PACKET_SIZE - sizeof(int)];
-} Packet;
-
-typedef struct TimingPacket {
-    int type;
-    int seq; // last packet has a squence number -1
-    char buffer[PACKET_SIZE - sizeof(int)*2];
-} TimingPacket;
-
-typedef struct ReportPacket {
-    int type;
-    int seq;
-    float throughput;   
-} ReportPacket;
-
-typedef struct EchoPacket {
-    int type;
-    int seq;   
-} EchoPacket;
+enum LocalPacketType
+{
+    LOCAL_START,
+    LOCAL_CONTROL
+};
