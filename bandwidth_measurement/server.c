@@ -32,12 +32,15 @@ void receive(int s)
     fd_set mask;
     fd_set read_mask;
     struct timeval timeout;
-
     int num;
     int len;
 
     data_packet data_pkt;
+    
 
+    // state variables
+    struct timeval arrivals[BURST_SIZE];
+    struct timeval tm_diff;
 
     FD_ZERO(&mask);
     FD_SET(s, &mask);
@@ -56,6 +59,15 @@ void receive(int s)
 
 
                 printf("received %d bytes, seq %d at rate %f\n", len, data_pkt.hdr.seq_num, data_pkt.hdr.rate );
+
+                int seq = data_pkt.hdr.seq_num;
+                gettimeofday(&arrivals[seq % BURST_SIZE], NULL);
+                if (seq >= BURST_SIZE) {
+                    tm_diff = diffTime(arrivals[seq % BURST_SIZE], arrivals[(seq + 1) % BURST_SIZE]);
+                    printf("calculated speed of %.4f Mbps\n", interval_to_speed(tm_diff, BURST_SIZE - 1));
+                    
+                }
+
             }
         } else {
             printf(".");

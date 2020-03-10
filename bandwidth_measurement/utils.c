@@ -15,6 +15,16 @@ struct timeval speed_to_interval(double speed)
     return ret;
 }
 
+/* 
+ * Given the interval to receive num_packets of size
+ * PACKET_SIZE, returns a calculated speed in Mbps
+ */
+double interval_to_speed(struct timeval interval, int num_packets)
+{
+    long usec = interval.tv_usec + interval.tv_sec * 1000000l;
+    double ret = num_packets * PACKET_SIZE * 8.0/(usec/1000000.0);  
+    return ret / 1024.0 / 1024.0;
+}
 
 /**
  * Calculates time difference between two time intervals
