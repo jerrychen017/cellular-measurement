@@ -32,9 +32,9 @@
 
 enum NetworkPacketType
 {
+    NETWORK_DATA,
+    NETWORK_PROBE,  // data packet that is sent at a higher rate to probe for bandwidth
     NETWORK_REPORT,
-    NETWORK_START,
-    NETWORK_DATA
 };
 
 enum LocalPacketType
@@ -53,7 +53,7 @@ typedef struct data_header_
 {
     int type;
     int seq_num;
-    struct timeval sent;
+    double rate;
 } data_header;
 
 typedef struct data_packet_
@@ -61,3 +61,4 @@ typedef struct data_packet_
     data_header hdr;
     char data[PACKET_SIZE - sizeof(data_header)];
 } data_packet;
+

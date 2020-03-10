@@ -39,6 +39,7 @@ echo_client
 echo_server
 controller
 data_generator
+server
 
 # Debug files
 *.dSYM/

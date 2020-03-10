@@ -1,8 +1,8 @@
 #include "net_include.h"
 #include "utils.h"
 
-void startup(int s_server, int s_data);
-void control(int s_server, int s_data);
+void startup(int s_server, int s_data, struct sockaddr_in send_addr);
+void control(int s_server, int s_data, struct sockaddr_in send_addr);
 
 int setup_data_socket();
 int setup_server_socket();
@@ -30,14 +30,14 @@ int main(int argc, char *argv[])
     struct sockaddr_in send_addr = addrbyname(address, port);
     int s_data = setup_data_socket();
 
-    startup(s_server, s_data);
-    control(s_server, s_data);
+    startup(s_server, s_data, send_addr);
+    control(s_server, s_data, send_addr);
 
     return 0;
 }
 
 /* Pings server to check that it is there and then starts data stream */
-void startup(int s_server, int s_data)
+void startup(int s_server, int s_data, struct sockaddr_in send_addr)
 {
     typed_packet pkt;
     pkt.type = LOCAL_START;
@@ -45,7 +45,7 @@ void startup(int s_server, int s_data)
 }
 
 /* Main event loop */
-void control(int s_server, int s_data)
+void control(int s_server, int s_data, struct sockaddr_in send_addr)
 {
     fd_set mask;
     fd_set read_mask;
@@ -58,9 +58,8 @@ void control(int s_server, int s_data)
     struct timeval timeout;
     data_packet data_pkt;
 
-    struct timeval tm_last;
-    struct timeval tm_now;
-    struct timeval tm_diff;
+    int seq = 0;
+    double rate = 1.0;
 
     for (;;) {
         read_mask = mask;
@@ -70,8 +69,7 @@ void control(int s_server, int s_data)
         num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
 
         if (num > 0) {
-            if (FD_ISSET(s_data, &read_mask))
-            {
+            if (FD_ISSET(s_data, &read_mask)) {
                 int len = recv(s_data, data_pkt.data, sizeof(data_packet), 0); 
                 if (len == 0) {
                     printf("data stream ended, exiting...\n");
@@ -80,11 +78,20 @@ void control(int s_server, int s_data)
                     exit(0);
                 }
 
-                printf("Received packet of size %d\n", len);
-                gettimeofday(&tm_now, NULL);
-                tm_diff = diffTime(tm_now, tm_last);
-                printf("%d ms\n", tm_diff.tv_usec / 1000);
-                tm_last = tm_now;
+                data_pkt.hdr.type = NETWORK_DATA;
+                data_pkt.hdr.seq_num = seq;
+                data_pkt.hdr.rate = rate;
+
+                printf("Sending to serveR \n");
+
+                // Pass to server
+                sendto(s_server, &data_pkt, sizeof(data_pkt), 0,
+                        (struct sockaddr *) &send_addr, sizeof(send_addr));
+
+                seq++;
+            }
+            if (FD_ISSET(s_server, &read_mask)) {
+
             }
         } else {
             printf("timeout?\n");
@@ -96,7 +103,7 @@ void control(int s_server, int s_data)
 int setup_data_socket()
 {
     int s, s2;
-    int len, len2;
+    socklen_t len, len2;
 
     struct sockaddr_un addr1, addr2;
 

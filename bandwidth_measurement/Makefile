@@ -4,7 +4,10 @@ CFLAGS = -std=c99 -g -c -Wall -pedantic #-D_POSIX_SOURCE -D_GNU_SOURCE
 LDFLAGS = -lpthread -lrt
 # when running on rain1 server, add LDFLAGS to echo_server and echo_client
 
-all: controller data_generator 
+all: controller data_generator server 
+
+server: server.o utils.o
+	$(CC) -o server server.o utils.o
 
 controller: controller.o utils.o
 	$(CC) -o controller controller.o utils.o
