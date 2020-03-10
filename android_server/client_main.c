@@ -1,5 +1,7 @@
-#include "echo_client.h"
-
+#include "client.h"
+/**
+For easiler depolyment to android app, client_main has a similar setup to native-lib.cpp in android NDK. 
+*/ 
 int main(int argc, char* argv[]) {
 
 // args error checking
