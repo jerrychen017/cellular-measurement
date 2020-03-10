@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <time.h>
+#include <float.h>
 
 #include <errno.h>
 
@@ -22,11 +23,12 @@
 #define TIMEOUT_SEC 5
 #define TIMEOUT_USEC 0
 #define PACKET_SIZE 1400
-#define NUM_SEND 10
+#define NUM_SEND 100
 
 enum PacketType {
     TIMING,
-    REPORT
+    REPORT, 
+    ECHO
 };
 
 typedef struct Packet {
@@ -45,3 +47,8 @@ typedef struct ReportPacket {
     int seq;
     float throughput;   
 } ReportPacket;
+
+typedef struct EchoPacket {
+    int type;
+    int seq;   
+} EchoPacket;
