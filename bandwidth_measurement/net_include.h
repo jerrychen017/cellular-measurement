@@ -19,13 +19,14 @@
 
 #include <sys/time.h>
 
-#define PORT 9008
-#define BUFF_SIZE 1000
-#define TIMEOUT_SEC 5
+#define TIMEOUT_SEC 1
 #define TIMEOUT_USEC 0
 #define PACKET_SIZE 1400
-#define NUM_SEND 100
-#define NUM_REPROT 5 // number of report packets the server sends to client
+
+// controller constants
+#define BURST_SIZE 5 // number of report packets the server sends to client
+#define MIN_SPEED 0.1   // 100 Kbps
+#define MAX_SPEED 10 // 10 Mbps
 
 #define SOCK_PATH "/tmp/unix_socket"
 
@@ -33,8 +34,6 @@ enum NetworkPacketType
 {
     NETWORK_REPORT,
     NETWORK_START,
-    NETWORK_PING,
-    NETWORK_PONG,
     NETWORK_DATA
 };
 
@@ -43,3 +42,22 @@ enum LocalPacketType
     LOCAL_START,
     LOCAL_CONTROL
 };
+
+typedef struct typed_packet_
+{
+    int type;
+    char data[PACKET_SIZE - sizeof(int)];
+} typed_packet;
+
+typedef struct data_header_
+{
+    int type;
+    int seq_num;
+    struct timeval sent;
+} data_header;
+
+typedef struct data_packet_
+{
+    data_header hdr;
+    char data[PACKET_SIZE - sizeof(data_header)];
+} data_packet;

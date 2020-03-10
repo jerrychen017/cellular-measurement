@@ -1,6 +1,15 @@
 #include "net_include.h"
+#include "utils.h"
+
+void startup(int s_server, int s_data);
+void control(int s_server, int s_data);
+
+int setup_data_socket();
+int setup_server_socket();
+struct sockaddr_in addrbyname(char *hostname, int port);
+
 /**
-Controller 
+    Controller 
 */
 int main(int argc, char *argv[])
 {
@@ -14,14 +23,158 @@ int main(int argc, char *argv[])
 
     // port
     int port = atoi(argv[2]);
-    // addres
+    // address
     char *address = argv[1];
 
-    // TODO: receive data from data_generator
-    // TODO: send data to server
+    int s_server = setup_server_socket(port);
+    struct sockaddr_in send_addr = addrbyname(address, port);
+    int s_data = setup_data_socket();
 
-    char *out = client_send(address, port);
-    printf("%s", out); // print out string
-    free(out);
+    startup(s_server, s_data);
+    control(s_server, s_data);
+
     return 0;
+}
+
+/* Pings server to check that it is there and then starts data stream */
+void startup(int s_server, int s_data)
+{
+    typed_packet pkt;
+    pkt.type = LOCAL_START;
+    send(s_data, &pkt, sizeof(pkt.type), 0);
+}
+
+/* Main event loop */
+void control(int s_server, int s_data)
+{
+    fd_set mask;
+    fd_set read_mask;
+    int num;
+
+    FD_ZERO(&mask);
+    FD_SET(s_server, &mask);
+    FD_SET(s_data, &mask);
+
+    struct timeval timeout;
+    data_packet data_pkt;
+
+    struct timeval tm_last;
+    struct timeval tm_now;
+    struct timeval tm_diff;
+
+    for (;;) {
+        read_mask = mask;
+        timeout.tv_sec = TIMEOUT_SEC;
+        timeout.tv_usec = TIMEOUT_USEC;
+
+        num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
+
+        if (num > 0) {
+            if (FD_ISSET(s_data, &read_mask))
+            {
+                int len = recv(s_data, data_pkt.data, sizeof(data_packet), 0); 
+                if (len == 0) {
+                    printf("data stream ended, exiting...\n");
+                    close(s_data);
+                    close(s_server);
+                    exit(0);
+                }
+
+                printf("Received packet of size %d\n", len);
+                gettimeofday(&tm_now, NULL);
+                tm_diff = diffTime(tm_now, tm_last);
+                printf("%d ms\n", tm_diff.tv_usec / 1000);
+                tm_last = tm_now;
+            }
+        } else {
+            printf("timeout?\n");
+        }
+
+    }
+}
+
+int setup_data_socket()
+{
+    int s, s2;
+    int len, len2;
+
+    struct sockaddr_un addr1, addr2;
+
+    if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
+    {
+        perror("socket error\n");
+        exit(1);
+    }
+
+    printf("Trying to connect...\n");
+
+    addr1.sun_family = AF_UNIX;
+    strcpy(addr1.sun_path, SOCK_PATH);
+    len = strlen(addr1.sun_path) + sizeof(addr1.sun_family);
+    unlink(addr1.sun_path);
+    if (bind(s, (struct sockaddr *)&addr1, len) == -1) {
+        perror("bind");
+        exit(1);
+    }
+
+    if (listen(s, 5) == -1) {
+        perror("listen");
+        exit(1);
+    }
+
+    printf("Waiting for a connection...\n");
+    len2 = sizeof(addr1);
+    if ((s2 = accept(s, (struct sockaddr *)&addr2, &len2)) == -1) {
+        perror("accept");
+        exit(1);
+    }
+
+    printf("Connected.\n");
+
+    return s2;
+}
+
+int setup_server_socket(int port)
+{
+    struct sockaddr_in name;
+
+    int s_recv = socket(AF_INET, SOCK_DGRAM, 0);  /* socket for receiving (udp) */
+    if (s_recv < 0) {
+        perror("socket recv error\n");
+        exit(1);
+    }
+
+    name.sin_family = AF_INET;
+    name.sin_addr.s_addr = INADDR_ANY;
+    name.sin_port = htons(port);
+
+    if (bind( s_recv, (struct sockaddr *)&name, sizeof(name) ) < 0 ) {
+        perror("bind error\n");
+        exit(1);
+    }
+
+    return s_recv;
+}
+
+struct sockaddr_in addrbyname(char *hostname, int port)
+{
+    int host_num;
+    struct hostent h_ent, *p_h_ent;
+
+    struct sockaddr_in addr;
+
+    p_h_ent = gethostbyname(hostname);
+    if (p_h_ent == NULL) {
+        printf("gethostbyname error.\n");
+        exit(1);
+    }
+
+    memcpy( &h_ent, p_h_ent, sizeof(h_ent));
+    memcpy( &host_num, h_ent.h_addr_list[0], sizeof(host_num) );
+
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = host_num;
+    addr.sin_port = htons(port);
+
+    return addr;
 }

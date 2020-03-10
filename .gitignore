@@ -37,6 +37,8 @@
 *.hex
 echo_client
 echo_server
+controller
+data_generator
 
 # Debug files
 *.dSYM/

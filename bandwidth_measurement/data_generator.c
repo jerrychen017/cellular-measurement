@@ -1,31 +1,115 @@
 #include "net_include.h"
+#include "utils.h"
+
+#define DATA_SIZE (PACKET_SIZE - sizeof(data_header))
+
+int setup_socket();
 
 /**
-Data generator
+    Data generator
 */
 int main(int argc, char *argv[])
 {
     // args error checking
-    if (argc != 2)
+    if (argc != 1)
     {
-        printf("data_generator usage: data_generator <speed>\n");
+        printf("data_generator usage: data_generator\n");
         exit(1);
     }
-    int n = atoi(argv[1]);
 
-    // n Mbits = 125000*n bytes
-    // 1 / (125000*n) second = 8/n microseconds
-    // we send a byte per 8/n microsecond
-    // PACKET_SIZE bytes per 8*PACKET_SIZE/n microsend
+    int s = setup_socket();
 
-    int s,
-        t, len;
+    // Select loop stuff
+    fd_set mask;
+    fd_set read_mask;
+
+    struct timeval timeout;
+    int num;
+
+    FD_ZERO(&mask);
+    FD_SET(s, &mask);
+
+    int seq = 0;
+    bool start = false;
+    typed_packet pkt;
+    char buffer[DATA_SIZE];
+    double speed = 1.0;
+
+    // Timeout before start is TIMEOUT_SEC
+
+    for (;;)
+    {
+        read_mask = mask;
+
+        // timeout limit
+        if (!start) {
+            timeout.tv_sec = TIMEOUT_SEC;
+            timeout.tv_usec = TIMEOUT_USEC;
+        }
+        else {
+            timeout = speed_to_interval(speed); 
+        }
+
+        num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
+
+        if (num > 0) {
+            if (FD_ISSET(s, &read_mask))
+            {
+                int len = recv(s, &pkt, sizeof(typed_packet), 0);
+                if (len <= 0) {
+                    printf("controller disconnected, exiting\n");
+                    exit(0);
+                }
+                if (pkt.type == LOCAL_START)
+                {
+                    printf("Starting data stream\n");
+                    start = true;
+                }
+                else if (pkt.type == LOCAL_CONTROL)
+                {
+                    // adjust speed n
+                    printf("received LOCAL_CONTROL message\n");
+                    speed = *((double *) pkt.data);
+                    if (speed <= 0) {
+                        perror("negative speed\n");
+                        exit(1);
+                    }
+                    if (speed > MAX_SPEED) {
+                        perror("exceed max speed\n");
+                        exit(1);
+                    }
+                }
+            }
+        }
+        else {
+            //timeout
+            if (!start)
+            {
+                printf("Waiting to start\n");
+            }
+            else
+            {
+                send(s, buffer, DATA_SIZE , 0);
+                seq++;
+            }
+        }
+
+    }
+
+    return 0;
+}
+
+
+int setup_socket()
+{
+    int s;
+    int len;
+
     struct sockaddr_un controller;
-    char str[100];
 
     if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
     {
-        perror("socket");
+        perror("socket error\n");
         exit(1);
     }
 
@@ -36,65 +120,10 @@ int main(int argc, char *argv[])
     len = strlen(controller.sun_path) + sizeof(controller.sun_family);
     if (connect(s, (struct sockaddr *)&controller, len) == -1)
     {
-        perror("connect");
+        perror("connect error\n");
         exit(1);
     }
 
     printf("Connected.\n");
-
-    fd_set mask;
-    fd_set read_mask;
-    int num;
-
-    FD_ZERO(&mask);
-    FD_SET(s, &mask);
-
-    struct timeval timeout;
-    int seq = 0;
-
-    bool start = false;
-    char data[1400];
-    for (;;)
-    {
-        read_mask = mask;
-        // timeout limit
-        timeout.tv_sec = 0;
-        timeout.tv_usec = 8 * PACKET_SIZE / n;
-
-        num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
-
-        int local_packet_type;
-
-        if (num > 0)
-        {
-            if (FD_ISSET(s, &read_mask))
-            {
-                recv(s, &local_packet_type, sizeof(int), 0);
-                if (local_packet_type == LOCAL_START)
-                {
-                    start = true;
-                }
-                else if (local_packet_type == LOCAL_CONTROL)
-                {
-                    // adjust speed n
-                    printf("received LOCAL_CONTROL message\n");
-                }
-            }
-        }
-        else
-        { //timeout
-            if (!start)
-            {
-                printf("Waiting to start\n");
-            }
-            else
-            {
-                sendto(s, &data, sizeof(data), 0,
-                       (struct sockaddr *)&controller, sizeof(controller));
-                seq++;
-            }
-        }
-    }
-
-    return 0;
+    return s;
 }
