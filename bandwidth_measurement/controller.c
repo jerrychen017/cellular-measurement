@@ -58,13 +58,18 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
     struct timeval timeout;
     data_packet data_pkt;
 
+    // Varibales to deal with burst
+    int burst_seq_recv = -1; // index of burst we have received from data
+    int burst_seq_send = -1; // index of burst we have sent
+    data_packet pkt_buffer[BURST_SIZE];
+
     int seq = 0;
     double rate = 1.0;
 
+
+
     for (;;) {
         read_mask = mask;
-        timeout.tv_sec = TIMEOUT_SEC;
-        timeout.tv_usec = TIMEOUT_USEC;
 
         num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
 
@@ -78,25 +83,68 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                     exit(0);
                 }
 
-                data_pkt.hdr.type = NETWORK_DATA;
+                // Start burst
+                if (seq % INTERVAL_SIZE == INTERVAL_SIZE - BURST_SIZE) {
+                    printf("starting burst at seq %d\n", seq);
+                    burst_seq_recv = 0; 
+                }
+
+                data_pkt.hdr.type = burst_seq_recv == -1 ? NETWORK_DATA : NETWORK_PROBE;
                 data_pkt.hdr.seq_num = seq;
-                data_pkt.hdr.rate = rate;
+                data_pkt.hdr.rate = burst_seq_recv == -1 ? rate : rate * BURST_FACTOR;
 
-                printf("Sending to serveR \n");
 
-                // Pass to server
-                sendto(s_server, &data_pkt, sizeof(data_pkt), 0,
-                        (struct sockaddr *) &send_addr, sizeof(send_addr));
+                if (burst_seq_recv == -1) {
+                    printf("Sending to server \n");
 
+                    // Pass to server during normal operation
+                    sendto(s_server, &data_pkt, sizeof(data_pkt), 0,
+                            (struct sockaddr *) &send_addr, sizeof(send_addr));
+                } else {
+                    printf("storing packet seq %d, in spot %d\n", seq, burst_seq_recv);
+                    pkt_buffer[burst_seq_recv] = data_pkt;
+                    
+                    burst_seq_recv++;
+
+                    // We have recieved all the packets in the burst, so we can stop storing
+                    if (burst_seq_recv == BURST_SIZE) {
+                        burst_seq_recv = -1;
+                    }
+                    // After receiving half of the packets, we can start sending
+                    if (burst_seq_recv == BURST_SIZE / 2) {
+                        burst_seq_send = 0;
+                        timeout = speed_to_interval(rate * BURST_FACTOR);
+                    }
+                }
                 seq++;
             }
             if (FD_ISSET(s_server, &read_mask)) {
 
             }
         } else {
-            printf("timeout?\n");
+            // timeout
+            if (burst_seq_send == -1) {
+                printf("timeout?\n");
+            }
+            else {  
+                printf("sending packet %d of burst\n", burst_seq_send);
+                sendto(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
+                        (struct sockaddr *) &send_addr, sizeof(send_addr));
+                burst_seq_send++;
+                timeout = speed_to_interval(rate * BURST_FACTOR);
+                if (burst_seq_send == BURST_SIZE) {
+                    burst_seq_send = -1;
+                }
+            }
         }
 
+        // if we are not sending at burst, we can just send when the data
+        // source gives us a packet. However, if we are sending a burst,
+        // we want to timeout to send at a certain rate
+        if (burst_seq_send == -1) {
+            timeout.tv_sec = TIMEOUT_SEC;
+            timeout.tv_usec = TIMEOUT_USEC;
+        }
     }
 }
 

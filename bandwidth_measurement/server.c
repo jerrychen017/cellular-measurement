@@ -67,7 +67,6 @@ void receive(int s)
                     printf("calculated speed of %.4f Mbps\n", interval_to_speed(tm_diff, BURST_SIZE - 1));
                     
                 }
-
             }
         } else {
             printf(".");

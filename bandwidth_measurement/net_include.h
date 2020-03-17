@@ -24,7 +24,9 @@
 #define PACKET_SIZE 1400
 
 // controller constants
-#define BURST_SIZE 5 // number of report packets the server sends to client
+#define BURST_SIZE 10 // number of packets in increased speed burst
+#define BURST_FACTOR 2
+#define INTERVAL_SIZE 100 // one burst per INTERVAL_SIZE packets, should make this a multiple of BURST_SIZE
 #define MIN_SPEED 0.1   // 100 Kbps
 #define MAX_SPEED 10 // 10 Mbps
 
