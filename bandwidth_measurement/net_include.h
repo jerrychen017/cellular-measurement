@@ -63,4 +63,3 @@ typedef struct data_packet_
     data_header hdr;
     char data[PACKET_SIZE - sizeof(data_header)];
 } data_packet;
-

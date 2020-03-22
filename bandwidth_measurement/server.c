@@ -34,8 +34,10 @@ void receive(int s)
     struct timeval timeout;
     int num;
     int len;
+    double calculated_speed;
 
     data_packet data_pkt;
+    data_packet report_pkt;
     
 
     // state variables
@@ -64,7 +66,13 @@ void receive(int s)
                 gettimeofday(&arrivals[seq % BURST_SIZE], NULL);
                 if (seq >= BURST_SIZE) {
                     tm_diff = diffTime(arrivals[seq % BURST_SIZE], arrivals[(seq + 1) % BURST_SIZE]);
-                    printf("calculated speed of %.4f Mbps\n", interval_to_speed(tm_diff, BURST_SIZE - 1));
+                    calculated_speed = interval_to_speed(tm_diff, BURST_SIZE - 1);
+                    printf("calculated speed of %.4f Mbps\n", calculated_speed);
+                    report_pkt.hdr.type = NETWORK_REPORT;
+                    report_pkt.hdr.rate = calculated_speed;
+
+                    sendto(s, &report_pkt, sizeof(data_packet), 0,
+                        (struct sockaddr *) &from_addr, from_len);
                     
                 }
             }

@@ -3,6 +3,7 @@
 
 void startup(int s_server, int s_data, struct sockaddr_in send_addr);
 void control(int s_server, int s_data, struct sockaddr_in send_addr);
+double estimate_change(double rate);
 
 int setup_data_socket();
 int setup_server_socket();
@@ -36,7 +37,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-/* Pings server to check that it is there and then starts data stream */
+/* Pings data generator to check that it is there and then starts data stream */
 void startup(int s_server, int s_data, struct sockaddr_in send_addr)
 {
     typed_packet pkt;
@@ -47,6 +48,9 @@ void startup(int s_server, int s_data, struct sockaddr_in send_addr)
 /* Main event loop */
 void control(int s_server, int s_data, struct sockaddr_in send_addr)
 {
+    struct sockaddr_in server_addr;
+    socklen_t server_addr_len;
+
     fd_set mask;
     fd_set read_mask;
     int num;
@@ -57,6 +61,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
 
     struct timeval timeout;
     data_packet data_pkt;
+    data_packet recv_pkt;
 
     // Varibales to deal with burst
     int burst_seq_recv = -1; // index of burst we have received from data
@@ -119,7 +124,16 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                 seq++;
             }
             if (FD_ISSET(s_server, &read_mask)) {
+                int len = recvfrom(s_server, &recv_pkt, sizeof(data_packet), 0, (struct sockaddr *)&server_addr, &server_addr_len);
+                if (len <= 0) {
+                    printf("data stream ended, exiting...\n");
+                    close(s_data);
+                    close(s_server);
+                    exit(0);
+                }
+                if(recv_pkt.hdr.type == NETWORK_REPORT){
 
+                }
             }
         } else {
             // timeout
@@ -232,4 +246,8 @@ struct sockaddr_in addrbyname(char *hostname, int port)
     addr.sin_port = htons(port);
 
     return addr;
+}
+
+double estimate_change(double rate){
+    return 0;
 }
