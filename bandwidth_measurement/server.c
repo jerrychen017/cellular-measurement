@@ -40,6 +40,10 @@ void receive(int s)
 
     data_packet data_pkt;
     data_packet report_pkt;
+
+    // use T_cur = alpha * T_new + (1 - alpha) * T_cur
+    double rate = 1.0;
+    double alpha = 0.6; // closer to 0 is smoother, closer to 1 is quicker reaction
     
 
     // state variables
@@ -79,14 +83,16 @@ void receive(int s)
                     tm_diff = diffTime(burstArrivals[ind - 1], burstArrivals[0]);
                     calculated_speed = interval_to_speed(tm_diff, BURST_SIZE);
                     printf("Burst calculated speed of %.4f Mbps\n", calculated_speed);
+                    rate = (alpha * calculated_speed) + (1 - alpha) * rate;
+                    printf("EWMA speed of %.4f Mbps\n", rate);
                     report_pkt.hdr.type = NETWORK_REPORT;
-                    report_pkt.hdr.rate = calculated_speed;
+                    report_pkt.hdr.rate = rate;
                     sendto(s, &report_pkt, sizeof(data_packet), 0,
                         (struct sockaddr *) &from_addr, from_len);
                     ind = 0;
                 }
                 if(nonBurstPkt >= BURST_SIZE){
-                    tm_diff = diffTime(arrivals[seq % BURST_SIZE], arrivals[(seq + 1) % BURST_SIZE]);
+                    tm_diff = diffTime(arrivals[seq % BURST_SIZE], arrivals[(seq + 1) % BURST_SIZE]);   
                     calculated_speed = interval_to_speed(tm_diff, BURST_SIZE - 1);
                     printf("calculated speed of %.4f Mbps\n", calculated_speed);
                 }
