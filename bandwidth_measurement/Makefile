@@ -20,5 +20,3 @@ data_generator: data_generator.o utils.o
 
 clean:
 	rm *.o
-	rm echo_server
-	rm client_main

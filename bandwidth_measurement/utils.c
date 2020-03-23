@@ -2,7 +2,7 @@
 #include "utils.h"
 
 /* 
- * Returns interval to send packets of size PACKET_SZIE
+ * Returns interval to send packets of size PACKET_SIZE
  * to acheive flow of speed Mbps (megabits per seconds)
  */
 struct timeval speed_to_interval(double speed)

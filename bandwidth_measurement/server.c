@@ -34,6 +34,8 @@ void receive(int s)
     struct timeval timeout;
     int num;
     int len;
+    int ind = 0;
+    int nonBurstPkt = 0; // try and recover after measuring burst packets, accure at least another burst size of packets at original rate
     double calculated_speed;
 
     data_packet data_pkt;
@@ -41,6 +43,8 @@ void receive(int s)
     
 
     // state variables
+    // one for burst packets and one for regular packet arrivals
+    struct timeval burstArrivals[BURST_SIZE];
     struct timeval arrivals[BURST_SIZE];
     struct timeval tm_diff;
 
@@ -61,19 +65,30 @@ void receive(int s)
 
 
                 printf("received %d bytes, seq %d at rate %f\n", len, data_pkt.hdr.seq_num, data_pkt.hdr.rate );
-
                 int seq = data_pkt.hdr.seq_num;
-                gettimeofday(&arrivals[seq % BURST_SIZE], NULL);
-                if (seq >= BURST_SIZE) {
+                if (data_pkt.hdr.isBurst){
+                    gettimeofday(&burstArrivals[ind], NULL);
+                    nonBurstPkt = 0;
+                    ind++;
+                }
+                else{
+                    gettimeofday(&arrivals[seq % BURST_SIZE], NULL);
+                    nonBurstPkt++;
+                }
+                if(ind >= BURST_SIZE){
+                    tm_diff = diffTime(burstArrivals[ind - 1], burstArrivals[0]);
+                    calculated_speed = interval_to_speed(tm_diff, BURST_SIZE);
+                    printf("Burst calculated speed of %.4f Mbps\n", calculated_speed);
+                    report_pkt.hdr.type = NETWORK_REPORT;
+                    report_pkt.hdr.rate = calculated_speed;
+                    sendto(s, &report_pkt, sizeof(data_packet), 0,
+                        (struct sockaddr *) &from_addr, from_len);
+                    ind = 0;
+                }
+                if(nonBurstPkt >= BURST_SIZE){
                     tm_diff = diffTime(arrivals[seq % BURST_SIZE], arrivals[(seq + 1) % BURST_SIZE]);
                     calculated_speed = interval_to_speed(tm_diff, BURST_SIZE - 1);
                     printf("calculated speed of %.4f Mbps\n", calculated_speed);
-                    report_pkt.hdr.type = NETWORK_REPORT;
-                    report_pkt.hdr.rate = calculated_speed;
-
-                    sendto(s, &report_pkt, sizeof(data_packet), 0,
-                        (struct sockaddr *) &from_addr, from_len);
-                    
                 }
             }
         } else {

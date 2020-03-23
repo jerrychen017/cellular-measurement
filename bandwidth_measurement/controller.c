@@ -63,7 +63,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
     data_packet data_pkt;
     data_packet recv_pkt;
 
-    // Varibales to deal with burst
+    // Variables to deal with burst
     int burst_seq_recv = -1; // index of burst we have received from data
     int burst_seq_send = -1; // index of burst we have sent
     data_packet pkt_buffer[BURST_SIZE];
@@ -97,6 +97,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                 data_pkt.hdr.type = burst_seq_recv == -1 ? NETWORK_DATA : NETWORK_PROBE;
                 data_pkt.hdr.seq_num = seq;
                 data_pkt.hdr.rate = burst_seq_recv == -1 ? rate : rate * BURST_FACTOR;
+                data_pkt.hdr.isBurst = false;
 
 
                 if (burst_seq_recv == -1) {
@@ -107,6 +108,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                             (struct sockaddr *) &send_addr, sizeof(send_addr));
                 } else {
                     printf("storing packet seq %d, in spot %d\n", seq, burst_seq_recv);
+                    data_pkt.hdr.isBurst = true;
                     pkt_buffer[burst_seq_recv] = data_pkt;
                     
                     burst_seq_recv++;
@@ -131,8 +133,14 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                     close(s_server);
                     exit(0);
                 }
-                if(recv_pkt.hdr.type == NETWORK_REPORT){
 
+                // Check if we have a decrepancy in our sending rates at sender and receiver
+                if(recv_pkt.hdr.type == NETWORK_REPORT){
+                    typed_packet pkt;
+                    pkt.type = LOCAL_CONTROL;
+                    pkt.rate = recv_pkt.hdr.rate >= MAX_SPEED ? MAX_SPEED : recv_pkt.hdr.rate;
+                    send(s_data, &pkt, sizeof(pkt), 0);
+                    rate = pkt.rate;
                 }
             }
         } else {

@@ -69,9 +69,10 @@ int main(int argc, char *argv[])
                 {
                     // adjust speed n
                     printf("received LOCAL_CONTROL message\n");
-                    speed = *((double *) pkt.data);
+                    speed = pkt.rate;
+                    printf("SPEED: %f\n", speed);
                     if (speed <= 0) {
-                        perror("negative speed\n");
+                        perror("negative speed &\n");
                         exit(1);
                     }
                     if (speed > MAX_SPEED) {

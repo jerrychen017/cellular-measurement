@@ -48,7 +48,8 @@ enum LocalPacketType
 typedef struct typed_packet_
 {
     int type;
-    char data[PACKET_SIZE - sizeof(int)];
+    double rate;
+    char data[PACKET_SIZE - sizeof(int)- sizeof(double)];
 } typed_packet;
 
 typedef struct data_header_
@@ -56,6 +57,7 @@ typedef struct data_header_
     int type;
     int seq_num;
     double rate;
+    bool isBurst;
 } data_header;
 
 typedef struct data_packet_
