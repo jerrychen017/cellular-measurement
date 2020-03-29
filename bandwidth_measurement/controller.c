@@ -69,7 +69,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
     data_packet pkt_buffer[BURST_SIZE];
 
     int seq = 0;
-    double rate = 1.0;
+    double rate = START_SPEED;
 
 
 
@@ -136,9 +136,21 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
 
                 // Check if we have a decrepancy in our sending rates at sender and receiver
                 if(recv_pkt.hdr.type == NETWORK_REPORT){
+                    double reportedRate = 0.0;
                     typed_packet pkt;
                     pkt.type = LOCAL_CONTROL;
-                    pkt.rate = recv_pkt.hdr.rate >= MAX_SPEED ? MAX_SPEED : recv_pkt.hdr.rate;
+                    reportedRate = recv_pkt.hdr.rate;
+                    if (reportedRate < rate){
+                        // set new rate to the max of less than reported rate to flush queue
+                        double newRate = reportedRate - (rate - reportedRate);
+                        if(newRate < 0.5*reportedRate){
+                            reportedRate = 0.5*reportedRate;
+                        }
+                        else{
+                            reportedRate = newRate;
+                        }
+                    }
+                    pkt.rate = recv_pkt.hdr.rate >= MAX_SPEED ? MAX_SPEED : reportedRate;
                     send(s_data, &pkt, sizeof(pkt), 0);
                     rate = pkt.rate;
                 }
@@ -259,3 +271,6 @@ struct sockaddr_in addrbyname(char *hostname, int port)
 double estimate_change(double rate){
     return 0;
 }
+
+//if (reportedRate < rate)
+// max (reportedRate - (rate - reportedRate), .5 * reportedRate)
