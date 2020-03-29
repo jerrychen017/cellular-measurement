@@ -80,7 +80,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
 
         if (num > 0) {
             if (FD_ISSET(s_data, &read_mask)) {
-                int len = recv(s_data, data_pkt.data, sizeof(data_packet), 0); 
+                int len = recv(s_data, data_pkt.data, sizeof(data_pkt.data), 0); 
                 if (len == 0) {
                     printf("data stream ended, exiting...\n");
                     close(s_data);

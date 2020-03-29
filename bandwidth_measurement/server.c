@@ -107,6 +107,7 @@ void receive(int s, int predMode)
                     }
                     // Running Avg
                     if (predMode == 1 && nonBurstPkt >= BURST_SIZE) {
+                        //Wrap around average of packets
                         tm_diff = diffTime(arrivals[seq % BURST_SIZE], arrivals[(seq + 1) % BURST_SIZE]);   
                         calculated_speed = interval_to_speed(tm_diff, BURST_SIZE - 1);
                         rate = calculated_speed; //Figure out threshold
