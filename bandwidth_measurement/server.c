@@ -40,6 +40,7 @@ void receive(int s, int predMode)
     int num;
     int len;
 
+    int seq = 0;
     int burstSeq = 0;
     int nonBurstPkt = 0; // try and recover after measuring burst packets, accure at least another burst size of packets at original rate
     double calculated_speed;
@@ -56,6 +57,9 @@ void receive(int s, int predMode)
     struct timeval arrivals[BURST_SIZE];
     struct timeval tm_diff;
 
+    // whether we have received a packet in window
+    int received[BURST_SIZE];
+
     FD_ZERO(&mask);
     FD_SET(s, &mask);
 
@@ -71,7 +75,17 @@ void receive(int s, int predMode)
                 len = recvfrom(s, &data_pkt, sizeof(data_packet), 0,
                         (struct sockaddr *) &from_addr, &from_len);
                 printf("received %d bytes, seq %d at rate %f\n", len, data_pkt.hdr.seq_num, data_pkt.hdr.rate );
-                int seq = data_pkt.hdr.seq_num;
+
+                // old packet that is not userful anymore, throw out                
+                if (data_packet.hdr.seq_num <= seq - BURST_SIZE){
+                    continue;
+                }
+
+                if (data_packet.hdr.seq_num < seq) {
+                    // Save packet for caclulations
+                }
+
+
                 int expectedRate = data_pkt.hdr.rate;
 
                 if (data_pkt.hdr.isBurst){
