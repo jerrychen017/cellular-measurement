@@ -37,6 +37,7 @@ enum NetworkPacketType
     NETWORK_DATA,
     NETWORK_PROBE,  // data packet that is sent at a higher rate to probe for bandwidth
     NETWORK_REPORT,
+    NETWORK_BURST
 };
 
 enum LocalPacketType
