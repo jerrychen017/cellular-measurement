@@ -37,9 +37,8 @@
 enum NetworkPacketType
 {
     NETWORK_DATA,
-    NETWORK_PROBE,  // data packet that is sent at a higher rate to probe for bandwidth
+    NETWORK_BURST,  // data packet that is sent at a higher rate to probe for bandwidth
     NETWORK_REPORT,
-    NETWORK_BURST
 };
 
 enum LocalPacketType
@@ -60,7 +59,6 @@ typedef struct data_header_
     int type;
     int seq_num;
     double rate;
-    bool isBurst;
 } data_header;
 
 typedef struct data_packet_

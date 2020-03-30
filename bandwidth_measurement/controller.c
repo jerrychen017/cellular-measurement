@@ -94,21 +94,19 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                     burst_seq_recv = 0; 
                 }
 
-                data_pkt.hdr.type = burst_seq_recv == -1 ? NETWORK_DATA : NETWORK_PROBE;
+                data_pkt.hdr.type = burst_seq_recv == -1 ? NETWORK_DATA : NETWORK_BURST;
                 data_pkt.hdr.seq_num = seq;
                 data_pkt.hdr.rate = burst_seq_recv == -1 ? rate : rate * BURST_FACTOR;
-                data_pkt.hdr.isBurst = false;
 
 
                 if (burst_seq_recv == -1) {
-                    printf("Sending to server \n");
+                //    printf("Sending to server \n");
 
                     // Pass to server during normal operation
                     sendto(s_server, &data_pkt, sizeof(data_pkt), 0,
                             (struct sockaddr *) &send_addr, sizeof(send_addr));
                 } else {
-                    printf("storing packet seq %d, in spot %d\n", seq, burst_seq_recv);
-                    data_pkt.hdr.isBurst = true;
+                    //printf("storing packet seq %d, in spot %d\n", seq, burst_seq_recv);
                     pkt_buffer[burst_seq_recv] = data_pkt;
                     
                     burst_seq_recv++;
