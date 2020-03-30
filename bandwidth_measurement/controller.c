@@ -111,6 +111,10 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                     
                     burst_seq_recv++;
 
+                    if (burst_seq_recv > BURST_SIZE) {
+                        printf("error, send before burst was done\n");
+                        exit(1);
+                    }
                     // We have recieved all the packets in the burst, so we can stop storing
                     if (burst_seq_recv == BURST_SIZE) {
                         burst_seq_recv = -1;
