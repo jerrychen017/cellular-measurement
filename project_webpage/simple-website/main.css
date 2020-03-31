@@ -1,6 +1,6 @@
 button, [type='button'], [type='reset'], [type='submit'], .button {
   appearance: none;
-  background-color: #1565c0;
+  background-color: #c01515;
   border: 1px solid #076fe4;
   border-radius: 3px;
   color: #fff;
@@ -28,7 +28,7 @@ button, [type='button'], [type='reset'], [type='submit'], .button {
     button:disabled:hover, [type='button']:disabled:hover, [type='reset']:disabled:hover, [type='submit']:disabled:hover, .button:disabled:hover {
       background-color: #1565c0; }
   button:active, [type='button']:active, [type='reset']:active, [type='submit']:active, .button:active {
-    border: 1px solid #076fe4;
+    border: 1px solid #e40707;
     box-shadow: inset 0 0 8px 4px #0868d3, inset 0 0 8px 4px #0868d3; }
 
 fieldset {
@@ -251,7 +251,7 @@ header {
   margin-left: auto;
   margin-right: auto;
   max-width: 1000px;
-  color: #a40f0f; }
+  color: #000000; }
   header h1 {
     font-family: 'Pacifico', cursive;
     font-weight: normal;
@@ -260,7 +260,7 @@ header {
 
 #header-container {
   width: 100%;
-  background-color: #c7ddf5;
+  background-color: #b9daa6;
   padding-top: 2rem;
   padding-bottom: 2rem; }
 
