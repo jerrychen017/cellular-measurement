@@ -24,31 +24,28 @@ int main(int argc, char *argv[])
     fd_set read_mask;
 
     struct timeval timeout;
+    struct timeval expectedTimeout;
     int num;
-
-    FD_ZERO(&mask);
-    FD_SET(s, &mask);
 
     int seq = 0;
     bool start = false;
     typed_packet pkt;
     char buffer[DATA_SIZE];
+
+    struct timeval tmPrev;
+    struct timeval tmNow;
     double speed = 1.0;
 
-    // Timeout before start is TIMEOUT_SEC
+    FD_ZERO(&mask);
+    FD_SET(s, &mask);
+
+    // initial timeout is 1 sec
+    timeout.tv_sec = TIMEOUT_SEC;
+    timeout.tv_usec = TIMEOUT_USEC;
 
     for (;;)
     {
         read_mask = mask;
-
-        // timeout limit
-        if (!start) {
-            timeout.tv_sec = TIMEOUT_SEC;
-            timeout.tv_usec = TIMEOUT_USEC;
-        }
-        else {
-            timeout = speed_to_interval(speed); 
-        }
 
         num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
 
@@ -80,6 +77,7 @@ int main(int argc, char *argv[])
                         exit(1);
                     }
                 }
+                expectedTimeout = speed_to_interval(speed); 
             }
         }
         else {
@@ -91,11 +89,31 @@ int main(int argc, char *argv[])
             else
             {
                 send(s, buffer, DATA_SIZE , 0);
+
+                gettimeofday(&tmNow, NULL);
+                if (seq != 0) {
+                    // Account for kernel returning from select loop late
+                    struct timeval actualTimeout = diffTime(tmNow, tmPrev);
+                    struct timeval baseTimeout = speed_to_interval(speed); 
+                    expectedTimeout = diffTime(baseTimeout, diffTime(actualTimeout, expectedTimeout));
+                    /*printf("timeout base %.4f, expected %.4f ms\n", 
+                        baseTimeout.tv_usec / 1000.0,
+                        expectedTimeout.tv_usec / 1000.0);*/
+                }
+                tmPrev = tmNow;
                 seq++;
             }
         }
 
-    }
+        // timeout limit
+        if (!start) {
+            timeout.tv_sec = TIMEOUT_SEC;
+            timeout.tv_usec = TIMEOUT_USEC;
+        } else {
+            timeout = expectedTimeout;
+        }
+
+     }
 
     return 0;
 }
