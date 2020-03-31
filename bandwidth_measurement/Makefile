@@ -6,11 +6,11 @@ LDFLAGS = -lpthread -lrt
 
 all: controller data_generator server 
 
-server: server.o utils.o
-	$(CC) -o server server.o utils.o
+server: server.o utils.o sendto_dbg.o
+	$(CC) -o server server.o utils.o sendto_dbg.o
 
-controller: controller.o utils.o
-	$(CC) -o controller controller.o utils.o
+controller: controller.o utils.o sendto_dbg.o
+	$(CC) -o controller controller.o utils.o sendto_dbg.o
 
 data_generator: data_generator.o utils.o
 	$(CC) -o data_generator data_generator.o utils.o

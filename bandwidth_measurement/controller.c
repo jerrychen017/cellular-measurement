@@ -1,5 +1,6 @@
 #include "net_include.h"
 #include "utils.h"
+#include "sendto_dbg.h"
 
 void startup(int s_server, int s_data, struct sockaddr_in send_addr);
 void control(int s_server, int s_data, struct sockaddr_in send_addr);
@@ -21,7 +22,7 @@ int main(int argc, char *argv[])
         printf("controller usage: controller <host_address> <port>\n");
         exit(1);
     }
-
+    sendto_dbg_init(0);
     // port
     int port = atoi(argv[2]);
     // address
@@ -103,7 +104,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                 //    printf("Sending to server \n");
 
                     // Pass to server during normal operation
-                    sendto(s_server, &data_pkt, sizeof(data_pkt), 0,
+                    sendto_dbg(s_server, &data_pkt, sizeof(data_pkt), 0,
                             (struct sockaddr *) &send_addr, sizeof(send_addr));
                 } else {
                     //printf("storing packet seq %d, in spot %d\n", seq, burst_seq_recv);
@@ -164,7 +165,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
             }
             else {  
                 printf("sending packet %d of burst\n", burst_seq_send);
-                sendto(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
+                sendto_dbg(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
                         (struct sockaddr *) &send_addr, sizeof(send_addr));
                 burst_seq_send++;
                 timeout = speed_to_interval(rate * BURST_FACTOR);
