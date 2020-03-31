@@ -60,10 +60,11 @@ int main(int argc, char *argv[])
                 if (pkt.type == LOCAL_START)
                 {
                     printf("Starting data stream\n");
-                    start = true;
+		    start = true;
+		    expectedTimeout = speed_to_interval(speed);
                 }
                 else if (pkt.type == LOCAL_CONTROL)
-                {
+		{
                     // adjust speed n
                     printf("received LOCAL_CONTROL message\n");
                     speed = pkt.rate;
@@ -76,8 +77,8 @@ int main(int argc, char *argv[])
                         perror("exceed max speed\n");
                         exit(1);
                     }
+		    expectedTimeout = diffTime(speed_to_interval(speed), timeout);
                 }
-                expectedTimeout = speed_to_interval(speed); 
             }
         }
         else {
