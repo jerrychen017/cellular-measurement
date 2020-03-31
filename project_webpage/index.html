@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
+<!-- saved from url=(0095)file:///C:/Users/dan_qian/Desktop/2020%20Spring/cellular-measurement/project_webpage/index.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Real-Time Interactivity in 5G Networks</title>
@@ -10,11 +9,11 @@
 Template 2110 Character
 http://www.tooplate.com/view/2110-character
 -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,600">
+    <link rel="stylesheet" href="./index_files/css">
     <!-- https://fonts.google.com/specimen/Open+Sans -->
-    <link rel="stylesheet" href="css/all.min.css">
+    <link rel="stylesheet" href="./index_files/all.min.css">
     <!-- https://fontawesome.com/ -->
-    <link rel="stylesheet" href="css/tooplate-style.css">
+    <link rel="stylesheet" href="./index_files/tooplate-style.css">
 </head>
 
 <body class="tm-bg-dark">
@@ -31,52 +30,9 @@ http://www.tooplate.com/view/2110-character
                 </div>
             </header>
 
-        </div>
-        <div class="item" data-desktop-seq-no="2" data-mobile-seq-no="4">
-            <img src="img/app1.png" alt="Image" class="tm-img-left">
-        </div>
-        <div class="item tm-bg-secondary tm-text-white tm-block tm-block-wider tm-block-pad tm-block-left-2" data-desktop-seq-no="3"
-            data-mobile-seq-no="5">
-            <h2>Our Approach</h2>
-            <p>We first aim to understand some properties of mobile networking. We built multiple tools and apps to
-                help with our understanding.
-                <ul>
-                    <b>Echo App</b> - A client server packet echoing application that basically start sending packets from a mobile device to the Rain1 server
-                    in the DSN lab.
-                </ul>
-                <ul>
-                    <b>Ping App</b> - Application that gets the latency between client and server
-                </ul>
-                <ul>
-                    <b>Interarrival-Time App</b> - Application that tried to use interarrival time to estimate bandwidth
-                </ul>
-                <ul>
-                    <b>Interactive Drawing App</b> - Application that takes commands from the device, sends it to the server, and echoes back to the device before drawing (to test
-                    latency from server after device command input)
-                </ul>
-                <ul>
-                    <b>Streaming App</b> - Application that generates one way stream of data at some bit rate and then computes the estimated bandwidth at the receiver. Receiver then
-                    responds with the available bandwidth and the client adjusts accordingly.
-                </ul>
-            </p>
-            <!-- <div class="tm-text-right">
-                <a href="#" class="tm-btn tm-btn-small tm-btn-primary tm-mt">Read More</a>
-            </div> -->
-        </div>
-        <div class="item" data-desktop-seq-no="4" data-mobile-seq-no="8">
-            <img src="img/app2.png" alt="Image" class="tm-img-left">
-        </div>
-        <div class="tm-footer" id="tmFooter" data-desktop-seq-no="5" data-mobile-seq-no="9">
-            <div>
-                <p class="tm-mb-small">Spring 2020 Advanced Distributed Systems Class</p>
-                <h3><a href="presentation.pdf">Download the Presentation</a></h3>
-                <p>Designed by <a rel="nofollow" href="https://www.facebook.com/tooplate">Tooplate</a></p>
-            </div>
-        </div>
-        <div class="item" data-desktop-seq-no="6" data-mobile-seq-no="2">
-            <img src="img/app3.png" alt="Image">
-        </div>
-        <div class="item tm-block-right" data-desktop-seq-no="7" data-mobile-seq-no="3">
+        </div><div class="item" data-desktop-seq-no="6" data-mobile-seq-no="2">
+            <img src="./index_files/app3.png" alt="Image">
+        </div><div class="item tm-block-right" data-desktop-seq-no="7" data-mobile-seq-no="3">
             <div class="tm-block-right-inner tm-bg-primary-light tm-text-white tm-block tm-block-wider tm-block-pad">
                 <header>
                     <h2 class="tm-text-uppercase">
@@ -91,40 +47,58 @@ http://www.tooplate.com/view/2110-character
                     5G brings a heavy improvement to mobile networks. It is touted to bring Gigabit download speeds and sub 10ms latency (for reference LTE is around 40~100 ms).
                     This presents an opportunity for real time communication, which requires sub 100 ms end to end latency. While theoretical 5G has amazing benefits, there is still
                     much work to be done before it is fully realized since its still so new. Thus the goal for this project is to investigate real-time interactivity over a 5G network and
-                    design a bandwidth estimation protocol to efficiently utilize bandwidth.
+                    design a bandwidth estimation protocol for cellular networks. We also are making a proof of concept Android app that implements our protocol.
                 </p>
-            </div>
-        </div>
 
-        <div class="item" data-desktop-seq-no="8" data-mobile-seq-no="6">
-            <img src="img/app4.png" alt="Image">
-        </div>
-        <div class="item tm-block-right" data-desktop-seq-no="7" data-mobile-seq-no="3">
+
+            </div>
+        </div><div class="item" data-desktop-seq-no="2" data-mobile-seq-no="4">
+            <img src="./index_files/app1.png" alt="Image" class="tm-img-left">
+        </div><div class="item tm-block-right" data-desktop-seq-no="7" data-mobile-seq-no="3">
             <div class="tm-block-right-inner tm-bg-primary-light tm-text-white tm-block tm-block-wider tm-block-pad">
                 <header>
                     <h2 class="tm-text-uppercase">
-                        Current Progress
+                    	The Planned App
                     </h2>
                 </header>
-                <p> We've built the above apps and we are currently iterating on the Interactivity application and the Streaming application to try and get bidirectional communication
-                    between client and server devices and make sure the application is stable on mobile devices so that we can begin doing some realistic 5G mobile testing. We also aim
-                    to read more literature on real-time bandwidth estimation protocols and try and implement them to see if we can get any improvements.
+                <p> 
+                	We want our app to demonstrate that our bandwidth estimation protocol utilizes the available bandwidth without adversely affecting latency (by exceeding capacity). Therefore, we will have an underlying data stream controlled by our protocol, for example video, and an interaction layer on top. The interaction layer currently consists of multiple users moving pointers across a screen.
                 </p>
                 <header>
                     <h2 class="tm-text-uppercase">
-                        What we know now...
+                    	Current Progress
                     </h2>
                 </header>
-                <p> Through our tests we've learned a lot of interesting things about mobile networking. First, all wirelessly trasmitted packets are sent to a discrete baseband processor
-                    on the mobile device. Second, there is a possiblity of packet bunching at the cell towers before being sent to its destination (more evident in the downlink). Third, measurements of LTE are
-                    typically around 40ms for Verizon, 70 ms for AT&T, and 100 ms for T-Mobile. These high latency measurements are possibily due to mobile devices peering somewhere else geographically. From our 
-                    tests we noted that they do all peer around the Tri-State Area.
+                <h4> Network Characteristics</h4>
+                <p> 
+                	Our first task was testing the characteristics of mobile networks. To do this, we built an Android App to measure latency and bandwidth accross the cellular link. We learned that cellular packets are processed through a separate baseband processor on the mobile device. Furthermore, this baseband processor seems to bunch packets and deliver them together, outside of our control. We also learned generally what the baseline latency over LTE is: around 40ms for Verizon, 70 ms for AT&amp;T, and 100 ms for T-Mobile. These high latency measurements are possibily due to the providers peering nonlocally.
                 </p>
+                <h4> Network Characteristics</h4>
+
+                <p> 
+                	The current version of app has the tools we used for determining network characteristics, as well as a basic version of the interactive layer we want to implement. Screenshots of the interface are below: 
+                </p>
+                <h4> Protocol </h4>
+                <p>
+                	We have a general idea of what kind of protocol we want to implement. See the midterm presentation for details
+                </p>
+
             </div>
+        </div><div class="item" data-desktop-seq-no="2" data-mobile-seq-no="4">
+            <img src="./index_files/app1.png" alt="Image" class="tm-img-left">
         </div>
+        
+
+        
+        
+        
+        
+
+        
+        
 
     </main>
-    <script src="js/jquery-3.3.1.min.js"></script>
+    <script src="./index_files/jquery-3.3.1.min.js.download"></script>
     <!-- https://jquery.com/download/ -->
     <script>
 
@@ -221,6 +195,6 @@ http://www.tooplate.com/view/2110-character
             adjustLayout();
         })
     </script>
-</body>
 
-</html>
+
+</body></html>
