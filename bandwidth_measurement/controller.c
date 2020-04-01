@@ -291,7 +291,7 @@ int setup_server_socket(int port)
     return s_recv;
 }
 
-struct sockaddr_in addrbyname(char *hostname, int port)
+struct sockaddr_in addrbyname(const char *hostname, int port)
 {
     int host_num;
     struct hostent h_ent, *p_h_ent;
