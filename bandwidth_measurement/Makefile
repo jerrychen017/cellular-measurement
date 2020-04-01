@@ -19,4 +19,4 @@ data_generator: data_generator.o utils.o
 	$(CC) $(CFLAGS) $*.c
 
 clean:
-	rm *.o
+	rm *.o server controller data_generator
