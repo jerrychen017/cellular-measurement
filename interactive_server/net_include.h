@@ -7,13 +7,12 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/select.h>
-#include <netinet/in.h> 
+#include <netinet/in.h>
 #include <netdb.h>
 
 #include <errno.h>
 
 //#define PORT	     5555
-#define PORT	     11011
+#define PORT 4579
 
 #define MAX_MESS_LEN 1400
-
