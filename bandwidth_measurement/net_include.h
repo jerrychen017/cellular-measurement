@@ -1,3 +1,5 @@
+#ifndef BANDWIDTH_NET_INCLUDE_H
+#define BANDWIDTH_NET_INCLUDE_H
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -66,3 +68,4 @@ typedef struct data_packet_
     data_header hdr;
     char data[PACKET_SIZE - sizeof(data_header)];
 } data_packet;
+#endif

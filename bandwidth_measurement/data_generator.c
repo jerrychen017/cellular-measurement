@@ -141,9 +141,14 @@ int setup_socket()
 
     printf("Trying to connect...\n");
 
+    memset(&controller, 0, sizeof(controller)); // fix android connect error 
     controller.sun_family = AF_UNIX;
-    strcpy(controller.sun_path, SOCK_PATH);
-    len = strlen(controller.sun_path) + sizeof(controller.sun_family);
+    const char name[] = "\0my.local.socket.address"; // fix android connect error 
+    // strcpy(controller.sun_path, SOCK_PATH);
+    memcpy(controller.sun_path, name, sizeof(name) - 1); // fix android connect error 
+    // len = strlen(controller.sun_path) + sizeof(controller.sun_family);
+    len = strlen(controller.sun_path) + sizeof(name); // fix android connect error 
+    controller.sun_path[0] = 0; // fix android connect error 
     if (connect(s, (struct sockaddr *)&controller, len) == -1)
     {
         perror("connect error\n");

@@ -243,9 +243,15 @@ int setup_data_socket()
 
     printf("Trying to connect...\n");
 
+
+    memset(&addr1, 0, sizeof(addr1)); 
     addr1.sun_family = AF_UNIX;
-    strcpy(addr1.sun_path, SOCK_PATH);
-    len = strlen(addr1.sun_path) + sizeof(addr1.sun_family);
+    const char name[] = "\0my.local.socket.address"; // fix android socket error
+    // strcpy(addr1.sun_path, SOCK_PATH);
+    memcpy(addr1.sun_path, name, sizeof(name) - 1); // fix android socket error
+    // len = strlen(addr1.sun_path) + sizeof(addr1.sun_family);
+    len = strlen(addr1.sun_path) + sizeof(name); // fix android socket error
+    addr1.sun_path[0] = 0; // fix android socket error
     unlink(addr1.sun_path);
     if (bind(s, (struct sockaddr *)&addr1, len) == -1) {
         perror("bind");
@@ -258,7 +264,12 @@ int setup_data_socket()
     }
 
     printf("Waiting for a connection...\n");
-    len2 = sizeof(addr1);
+
+    const char name2[] = "\0my2.local.socket.address"; // fix android socket error
+    memcpy(addr2.sun_path, name2, sizeof(name2) - 1); // fix android socket error
+    // len2 = sizeof(addr1);
+    len2 = strlen(addr2.sun_path) + sizeof(name); // fix android socket error
+    addr2.sun_path[0] = 0; // fix android socket error
     if ((s2 = accept(s, (struct sockaddr *)&addr2, &len2)) == -1) {
         perror("accept");
         exit(1);
@@ -283,6 +294,7 @@ int setup_server_socket(int port)
     name.sin_addr.s_addr = INADDR_ANY;
     name.sin_port = htons(port);
 
+    // bind should be commented out when running on the android side
     if (bind( s_recv, (struct sockaddr *)&name, sizeof(name) ) < 0 ) {
         perror("bind error\n");
         exit(1);
