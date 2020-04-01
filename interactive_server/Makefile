@@ -1,18 +1,17 @@
 CC=gcc
 
-CFLAGS = -g -c -Wall -pedantic -D_GNU_SOURCE
-#CFLAGS = -ansi -c -Wall -pedantic -D_GNU_SOURCE
+CFLAGS = -std=c99 -g -c -Wall -pedantic -D_POSIX_SOURCE -D_GNU_SOURCE
+LDFLAGS = -lpthread -lrt
+# when running on rain1 server, add LDFLAGS to echo_server and echo_client
 
-all: bcast mcast
+all: interactive_server
 
+interactive_server: interactive_server.o 
+	$(CC) -o interactive_server interactive_server.o  
 
-bcast: bcast.o
-	$(CC) -o bcast bcast.o 
-
-mcast: mcast.o
-	$(CC) -o mcast mcast.o 
+interactive_server.o: interactive_server.c include/net_include.h 
+	$(CC) $(CFLAGS) interactive_server.c
 
 clean:
 	rm *.o
-	rm bcast
-	rm mcast
+	rm interactive_server

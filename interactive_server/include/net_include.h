@@ -24,33 +24,57 @@
 #define TIMEOUT_USEC 0
 #define PACKET_SIZE 1400
 #define NUM_SEND 10
+#define NAME_LENGTH 100
 
-enum PacketType {
+enum PacketType
+{
     TIMING,
-    REPORT, 
-    ECHO
+    REPORT,
+    ECHO,
+    INTERACTIVE,
+    CONNECT
 };
 
-typedef struct Packet {
+typedef struct Packet
+{
     int type;
     char buffer[PACKET_SIZE + 8];
 } Packet;
 
-typedef struct TimingPacket {
+typedef struct TimingPacket
+{
     int type;
     int seq;
     char buffer[PACKET_SIZE];
 } TimingPacket;
 
-typedef struct ReportPacket {
+typedef struct ReportPacket
+{
     int type;
     int seq;
-    float throughput;   
+    float throughput;
 } ReportPacket;
 
-typedef struct EchoPacket {
+typedef struct EchoPacket
+{
     int type;
-    int seq; 
-    float x; 
-    float y; 
+    int seq;
+    float x;
+    float y;
+    int id;
+    char name[NAME_LENGTH];
 } EchoPacket;
+
+typedef struct ConnectPacket
+{
+    int type;
+    int id;
+    char name[NAME_LENGTH];
+} ConnectPacket;
+
+typedef struct User
+{
+    int id;
+    char name[NAME_LENGTH];
+    struct sockaddr_in socket_addr;
+} User;
