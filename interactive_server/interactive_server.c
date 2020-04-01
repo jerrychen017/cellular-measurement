@@ -10,7 +10,7 @@ int main(int argc, char **argv)
 {
 
     // argc error checking
-    if (argc != 2)
+    if (argc != 3)
     {
         printf("Usage: interactive_server <port> <max-num-users>\n");
         exit(0);
