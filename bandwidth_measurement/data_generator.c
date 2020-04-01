@@ -1,9 +1,4 @@
-#include "net_include.h"
-#include "utils.h"
-
-#define DATA_SIZE (PACKET_SIZE - sizeof(data_header))
-
-int setup_socket();
+#include "data_generator.h"
 
 /**
     Data generator
@@ -17,6 +12,11 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    int ret = start_generator(); 
+    return ret; 
+}
+
+int start_generator() {
     int s = setup_socket();
 
     // Select loop stuff
