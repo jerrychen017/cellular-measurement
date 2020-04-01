@@ -1,7 +1,6 @@
 #ifndef INTERACTIVE_CLIENT_H
 #define INTERACTIVE_CLIENT_H
 #include "include/net_include.h"
-#include "utils.h"
 
 int interactive_connect(int id, char name[NAME_LENGTH]);
 
