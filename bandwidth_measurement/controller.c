@@ -46,6 +46,9 @@ void startup(int s_server, int s_data, struct sockaddr_in send_addr)
     send(s_data, &pkt, sizeof(pkt.type), 0);
 }
 
+
+
+
 /* Main event loop */
 void control(int s_server, int s_data, struct sockaddr_in send_addr)
 {
@@ -61,12 +64,17 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
     FD_SET(s_data, &mask);
 
     struct timeval timeout;
+    struct timeval expectedTimeout;
+    
     data_packet data_pkt;
     data_packet recv_pkt;
 
     // Variables to deal with burst
     int burst_seq_recv = -1; // index of burst we have received from data
     int burst_seq_send = -1; // index of burst we have sent
+    struct timeval tmNow;
+    struct timeval tmPrev;
+
     data_packet pkt_buffer[BURST_SIZE];
 
     int seq = 0;
@@ -101,29 +109,29 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
 
 
                 if (burst_seq_recv == -1) {
-                //    printf("Sending to server \n");
+                    if (burst_seq_send != -1) {
+                        printf("Error: burst not done, on seq %d\n", burst_seq_send);
+                        exit(1);
+                    }
 
                     // Pass to server during normal operation
                     sendto_dbg(s_server, &data_pkt, sizeof(data_pkt), 0,
                             (struct sockaddr *) &send_addr, sizeof(send_addr));
                 } else {
-                    //printf("storing packet seq %d, in spot %d\n", seq, burst_seq_recv);
+                    printf("storing packet seq %d, in spot %d\n", seq, burst_seq_recv);
                     pkt_buffer[burst_seq_recv] = data_pkt;
                     
-                    burst_seq_recv++;
-
-                    if (burst_seq_recv > BURST_SIZE) {
-                        printf("error, send before burst was done\n");
-                        exit(1);
-                    }
-                    // We have recieved all the packets in the burst, so we can stop storing
-                    if (burst_seq_recv == BURST_SIZE) {
-                        burst_seq_recv = -1;
-                    }
                     // After receiving half of the packets, we can start sending
                     if (burst_seq_recv == BURST_SIZE / 2) {
                         burst_seq_send = 0;
-                        timeout = speed_to_interval(rate * BURST_FACTOR);
+                        timeout = speed_to_interval(0);
+                    }
+
+                    burst_seq_recv++;
+
+                    // We have recieved all the packets in the burst, so we can stop storing
+                    if (burst_seq_recv == BURST_SIZE) {
+                        burst_seq_recv = -1;
                     }
                 }
                 seq++;
@@ -164,11 +172,37 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                 printf("timeout?\n");
             }
             else {  
+                if (burst_seq_send >= burst_seq_recv && burst_seq_recv != -1) {
+                    printf("Error: burst trying to send seq not received %d\n", burst_seq_send);
+                    exit(1);
+                }
+
                 printf("sending packet %d of burst\n", burst_seq_send);
                 sendto_dbg(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
                         (struct sockaddr *) &send_addr, sizeof(send_addr));
+                
+                gettimeofday(&tmNow, NULL);
+
+                if (burst_seq_send == 0) {
+                    expectedTimeout = speed_to_interval(rate * BURST_FACTOR); 
+                    timeout = expectedTimeout;
+                } else {
+                    struct timeval baseTimeout = speed_to_interval(rate * BURST_FACTOR); 
+                    struct timeval tmExtra = diffTime(diffTime(tmNow, tmPrev), expectedTimeout);
+
+                    while (gtTime(tmExtra, baseTimeout)) {
+                        burst_seq_send++;
+                        sendto_dbg(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
+                                (struct sockaddr *) &send_addr, sizeof(send_addr));
+                        tmExtra = diffTime(tmExtra, baseTimeout);
+                    }
+
+                    expectedTimeout = diffTime(baseTimeout, tmExtra);
+                    timeout = expectedTimeout;
+                }
                 burst_seq_send++;
-                timeout = speed_to_interval(rate * BURST_FACTOR);
+                tmPrev = tmNow;
+                // We are done
                 if (burst_seq_send == BURST_SIZE) {
                     burst_seq_send = -1;
                 }
