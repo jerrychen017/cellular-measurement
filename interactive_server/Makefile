@@ -1,30 +1,17 @@
 CC=gcc
+LD=gcc
+CFLAGS=-g -Wall 
+CPPFLAGS=-I. -I/home/cs417/exercises/ex3/include
+SP_LIBRARY=/home/cs417/exercises/ex3/libspread-core.a /home/cs417/exercises/ex3/libspread-util.a
 
-CFLAGS = -std=c99 -g -c -Wall -pedantic -D_POSIX_SOURCE -D_GNU_SOURCE
-LDFLAGS = -lpthread -lrt
-# when running on rain1 server, add LDFLAGS to echo_server and echo_client
+all: mcast
 
-all: client_main echo_server
+mcast: mcast.o
+	$(LD) -o $@ mcast.o -ldl $(SP_LIBRARY)
 
-echo_server: echo_server.o utils.o
-	$(CC) $(LDFLAGS) -o echo_server echo_server.o utils.o 
-
-client_main: client_main.o utils.o echo_client.o
-	$(CC) $(LDFLAGS) -o client_main echo_client.o utils.o client_main.o
-
-client_main.o: client_main.c include/net_include.h echo_client.h
-	$(CC) $(CFLAGS) client_main.c
-
-echo_server.o: echo_server.c include/net_include.h utils.h
-	$(CC) $(CFLAGS) echo_server.c 
-
-echo_client.o: echo_client.c include/net_include.h utils.h echo_client.h
-	$(CC) $(CFLAGS) echo_client.c
-
-utils.o: utils.c utils.h include/net_include.h
-	$(CC) $(CFLAGS) utils.c
+mcast.o: mcast.c message.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c mcast.c
 
 clean:
 	rm *.o
-	rm echo_server
-	rm client_main
+	rm mcast
