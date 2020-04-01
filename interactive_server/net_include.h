@@ -12,4 +12,8 @@
 
 #include <errno.h>
 
-#define PORT	     10100
+//#define PORT	     5555
+#define PORT	     11011
+
+#define MAX_MESS_LEN 1400
+
