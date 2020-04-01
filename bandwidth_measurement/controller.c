@@ -79,12 +79,16 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
 
     int seq = 0;
     double rate = START_SPEED;
+    timeout.tv_sec = TIMEOUT_SEC;
+    timeout.tv_usec = TIMEOUT_USEC;
+    expectedTimeout.tv_sec = 0;
+    expectedTimeout.tv_usec = 0;
 
 
 
     for (;;) {
         read_mask = mask;
-
+        // printf("TIMEOUT %.4f\n", timeout.tv_usec / 1000.0);
         num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
 
         if (num > 0) {
@@ -119,11 +123,13 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                             (struct sockaddr *) &send_addr, sizeof(send_addr));
                 } else {
                     printf("storing packet seq %d, in spot %d\n", seq, burst_seq_recv);
+                    // printf("TIMEOUT %.4f EXEPECTEDTIMEOUT %.4f\n", timeout.tv_usec / 1000.0, expectedTimeout.tv_usec / 1000.0);
                     pkt_buffer[burst_seq_recv] = data_pkt;
                     
                     // After receiving half of the packets, we can start sending
                     if (burst_seq_recv == BURST_SIZE / 2) {
                         burst_seq_send = 0;
+                        gettimeofday(&tmPrev, NULL);
                         timeout = speed_to_interval(0);
                     }
 
@@ -132,6 +138,14 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                     // We have recieved all the packets in the burst, so we can stop storing
                     if (burst_seq_recv == BURST_SIZE) {
                         burst_seq_recv = -1;
+                        //temp fix for burst out of ordering/slow
+                        while (burst_seq_send != -1 && burst_seq_send < BURST_SIZE) {
+                            printf("sending packet at end %d of burst\n", burst_seq_send);
+                            sendto_dbg(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
+                                    (struct sockaddr *) &send_addr, sizeof(send_addr));
+                            burst_seq_send++;
+                        }
+                        burst_seq_send = -1;
                     }
                 }
                 seq++;
@@ -153,9 +167,9 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                     reportedRate = recv_pkt.hdr.rate;
                     if (reportedRate < rate){
                         // set new rate to the max of less than reported rate to flush queue
-                        double newRate = reportedRate - (rate - reportedRate);
-                        if(newRate < 0.5*reportedRate){
-                            reportedRate = 0.5*reportedRate;
+                        double newRate = reportedRate - .5 * (rate - reportedRate);
+                        if(newRate < 0.75*reportedRate){
+                            reportedRate = 0.75*reportedRate;
                         }
                         else{
                             reportedRate = newRate;
@@ -178,29 +192,28 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                 }
 
                 printf("sending packet %d of burst\n", burst_seq_send);
+
                 sendto_dbg(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
                         (struct sockaddr *) &send_addr, sizeof(send_addr));
+                burst_seq_send++;
+
                 
                 gettimeofday(&tmNow, NULL);
+                struct timeval baseTimeout = speed_to_interval(rate * BURST_FACTOR); 
+                struct timeval tmExtra = diffTime(diffTime(tmNow, tmPrev), expectedTimeout);
+                // printf("BASETIMEOUT %.4f EXTRATIME %.4f \n", baseTimeout.tv_usec / 1000.0, tmExtra.tv_usec / 1000.0);
 
-                if (burst_seq_send == 0) {
-                    expectedTimeout = speed_to_interval(rate * BURST_FACTOR); 
-                    timeout = expectedTimeout;
-                } else {
-                    struct timeval baseTimeout = speed_to_interval(rate * BURST_FACTOR); 
-                    struct timeval tmExtra = diffTime(diffTime(tmNow, tmPrev), expectedTimeout);
-
-                    while (gtTime(tmExtra, baseTimeout)) {
-                        burst_seq_send++;
-                        sendto_dbg(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
-                                (struct sockaddr *) &send_addr, sizeof(send_addr));
-                        tmExtra = diffTime(tmExtra, baseTimeout);
-                    }
-
-                    expectedTimeout = diffTime(baseTimeout, tmExtra);
-                    timeout = expectedTimeout;
+                while (gtTime(tmExtra, baseTimeout) && burst_seq_send < BURST_SIZE && burst_seq_send < burst_seq_recv) {
+                    printf("sending makeup packet %d of burst\n", burst_seq_send);
+                    sendto_dbg(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
+                            (struct sockaddr *) &send_addr, sizeof(send_addr));
+                    tmExtra = diffTime(tmExtra, baseTimeout);
+                    burst_seq_send++;
                 }
-                burst_seq_send++;
+
+                expectedTimeout = diffTime(baseTimeout, tmExtra);
+                timeout = expectedTimeout;
+                // printf("EXPECTEDTIMEOUT %.4f \n", expectedTimeout.tv_usec / 1000.0);
                 tmPrev = tmNow;
                 // We are done
                 if (burst_seq_send == BURST_SIZE) {
