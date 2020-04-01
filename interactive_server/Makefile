@@ -1,17 +1,28 @@
 CC=gcc
-LD=gcc
-CFLAGS=-g -Wall 
-CPPFLAGS=-I. -I/home/cs417/exercises/ex3/include
-SP_LIBRARY=/home/cs417/exercises/ex3/libspread-core.a /home/cs417/exercises/ex3/libspread-util.a
 
-all: mcast
+CFLAGS = -g -c -Wall -pedantic -D_GNU_SOURCE
 
-mcast: mcast.o
-	$(LD) -o $@ mcast.o -ldl $(SP_LIBRARY)
+all: mcast start_mcast
 
-mcast.o: mcast.c message.h
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c mcast.c
+mcast: mcast.o helper.o recv_dbg.o
+	$(CC) -o mcast mcast.o helper.o recv_dbg.o
+
+start_mcast: start_mcast.o
+	$(CC) -o start_mcast start_mcast.o 
+
+mcast.o: mcast.c net_include.h packet.h helper.h recv_dbg.h
+	$(CC) $(CFLAGS) mcast.c
+
+start_mcast.o: start_mcast.c net_include.h packet.h
+	$(CC) $(CFLAGS) start_mcast.c
+
+helper.o: helper.c helper.h net_include.h packet.h
+	$(CC) $(CFLAGS) helper.c
+
+recv_dbg.o: recv_dbg.c
+	$(CC) $(CFLAGS) recv_dbg.c
 
 clean:
 	rm *.o
 	rm mcast
+	rm start_mcast
