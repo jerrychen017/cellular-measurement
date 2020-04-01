@@ -16,17 +16,17 @@ int main(int argc, char *argv[])
     int port = atoi(argv[2]);
     // address
     char *address = argv[1];
-    int ret = start_controller(address, port); 
+    int ret = start_controller(address, port, false); 
     return ret;
 }
 
-int start_controller(const char* address, int port)
+int start_controller(const char* address, int port, bool android)
 {
     sendto_dbg_init(0);
     
-    int s_server = setup_server_socket(port);
+    int s_server = setup_server_socket(port, android);
     struct sockaddr_in send_addr = addrbyname(address, port);
-    int s_data = setup_data_socket();
+    int s_data = setup_data_socket(android);
 
     startup(s_server, s_data, send_addr);
     control(s_server, s_data, send_addr);
@@ -228,7 +228,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
     }
 }
 
-int setup_data_socket()
+int setup_data_socket(bool android)
 {
     int s, s2;
     socklen_t len, len2;
@@ -243,15 +243,19 @@ int setup_data_socket()
 
     printf("Trying to connect...\n");
 
-
-    memset(&addr1, 0, sizeof(addr1)); 
-    addr1.sun_family = AF_UNIX;
     const char name[] = "\0my.local.socket.address"; // fix android socket error
-    // strcpy(addr1.sun_path, SOCK_PATH);
-    memcpy(addr1.sun_path, name, sizeof(name) - 1); // fix android socket error
-    // len = strlen(addr1.sun_path) + sizeof(addr1.sun_family);
-    len = strlen(addr1.sun_path) + sizeof(name); // fix android socket error
-    addr1.sun_path[0] = 0; // fix android socket error
+    if (android) {
+        memset(&addr1, 0, sizeof(addr1)); // fix android socket error
+        addr1.sun_family = AF_UNIX;
+        memcpy(addr1.sun_path, name, sizeof(name) - 1); // fix android socket error
+        len = strlen(addr1.sun_path) + sizeof(name); // fix android socket error
+        addr1.sun_path[0] = 0; // fix android socket error
+    } else {
+        addr1.sun_family = AF_UNIX;
+        strcpy(addr1.sun_path, SOCK_PATH);
+        len = strlen(addr1.sun_path) + sizeof(addr1.sun_family);
+    }
+   
     unlink(addr1.sun_path);
     if (bind(s, (struct sockaddr *)&addr1, len) == -1) {
         perror("bind");
@@ -265,11 +269,15 @@ int setup_data_socket()
 
     printf("Waiting for a connection...\n");
 
-    const char name2[] = "\0my2.local.socket.address"; // fix android socket error
-    memcpy(addr2.sun_path, name2, sizeof(name2) - 1); // fix android socket error
-    // len2 = sizeof(addr1);
-    len2 = strlen(addr2.sun_path) + sizeof(name); // fix android socket error
-    addr2.sun_path[0] = 0; // fix android socket error
+    if (android) {
+        const char name2[] = "\0my2.local.socket.address"; // fix android socket error
+        memcpy(addr2.sun_path, name2, sizeof(name2) - 1); // fix android socket error
+        len2 = strlen(addr2.sun_path) + sizeof(name); // fix android socket error
+        addr2.sun_path[0] = 0; // fix android socket error
+    } else {
+        len2 = sizeof(addr1);
+    }
+    
     if ((s2 = accept(s, (struct sockaddr *)&addr2, &len2)) == -1) {
         perror("accept");
         exit(1);
@@ -280,7 +288,7 @@ int setup_data_socket()
     return s2;
 }
 
-int setup_server_socket(int port)
+int setup_server_socket(int port, bool android)
 {
     struct sockaddr_in name;
 
@@ -294,8 +302,8 @@ int setup_server_socket(int port)
     name.sin_addr.s_addr = INADDR_ANY;
     name.sin_port = htons(port);
 
-    // bind should be commented out when running on the android side
-    if (bind( s_recv, (struct sockaddr *)&name, sizeof(name) ) < 0 ) {
+    // bind is done separaltely when running on the android side
+    if (!android && bind( s_recv, (struct sockaddr *)&name, sizeof(name) ) < 0 ) {
         perror("bind error\n");
         exit(1);
     }
