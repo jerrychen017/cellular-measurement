@@ -61,3 +61,8 @@ dkms.conf
 
 # IDEs 
 .vscode
+.idea*
+
+# Mac
+.DS_Store
+
