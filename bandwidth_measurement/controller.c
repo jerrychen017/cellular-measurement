@@ -1,14 +1,4 @@
-#include "net_include.h"
-#include "utils.h"
-#include "sendto_dbg.h"
-
-void startup(int s_server, int s_data, struct sockaddr_in send_addr);
-void control(int s_server, int s_data, struct sockaddr_in send_addr);
-double estimate_change(double rate);
-
-int setup_data_socket();
-int setup_server_socket();
-struct sockaddr_in addrbyname(char *hostname, int port);
+#include "controller.h"
 
 /**
     Controller 
@@ -22,12 +12,18 @@ int main(int argc, char *argv[])
         printf("controller usage: controller <host_address> <port>\n");
         exit(1);
     }
-    sendto_dbg_init(0);
     // port
     int port = atoi(argv[2]);
     // address
     char *address = argv[1];
+    int ret = start_controller(address, port); 
+    return ret;
+}
 
+int start_controller(const char* address, int port)
+{
+    sendto_dbg_init(0);
+    
     int s_server = setup_server_socket(port);
     struct sockaddr_in send_addr = addrbyname(address, port);
     int s_data = setup_data_socket();
