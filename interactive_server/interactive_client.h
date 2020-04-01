@@ -19,4 +19,6 @@ int send_interactive_packet(int seq_num, float x, float y);
  */
 EchoPacket receive_interactive_packet();
 
+void init_socket(const char *address, int port);
+
 #endif //UDP_TOOLS_ECHO_CLIENT_H
