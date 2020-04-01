@@ -19,7 +19,7 @@ static int num;
 static EchoPacket packet_send;
 
 // send CONNECT packet to interactive server
-int interactive_connect(const char *address, int port, int id, char name[NAME_LENGTH])
+int interactive_connect(int id, char name[NAME_LENGTH])
 {
     // initialize starting packet and echo_packet
     ConnectPacket connect_packet;

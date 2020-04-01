@@ -3,7 +3,7 @@
 #include "include/net_include.h"
 #include "utils.h"
 
-int interactive_connect(const char *address, int port, int id, char name[NAME_LENGTH]);
+int interactive_connect(int id, char name[NAME_LENGTH]);
 
 /**
  * send an interactive packet to the server and returns the sequence number
