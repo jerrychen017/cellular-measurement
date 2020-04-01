@@ -1,5 +1,5 @@
 #include "net_include.h"
-#include "utils.h"
+#include "bandwidth_utils.h"
 #include "sendto_dbg.h"
 
 #define ALPHA 0.1  // closer to 0 is smoother, closer to 1 is quicker reaction (90 packets ~ 1Mbps) 0.2/0.1 for regular
