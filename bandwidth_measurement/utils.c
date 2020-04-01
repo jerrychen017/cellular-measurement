@@ -46,3 +46,9 @@ struct timeval diffTime(struct timeval left, struct timeval right)
     }
     return diff;
 }
+
+int gtTime(struct timeval left, struct timeval right) 
+{
+    return (left.tv_sec > right.tv_sec) ||
+        (left.tv_sec == right.tv_sec && left.tv_usec > right.tv_usec);
+}

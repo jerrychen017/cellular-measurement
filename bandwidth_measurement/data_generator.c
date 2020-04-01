@@ -94,9 +94,15 @@ int main(int argc, char *argv[])
                 gettimeofday(&tmNow, NULL);
                 if (seq != 0) {
                     // Account for kernel returning from select loop late
-                    struct timeval actualTimeout = diffTime(tmNow, tmPrev);
                     struct timeval baseTimeout = speed_to_interval(speed); 
-                    expectedTimeout = diffTime(baseTimeout, diffTime(actualTimeout, expectedTimeout));
+                    struct timeval tmExtra = diffTime(diffTime(tmNow, tmPrev), expectedTimeout);
+                    while (gtTime(tmExtra, baseTimeout)) {
+                        seq++;
+                        send(s, buffer, DATA_SIZE, 0);
+                        tmExtra = diffTime(tmExtra, baseTimeout);
+                    }
+
+                    expectedTimeout = diffTime(baseTimeout, tmExtra);
                     /*printf("timeout base %.4f, expected %.4f ms\n", 
                         baseTimeout.tv_usec / 1000.0,
                         expectedTimeout.tv_usec / 1000.0);*/
@@ -116,7 +122,7 @@ int main(int argc, char *argv[])
 
      }
 
-    return 0;
+     return 0;
 }
 
 
