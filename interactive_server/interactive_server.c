@@ -125,7 +125,7 @@ int main(int argc, char **argv)
                     User new_user;
                     new_user.id = recvConnect->id;
                     memcpy(new_user.name, recvConnect->name, NAME_LENGTH);
-                    new_user.socket_addr = sockaddr_client_pac;
+                    new_user.socket_addr = &sockaddr_client_pac;
                     // add user to the sending list
                     if (num_users == max_num_users)
                     { // max number of users already
@@ -134,7 +134,7 @@ int main(int argc, char **argv)
                     else
                     {
                         users[num_users] = new_user;
-                        printf("username is %s \n user addr is %s", users[num_users].name, users[num_users].socket_addr);
+                        // printf("username is %s \n user addr is %s", users[num_users].name, users[num_users].socket_addr);
                         num_users++;
                     }
                 }
