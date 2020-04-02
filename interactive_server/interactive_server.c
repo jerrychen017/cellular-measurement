@@ -103,6 +103,7 @@ int main(int argc, char **argv)
                     {
                         sendto(sk, &recvEcho, sizeof(recvEcho), 0,
                                (struct sockaddr *)&users[i], sizeof(users[i]));
+                        printf("sent an echo packet\n");
                     }
                 }
                 else if (packet->type == INTERACTIVE)
