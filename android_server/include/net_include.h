@@ -1,3 +1,5 @@
+#ifndef ANDROID_NET_INCLUDE_H
+#define ANDROID_NET_INCLUDE_H
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -43,3 +45,4 @@ enum LocalPacketType
     LOCAL_START,
     LOCAL_CONTROL
 };
+#endif

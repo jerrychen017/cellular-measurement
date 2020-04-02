@@ -19,16 +19,16 @@ static int num;
 static EchoPacket packet_send;
 
 // send CONNECT packet to interactive server
-int interactive_connect(int id, char name[NAME_LENGTH])
+int interactive_connect(int id, const char name[NAME_LENGTH])
 {
     // initialize starting packet and echo_packet
     ConnectPacket connect_packet;
-    connect_packet.type = CONNECT;
+    connect_packet.type = 4; // CONNECT
     connect_packet.id = id;
     memcpy(connect_packet.name, name, NAME_LENGTH);
 
     // initalize packet_send
-    packet_send.type = ECHO;
+    packet_send.type = 2; // ECHO
     packet_send.id = id;
     memcpy(packet_send.name, name, NAME_LENGTH);
 

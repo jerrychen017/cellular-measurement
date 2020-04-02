@@ -1,3 +1,6 @@
+#ifndef INTERACTIVE_NET_INCLUDE_H
+#define INTERACTIVE_NET_INCLUDE_H
+
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -28,11 +31,11 @@
 
 enum PacketType
 {
-    TIMING,
-    REPORT,
-    ECHO,
-    INTERACTIVE,
-    CONNECT
+    TIMING, // 0
+    REPORT, // 1
+    ECHO, // 2
+    INTERACTIVE, // 3
+    CONNECT // 4
 };
 
 typedef struct Packet
@@ -78,3 +81,5 @@ typedef struct User
     char name[NAME_LENGTH];
     struct sockaddr_in socket_addr;
 } User;
+
+#endif
