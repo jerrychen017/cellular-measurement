@@ -79,7 +79,7 @@ typedef struct User
 {
     int id;
     char name[NAME_LENGTH];
-    struct sockaddr_in * socket_addr;
+    struct sockaddr_in socket_addr;
 } User;
 
 #endif

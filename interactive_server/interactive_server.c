@@ -102,7 +102,7 @@ int main(int argc, char **argv)
                     for (int i = 0; i < num_users; i++)
                     {
                         sendto(sk, &recvEcho, sizeof(recvEcho), 0,
-                               (struct sockaddr *)users[i], sizeof(users[i]));
+                               (struct sockaddr *)&users[i].socket_addr, sizeof(users[i]));
                         printf("sent an echo packet\n");
                     }
                 }
@@ -125,7 +125,7 @@ int main(int argc, char **argv)
                     User new_user;
                     new_user.id = recvConnect->id;
                     memcpy(new_user.name, recvConnect->name, NAME_LENGTH);
-                    new_user.socket_addr = &sockaddr_client_pac;
+                    new_user.socket_addr = sockaddr_client_pac;
                     // add user to the sending list
                     if (num_users == max_num_users)
                     { // max number of users already
