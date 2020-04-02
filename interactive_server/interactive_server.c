@@ -44,9 +44,7 @@ int main(int argc, char **argv)
     // socket address of received packet from client
     struct sockaddr_in sockaddr_client_pac;
     socklen_t sockaddr_client_pac_len;
-    // socket address of current client
-    struct sockaddr_in sockaddr_client;
-
+    
     // packet received from client
     char init_packet[BUFF_SIZE];
     // packet to be sent from server
@@ -92,16 +90,17 @@ int main(int argc, char **argv)
                 { // Echo packet
                     printf("received an echo packet\n");
                     recvEcho = (EchoPacket *)packet;
-                    // echo.type = ECHO;
-                    // echo.seq = recvEcho->seq;
-                    // echo.x = recvEcho->x;
-                    // echo.y = recvEcho->y;
-                    // echo.name
+                    echo.type = ECHO;
+                    echo.seq = recvEcho->seq;
+                    echo.x = recvEcho->x;
+                    echo.y = recvEcho->y;
+                    memcpy(echo.name, recvEcho->name, sizeof(NAME_LENGTH));
+                    echo.id = recvEcho->id; 
 
                     // send the echo packet to each user
                     for (int i = 0; i < num_users; i++)
                     {
-                        sendto(sk, &recvEcho, sizeof(recvEcho), 0,
+                        sendto(sk, &echo, sizeof(echo), 0,
                                (struct sockaddr *)&users[i].socket_addr, sizeof(users[i]));
                         printf("sent an echo packet with name <%s> and id <%d>\n", users[i].name, users[i].id);
                     
