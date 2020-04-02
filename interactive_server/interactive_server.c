@@ -134,6 +134,7 @@ int main(int argc, char **argv)
                     else
                     {
                         users[num_users] = new_user;
+                        printf("username is %s \n user addr is %s", users[num_users].name, users[num_users].socket_addr);
                         num_users++;
                     }
                 }
