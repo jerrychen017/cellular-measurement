@@ -101,7 +101,7 @@ int main(int argc, char **argv)
                     for (int i = 0; i < num_users; i++)
                     {
                         sendto(sk, &echo, sizeof(echo), 0,
-                               (struct sockaddr *)&users[i].socket_addr, sizeof(users[i]));
+                               (struct sockaddr *)&users[i].socket_addr, sizeof(users[i].socket_addr));
                         printf("sent an echo packet with name <%s> and id <%d>\n", users[i].name, users[i].id);
                     
                     }
