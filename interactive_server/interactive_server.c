@@ -102,7 +102,7 @@ int main(int argc, char **argv)
                     for (int i = 0; i < num_users; i++)
                     {
                         sendto(sk, &recvEcho, sizeof(recvEcho), 0,
-                               (struct sockaddr *)&users[i], sizeof(users[i]));
+                               (struct sockaddr *)users[i], sizeof(users[i]));
                         printf("sent an echo packet\n");
                     }
                 }
