@@ -133,7 +133,7 @@ int main(int argc, char **argv)
                     }
                     else
                     {
-                        users[num_users];
+                        users[num_users] = new_user;
                         num_users++;
                     }
                 }
