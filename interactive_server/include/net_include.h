@@ -80,6 +80,7 @@ typedef struct User
     int id;
     char name[NAME_LENGTH];
     struct sockaddr_in socket_addr;
+    socklen_t socket_addr_len; 
 } User;
 
 #endif
