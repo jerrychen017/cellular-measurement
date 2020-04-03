@@ -14,9 +14,9 @@ int send_interactive_packet(int seq_num, float x, float y);
 
 /**
  * receive an interactive packet with a certain sequence number
- * @return EchoPacket
+ * @return InteractivePacket
  */
-EchoPacket receive_interactive_packet();
+InteractivePacket receive_interactive_packet();
 
 void init_socket(const char *address, int port);
 

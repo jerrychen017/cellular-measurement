@@ -54,7 +54,7 @@ int interactive_connect(const char name[NAME_LENGTH])
                 {
                 case NO_ERROR:
                     // initalize packet_send
-                    packet_send.type = 2; // ECHO
+                    packet_send.type = 3; // INTERACTIVE
                     packet_send.id = received_id;
                     memcpy(packet_send.name, name, NAME_LENGTH);
                     return received_id;
