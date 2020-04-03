@@ -101,7 +101,7 @@ int main(int argc, char **argv)
                 }
                 else if (packet->type == INTERACTIVE)
                 {
-                    printf("received an interactive packet\n");
+                    // printf("received an interactive packet\n");
                     recvInteractive = (InteractivePacket *)packet;
                     int cur_user_id = recvInteractive->id;
                     // check if the address of the user is set
