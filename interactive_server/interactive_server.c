@@ -102,7 +102,8 @@ int main(int argc, char **argv)
                 else if (packet->type == INTERACTIVE)
                 {
                     printf("received an interactive packet\n");
-                    int cur_user_id = recvConnect->id;
+                    recvInteractive = (InteractivePacket *)packet;
+                    int cur_user_id = recvInteractive->id;
                     // check if the address of the user is set
                     if (!users[cur_user_id].address_set)
                     {
@@ -110,7 +111,6 @@ int main(int argc, char **argv)
                         memcpy(&(users[cur_user_id].socket_addr), &sockaddr_client_pac, sizeof(sockaddr_client_pac));
                     }
 
-                    recvInteractive = (InteractivePacket *)packet;
                     interactive.type = INTERACTIVE;
                     interactive.seq = recvInteractive->seq;
                     interactive.x = recvInteractive->x;
