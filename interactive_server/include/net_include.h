@@ -31,11 +31,18 @@
 
 enum PacketType
 {
-    TIMING, // 0
-    REPORT, // 1
-    ECHO, // 2
+    TIMING,      // 0
+    REPORT,      // 1
+    ECHO,        // 2
     INTERACTIVE, // 3
-    CONNECT // 4
+    CONNECT      // 4
+};
+
+enum ConnnectError
+{
+    NO_ERROR,
+    ID_NOT_FOUND,
+    MAX_USERS_REACHED
 };
 
 typedef struct Packet
@@ -68,17 +75,29 @@ typedef struct EchoPacket
     char name[NAME_LENGTH];
 } EchoPacket;
 
+typedef struct InteractivePacket
+{
+    int type;
+    int seq;
+    float x;
+    float y;
+    int id;
+    char name[NAME_LENGTH];
+} InteractivePacket;
+
 typedef struct ConnectPacket
 {
     int type;
     int id;
     char name[NAME_LENGTH];
+    int error;
 } ConnectPacket;
 
 typedef struct User
 {
     int id;
     char name[NAME_LENGTH];
+    bool address_set;
     struct sockaddr_in socket_addr;
 } User;
 

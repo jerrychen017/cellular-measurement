@@ -2,7 +2,7 @@
 #define INTERACTIVE_CLIENT_H
 #include "include/net_include.h"
 
-int interactive_connect(int id, const char name[NAME_LENGTH]);
+int interactive_connect(const char name[NAME_LENGTH]);
 
 /**
  * send an interactive packet to the server and returns the sequence number

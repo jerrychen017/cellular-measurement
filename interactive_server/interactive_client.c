@@ -2,7 +2,7 @@
 // server socket address
 static struct sockaddr_in server_addr;
 // address of incoming packets
-static struct sockaddr_in echo_pac_addr;
+static struct sockaddr_in interactive_pac_addr;
 // client socket address
 static struct sockaddr_in client_addr;
 static socklen_t client_len;
@@ -16,31 +16,72 @@ static fd_set mask;
 static fd_set read_mask;
 static int num;
 
-static EchoPacket packet_send;
+static InteractivePacket packet_send;
 
 // send CONNECT packet to interactive server
-int interactive_connect(int id, const char name[NAME_LENGTH])
+// returns an id
+int interactive_connect(const char name[NAME_LENGTH])
 {
     // initialize starting packet and echo_packet
     ConnectPacket connect_packet;
     connect_packet.type = 4; // CONNECT
-    connect_packet.id = id;
+    connect_packet.id = -1;
     memcpy(connect_packet.name, name, NAME_LENGTH);
 
-    // initalize packet_send
-    packet_send.type = 2; // ECHO
-    packet_send.id = id;
-    memcpy(packet_send.name, name, NAME_LENGTH);
-
-    // send init packet to rcv
+    // send CONNECT packet to server
     sendto(sk, (ConnectPacket *)&connect_packet, sizeof(connect_packet), 0,
-           (struct sockaddr *)&echo_pac_addr, sizeof(echo_pac_addr));
-    return 0;
+           (struct sockaddr *)&interactive_pac_addr, sizeof(interactive_pac_addr));
+
+    // receive CONNECT packet from server
+    // initialize packet to be received
+    ConnectPacket received_packet;
+    read_mask = mask;
+    struct timeval timeout;
+    for (;;)
+    {
+        timeout.tv_sec = TIMEOUT_SEC;
+        timeout.tv_usec = TIMEOUT_USEC;
+        num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
+        if (num > 0)
+        {
+            if (FD_ISSET(sk, &read_mask))
+            {
+                client_len = sizeof(client_addr);
+                recvfrom(sk, &received_packet, sizeof(received_packet), 0,
+                         (struct sockaddr *)&client_addr, &client_len);
+                int received_id = received_packet.error;
+                switch (received_id)
+                {
+                case NO_ERROR:
+                    // initalize packet_send
+                    packet_send.type = 2; // ECHO
+                    packet_send.id = received_id;
+                    memcpy(packet_send.name, name, NAME_LENGTH);
+                    return received_id;
+                    break;
+                case ID_NOT_FOUND:
+                    return -1;
+                    break;
+                case MAX_USERS_REACHED:
+                    return -2;
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+        else
+        {
+            printf("interactive_connect: timeout!");
+            // send CONNECT packet to server again
+            sendto(sk, (ConnectPacket *)&connect_packet, sizeof(connect_packet), 0,
+                   (struct sockaddr *)&interactive_pac_addr, sizeof(interactive_pac_addr));
+        }
+    }
 }
 
 int send_interactive_packet(int seq_num, float x, float y)
 {
-
     // initialize starting packet and echo_packet
     packet_send.seq = seq_num;
     packet_send.x = x;
@@ -48,20 +89,19 @@ int send_interactive_packet(int seq_num, float x, float y)
 
     // send init packet to rcv
     sendto(sk, (EchoPacket *)&packet_send, sizeof(packet_send), 0,
-           (struct sockaddr *)&echo_pac_addr, sizeof(echo_pac_addr));
+           (struct sockaddr *)&interactive_pac_addr, sizeof(interactive_pac_addr));
     printf("interactive packet is sent\n");
     return 0;
 }
 
 /**
  * receive an interactive packet with a certain sequence number
- * @return EchoPacket
+ * @return InteractivePacket
  */
-EchoPacket receive_interactive_packet()
+InteractivePacket receive_interactive_packet()
 {
-    float *coord = malloc(3 * sizeof(float));
     // initialize packet to be received
-    EchoPacket received_packet;
+    InteractivePacket received_packet;
 
     read_mask = mask;
 
@@ -113,9 +153,9 @@ void init_socket(const char *address, int port)
     memcpy(&server_fd, server_name_copy.h_addr_list[0], sizeof(server_fd));
 
     // send echo_pac_addr to be server address
-    echo_pac_addr.sin_family = AF_INET;
-    echo_pac_addr.sin_addr.s_addr = server_fd;
-    echo_pac_addr.sin_port = htons(port);
+    interactive_pac_addr.sin_family = AF_INET;
+    interactive_pac_addr.sin_addr.s_addr = server_fd;
+    interactive_pac_addr.sin_port = htons(port);
 
     FD_ZERO(&mask);
     FD_SET(sk, &mask);
