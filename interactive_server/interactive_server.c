@@ -123,7 +123,7 @@ int main(int argc, char **argv)
                     {
                         sendto(sk, &interactive, sizeof(interactive), 0,
                                (struct sockaddr *)&(users[i].socket_addr), sizeof(users[i].socket_addr));
-                        printf("sent an echo packet with name <%s> and id <%d>\n", users[i].name, users[i].id);
+                        // printf("sent an interactive packet with name <%s>, id <%d>, coord_x <%f>, coord_y <%f>\n", users[i].name, users[i].id, interactive.x, interactive.y);
                     }
                 }
                 else
