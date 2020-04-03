@@ -49,15 +49,15 @@ int interactive_connect(const char name[NAME_LENGTH])
                 client_len = sizeof(client_addr);
                 recvfrom(sk, &received_packet, sizeof(received_packet), 0,
                          (struct sockaddr *)&client_addr, &client_len);
-                int received_id = received_packet.error;
-                switch (received_id)
+                int received_error = received_packet.error;
+                switch (received_error)
                 {
                 case NO_ERROR:
                     // initalize packet_send
                     packet_send.type = 3; // INTERACTIVE
-                    packet_send.id = received_id;
+                    packet_send.id = received_packet.id;
                     memcpy(packet_send.name, name, NAME_LENGTH);
-                    return received_id;
+                    return received_packet.id;
                     break;
                 case ID_NOT_FOUND:
                     return -1;
