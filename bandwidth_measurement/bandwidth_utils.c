@@ -8,10 +8,12 @@
 struct timeval speed_to_interval(double speed)
 {
     struct timeval ret;
-    long usec = 1000000l * PACKET_SIZE * 8l / (speed * 1024 * 1024); 
-    
+//    long long usec = 1000000l * PACKET_SIZE * 8l / (speed * 1024 * 1024);
+    // we use 0.9536743164 for 1000000/1024/1024 to avoid long overflow
+    long usec = 0.9536743164 * PACKET_SIZE * 8l / (speed);
     ret.tv_sec = usec / 1000000;
     ret.tv_usec = usec % 1000000;
+    printf("utils usec is %d\n", ret.tv_usec);
     return ret;
 }
 
@@ -22,8 +24,8 @@ struct timeval speed_to_interval(double speed)
 double interval_to_speed(struct timeval interval, int num_packets)
 {
     long usec = interval.tv_usec + interval.tv_sec * 1000000l;
-    double ret = num_packets * PACKET_SIZE * 8.0/(usec/1000000.0);  
-    return ret / 1024.0 / 1024.0;
+    double ret = num_packets * PACKET_SIZE * 8.0/(usec);
+    return 0.9536743164 * ret;
 }
 
 /**
@@ -41,7 +43,7 @@ struct timeval diffTime(struct timeval left, struct timeval right)
     }
     if (diff.tv_sec < 0)
     {
-        printf("WARNING: diffTime has negative result, returning 0!\n");
+//        printf("WARNING: diffTime has negative result, returning 0!\n");
         diff.tv_sec = diff.tv_usec = 0;
     }
     return diff;
