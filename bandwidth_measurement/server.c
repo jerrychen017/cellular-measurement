@@ -127,16 +127,18 @@ void receive(int s, int predMode)
                     // burst just finished, send report
                     if (burstSeq != 0) {
                         tm_diff = diffTime(barrivals[burstSeq - 1], barrivals[bFirst]);
-                        calculated_speed = interval_to_speed(tm_diff, (burstSeq - 1) - bFirst);
-                        printf("Burst calculated speed of %.4f Mbps\n", calculated_speed);
-                        rate = calculated_speed;
-                        report_pkt.hdr.type = NETWORK_REPORT;
-                        report_pkt.hdr.rate = rate;
-                        report_pkt.hdr.seq_num = 0;
+                        if (burstSeq - 1 != bFirst) {
+                            calculated_speed = interval_to_speed(tm_diff, (burstSeq - 1) - bFirst);
+                            printf("Burst calculated speed of %.4f Mbps\n", calculated_speed);
+                            rate = calculated_speed;
+                            report_pkt.hdr.type = NETWORK_REPORT;
+                            report_pkt.hdr.rate = rate;
+                            report_pkt.hdr.seq_num = 0;
 
-                        sendto_dbg(s, &report_pkt, sizeof(report_pkt.hdr), 0,
-                            (struct sockaddr *) &from_addr, from_len);
-                        burstSeq = 0;
+                            sendto_dbg(s, &report_pkt, sizeof(report_pkt.hdr), 0,
+                                       (struct sockaddr *) &from_addr, from_len);
+                            burstSeq = 0;
+                        }
                     }
 
 
