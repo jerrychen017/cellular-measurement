@@ -7,7 +7,7 @@ LDFLAGS = -lpthread -lrt
 all: controller data_generator server 
 
 server: server.o bandwidth_utils.o sendto_dbg.o
-	$(CC) -o server server.o bandwidth_utils.o sendto_dbg.o
+	$(CC) -o bandwidth_server server.o bandwidth_utils.o sendto_dbg.o
 
 controller: controller_main.o controller.o bandwidth_utils.o sendto_dbg.o
 	$(CC) -o controller controller_main.o controller.o bandwidth_utils.o sendto_dbg.o
