@@ -15,8 +15,6 @@ static int server_fd;
 static fd_set mask;
 static fd_set read_mask;
 static int num;
-static struct timeval now;
-static struct timeval latency;
 
 static InteractivePacket packet_send;
 
@@ -88,7 +86,9 @@ int send_interactive_packet(int seq_num, float x, float y)
     packet_send.seq = seq_num;
     packet_send.x = x;
     packet_send.y = y;
-    gettimeofday(&packet_send.send_time, NULL);
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    memcpy(&packet_send.send_time, &now, sizeof(struct timeval));
     // send init packet to rcv
     sendto(sk, (EchoPacket *)&packet_send, sizeof(packet_send), 0,
            (struct sockaddr *)&interactive_pac_addr, sizeof(interactive_pac_addr));
@@ -115,10 +115,11 @@ InteractivePacket receive_interactive_packet()
             client_len = sizeof(client_addr);
             recvfrom(sk, &received_packet, sizeof(received_packet), 0,
                      (struct sockaddr *)&client_addr, &client_len);
-
+            struct timeval now;
+            struct timeval latency;
             gettimeofday(&now, NULL);
             latency = diffTime(now, received_packet.send_time);
-            received_packet.latency = latency.tv_usec / 1000 + latency.tv_sec * 1000;
+            received_packet.latency = latency.tv_sec * 1000 + ((double) latency.tv_usec) / 1000;
             return received_packet;
         }
     }

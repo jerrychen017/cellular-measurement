@@ -115,6 +115,7 @@ int main(int argc, char **argv)
                     interactive.seq = recvInteractive->seq;
                     interactive.x = recvInteractive->x;
                     interactive.y = recvInteractive->y;
+                    interactive.send_time = recvInteractive->send_time;
                     memcpy(interactive.name, recvInteractive->name, sizeof(NAME_LENGTH));
                     interactive.id = recvInteractive->id;
 
