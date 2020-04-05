@@ -34,7 +34,9 @@
 #define MAX_SPEED 10 // 10 Mbps
 #define START_SPEED 1.0 // 1.0 Mbps
 
-#define SOCK_PATH "my.local.socket.address"
+#define SOCK_PATH "/tmp/unix_socket"
+// #define SOCK_PATH "my.local.socket.address" termux
+
 enum NetworkPacketType
 {
     NETWORK_DATA,
