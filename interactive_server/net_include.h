@@ -23,8 +23,8 @@
 
 #define PORT 9008
 #define BUFF_SIZE 1000
-#define TIMEOUT_SEC 5
-#define TIMEOUT_USEC 0
+#define INTERACTIVE_TIMEOUT_SEC 3
+#define INTERACTIVE_TIMEOUT_USEC 0
 #define PACKET_SIZE 1400
 #define NUM_SEND 10
 #define NAME_LENGTH 100
@@ -83,6 +83,8 @@ typedef struct InteractivePacket
     float y;
     int id;
     char name[NAME_LENGTH];
+    struct timeval send_time;
+    double latency;
 } InteractivePacket;
 
 typedef struct ConnectPacket

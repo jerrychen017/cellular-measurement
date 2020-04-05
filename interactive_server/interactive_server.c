@@ -1,4 +1,4 @@
-#include "include/net_include.h"
+#include "net_include.h"
 
 static TimingPacket timing, *recvTiming;
 static ReportPacket report, *recvReport;
