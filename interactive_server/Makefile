@@ -9,7 +9,7 @@ all: interactive_server
 interactive_server: interactive_server.o 
 	$(CC) -o interactive_server interactive_server.o  
 
-interactive_server.o: interactive_server.c include/net_include.h 
+interactive_server.o: interactive_server.c net_include.h
 	$(CC) $(CFLAGS) interactive_server.c
 
 clean:

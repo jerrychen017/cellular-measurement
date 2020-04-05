@@ -68,8 +68,8 @@ int main(int argc, char **argv)
     for (;;)
     {
         read_mask = mask;
-        timeout.tv_sec = TIMEOUT_SEC;
-        timeout.tv_usec = TIMEOUT_USEC;
+        timeout.tv_sec = INTERACTIVE_TIMEOUT_SEC;
+        timeout.tv_usec = INTERACTIVE_TIMEOUT_USEC;
 
         num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
 
