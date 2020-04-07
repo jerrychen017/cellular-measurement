@@ -35,11 +35,6 @@
 *.i*86
 *.x86_64
 *.hex
-echo_client
-echo_server
-controller
-data_generator
-server
 
 # Debug files
 *.dSYM/
