@@ -1,5 +1,5 @@
 #include "controller.h"
-#include "logger.h"
+#include "feedbackLogger.h"
 
 int start_controller(const char* address, int port, bool android)
 {
@@ -156,7 +156,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                     }
 
                     sprintf(feedbackBuf, "adjusted rate to %.4f\n", reportedRate);
-                    sendMessage(feedbackBuf, strlen(feedbackBuf));
+                    sendFeedbackMessage(feedbackBuf);
 
                     pkt.rate = recv_pkt.hdr.rate >= MAX_SPEED ? MAX_SPEED : reportedRate;
                     send(s_data, &pkt, sizeof(pkt), 0);
@@ -171,7 +171,8 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
             else {  
                 if (burst_seq_send >= burst_seq_recv && burst_seq_recv != -1) {
                     printf("Error: burst trying to send seq not received %d\n", burst_seq_send);
-                    exit(1);
+                    continue;
+//                    exit(1);
                 }
 
                 printf("sending packet %d of burst\n", burst_seq_send);

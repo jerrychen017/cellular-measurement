@@ -13,7 +13,6 @@ struct timeval speed_to_interval(double speed)
     long usec = 0.9536743164 * PACKET_SIZE * 8l / (speed);
     ret.tv_sec = usec / 1000000;
     ret.tv_usec = usec % 1000000;
-    printf("utils usec is %d\n", ret.tv_usec);
     return ret;
 }
 
