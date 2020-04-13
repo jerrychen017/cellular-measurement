@@ -1,7 +1,10 @@
 #include "data_generator.h"
-
+static int s = -1;
 int start_generator(bool android) {
-    int s = setup_socket(android);
+
+    if (s == -1) {
+        s = setup_socket(android);
+    }
 
     // Select loop stuff
     fd_set mask;
@@ -29,6 +32,10 @@ int start_generator(bool android) {
 
     for (;;)
     {
+        if (stop_thread) {
+            return 0;
+        }
+
         read_mask = mask;
 
         num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
@@ -112,12 +119,12 @@ int start_generator(bool android) {
 
 int setup_socket(bool android)
 {
-    int s;
+    int sk;
     int len;
 
     struct sockaddr_un controller;
 
-    if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
+    if ((sk = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
     {
         perror("socket error\n");
         exit(1);
@@ -138,12 +145,12 @@ int setup_socket(bool android)
         len = strlen(controller.sun_path) + sizeof(controller.sun_family);
     }
 
-    if (connect(s, (struct sockaddr *)&controller, len) == -1)
+    if (connect(sk, (struct sockaddr *)&controller, len) == -1)
     {
         perror("connect error\n");
         exit(1);
     }
 
     printf("Connected.\n");
-    return s;
+    return sk;
 }

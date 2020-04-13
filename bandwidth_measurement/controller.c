@@ -66,6 +66,9 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
 
 
     for (;;) {
+        if (stop_thread) {
+            return;
+        }
         read_mask = mask;
         // printf("TIMEOUT %.4f\n", timeout.tv_usec / 1000.0);
         num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
@@ -324,6 +327,10 @@ struct sockaddr_in addrbyname(const char *hostname, int port)
 
 double estimate_change(double rate){
     return 0;
+}
+
+void stop_running_thread() {
+    stop_thread = true;
 }
 
 //if (reportedRate < rate)
