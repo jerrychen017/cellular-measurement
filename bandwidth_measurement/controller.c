@@ -268,11 +268,12 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
 
 int setup_data_socket(bool android)
 {
-    int s;
-    socklen_t len;
+    int s, s2;
+    socklen_t len, len2;
 
-    struct sockaddr_un addr1;
+    struct sockaddr_un addr1, addr2;
 
+    // Create socket that listens for connections
     if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
     {
         perror("socket error\n");
@@ -307,9 +308,15 @@ int setup_data_socket(bool android)
         exit(1);
     }
 
-    printf("Controller: Connected to data generator.\n");
+    // Received connection
+    if ((s2 = accept(s, (struct sockaddr *)&addr2, &len2)) == -1) {
+        perror("accept");
+        exit(1);
+    }
 
-    return s;
+    printf("Controller: Connected to data generator.\n");
+    close(s);
+    return s2;
 }
 
 int setup_server_socket(int port, bool android)
