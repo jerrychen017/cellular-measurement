@@ -3,7 +3,7 @@
 #include "net_include.h"
 #include "bandwidth_utils.h"
 
-#define DATA_SIZE (PACKET_SIZE - sizeof(data_header))
+#define DATA_SIZE (PACKET_SIZE - sizeof(packet_header))
 
 int setup_socket(bool android);
 
