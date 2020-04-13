@@ -70,7 +70,8 @@ void receive(int s, int predMode)
 
     // packet buffers
     data_packet data_pkt;
-    data_packet report_pkt;
+    packet_header report_pkt;
+    pacekt_header ack_pkt;
 
 
     FD_ZERO(&mask);
@@ -87,7 +88,29 @@ void receive(int s, int predMode)
             if (FD_ISSET(s, &read_mask)) {
                 len = recvfrom(s, &data_pkt, sizeof(data_packet), 0,
                         (struct sockaddr *) &from_addr, &from_len);
+                if (len < 0) {
+                    perror("socket error");
+                    exit(1);
+                }
                 printf("received %d bytes, seq %d at rate %f\n", len, data_pkt.hdr.seq_num, data_pkt.hdr.rate );
+
+                // When we receive a new START message, reset the server
+                if (data_pkt.hdr.type == NETWORK_START) {
+                    int seq = 0;
+                    int burstSeq = 0;
+                    int bFirst = 0;
+
+                    memset(received, 0, sizeof(received));
+                    memset(breceived, 0, sizeof(breceived));
+
+                    ack_pkt.type = NETWORK_START_ACK;
+                    ack_pkt.rate = 0;
+                    ack_pkt.seq_num = 0;
+
+                    sendto_dbg(s, &ack_pkt, sizeof(ack_pkt), 0,
+                            (struct sockaddr *) &from_addr, from_len);
+                }
+
 
                 double expectedRate = data_pkt.hdr.rate;
                 int currSeq = data_pkt.hdr.seq_num;
@@ -131,11 +154,11 @@ void receive(int s, int predMode)
                             calculated_speed = interval_to_speed(tm_diff, (burstSeq - 1) - bFirst);
                             printf("Burst calculated speed of %.4f Mbps\n", calculated_speed);
                             rate = calculated_speed;
-                            report_pkt.hdr.type = NETWORK_REPORT;
-                            report_pkt.hdr.rate = rate;
-                            report_pkt.hdr.seq_num = 0;
+                            report_pkt.type = NETWORK_REPORT;
+                            report_pkt.rate = rate;
+                            report_pkt.seq_num = 0;
 
-                            sendto_dbg(s, &report_pkt, sizeof(report_pkt.hdr), 0,
+                            sendto_dbg(s, &report_pkt, sizeof(report_pkt), 0,
                                        (struct sockaddr *) &from_addr, from_len);
                             burstSeq = 0;
                         }
