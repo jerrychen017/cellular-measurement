@@ -1,6 +1,6 @@
 #include "controller.h"
 #include "feedbackLogger.h"
-static kill_thread = false;
+static bool kill_thread = false;
 int start_controller(const char* address, int port, bool android)
 {
     kill_thread = false;
@@ -315,7 +315,7 @@ int setup_data_socket(bool android)
     }
 
     printf("Controller: Connected to data generator.\n");
-    close(s);
+    close(s); // close the original socket
     return s2;
 }
 
