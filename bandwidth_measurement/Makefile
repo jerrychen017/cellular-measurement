@@ -9,8 +9,8 @@ all: controller data_generator server
 server: server.o bandwidth_utils.o sendto_dbg.o
 	$(CC) -o bandwidth_server server.o bandwidth_utils.o sendto_dbg.o
 
-controller: controller_main.o controller.o bandwidth_utils.o logger.o sendto_dbg.o
-	$(CC) -o controller controller_main.o controller.o bandwidth_utils.o logger.o sendto_dbg.o
+controller: controller_main.o controller.o bandwidth_utils.o feedbackLogger.o sendto_dbg.o
+	$(CC) -o controller controller_main.o controller.o bandwidth_utils.o feedbackLogger.o sendto_dbg.o
 
 data_generator: data_generator_main.o data_generator.o bandwidth_utils.o
 	$(CC) -o data_generator data_generator_main.o data_generator.o bandwidth_utils.o
@@ -19,4 +19,4 @@ data_generator: data_generator_main.o data_generator.o bandwidth_utils.o
 	$(CC) $(CFLAGS) $*.c
 
 clean:
-	rm *.o server controller data_generator
+	rm *.o bandwidth_server controller data_generator

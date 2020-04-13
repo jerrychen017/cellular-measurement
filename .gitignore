@@ -35,6 +35,10 @@
 *.i*86
 *.x86_64
 *.hex
+controller
+data_generator
+server
+bandwidth_server
 
 # Debug files
 *.dSYM/
@@ -50,9 +54,6 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
-
-# example code from my other projects
-/ex1
 
 # IDEs 
 .vscode

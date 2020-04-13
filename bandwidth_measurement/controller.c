@@ -1,29 +1,73 @@
 #include "controller.h"
 #include "feedbackLogger.h"
 
+
 int start_controller(const char* address, int port, bool android)
 {
-    sendto_dbg_init(0);
-    
     int s_server = setup_server_socket(port, android);
     struct sockaddr_in send_addr = addrbyname(address, port);
-    int s_data = setup_data_socket(android);
 
-    startup(s_server, s_data, send_addr);
+    startup(s_server, send_addr);
+
+    int s_data = setup_data_socket(android);
+    typed_packet pkt;
+    pkt.type = LOCAL_START;
+    send(s_data, &pkt, sizeof(pkt.type), 0);
+
     control(s_server, s_data, send_addr);
 
     return 0;
 }
 
-/* Pings data generator to check that it is there and then starts data stream */
-void startup(int s_server, int s_data, struct sockaddr_in send_addr)
+/* 
+ * First pings server to reset it and wait for ack
+ */
+void startup(int s_server, struct sockaddr_in send_addr)
 {
-    typed_packet pkt;
-    pkt.type = LOCAL_START;
-    send(s_data, &pkt, sizeof(pkt.type), 0);
+    fd_set mask;
+    fd_set read_mask;
+    int num;
+    struct timeval timeout;
+
+    packet_header server_pkt;
+
+    FD_ZERO(&mask);
+    FD_SET(s_server, &mask);
+    while (1) {
+        // create NETWORK_START packet
+        server_pkt.type = NETWORK_START;
+        server_pkt.seq_num = 0;
+        server_pkt.rate = 0;
+
+        printf("Connecting to server...\n");
+        sendto(s_server, &server_pkt, sizeof(packet_header), 0, 
+                (struct sockaddr *) &send_addr, sizeof(send_addr));
+
+        // reset select loop
+        read_mask = mask;
+        timeout.tv_sec = TIMEOUT_SEC;
+        timeout.tv_usec = TIMEOUT_USEC;
+
+        num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
+        
+        if (num > 0) {
+            int len = recv(s_server, &server_pkt, sizeof(server_pkt), 0); 
+            if (len < 0) {
+                perror("socket error\n");
+                exit(1);
+            }
+
+            if (server_pkt.type == NETWORK_START_ACK) {
+                printf("connected!\n");
+                break;
+            }
+        }
+        else {
+            printf("timeout, trying again\n");
+        }
+    }
+
 }
-
-
 
 
 /* Main event loop */
@@ -62,7 +106,6 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
     timeout.tv_usec = TIMEOUT_USEC;
     expectedTimeout.tv_sec = 0;
     expectedTimeout.tv_usec = 0;
-
 
 
     for (;;) {
@@ -169,7 +212,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
         } else {
             // timeout
             if (burst_seq_send == -1) {
-                printf("timeout?\n");
+                printf("timeout while sending\n");
             }
             else {  
                 if (burst_seq_send >= burst_seq_recv && burst_seq_recv != -1) {
