@@ -1,10 +1,10 @@
 #include "data_generator.h"
-static int s = -1;
+static bool stop_thread = false;
 int start_generator(bool android) {
 
-    if (s == -1) {
-        s = setup_socket(android);
-    }
+    stop_thread = false;
+    int s = setup_socket(android);
+
 
     // Select loop stuff
     fd_set mask;
@@ -33,6 +33,7 @@ int start_generator(bool android) {
     for (;;)
     {
         if (stop_thread) {
+            close(s);
             return 0;
         }
 
@@ -46,7 +47,7 @@ int start_generator(bool android) {
                 int len = recv(s, &pkt, sizeof(typed_packet), 0);
                 if (len <= 0) {
                     printf("controller disconnected, exiting\n");
-                    exit(0);
+                    return 0;
                 }
                 if (pkt.type == LOCAL_START)
                 {
@@ -130,7 +131,7 @@ int setup_socket(bool android)
         exit(1);
     }
 
-    printf("Trying to connect...\n");
+    printf("Data Generator: Trying to connect...\n");
 
     if (android) {
         memset(&controller, 0, sizeof(controller)); // fix android connect error 
@@ -147,10 +148,14 @@ int setup_socket(bool android)
 
     if (connect(sk, (struct sockaddr *)&controller, len) == -1)
     {
-        perror("connect error\n");
+        perror("Data Generator: connect error\n");
         exit(1);
     }
 
-    printf("Connected.\n");
+    printf("Data Generator: Connected.\n");
     return sk;
+}
+
+void stop_data_generator_thread() {
+    stop_thread = true;
 }

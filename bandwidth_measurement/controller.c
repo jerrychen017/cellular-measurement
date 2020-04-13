@@ -1,10 +1,12 @@
 #include "controller.h"
 #include "feedbackLogger.h"
-
-
+static kill_thread = false;
 int start_controller(const char* address, int port, bool android)
 {
+    kill_thread = false;
     int s_server = setup_server_socket(port, android);
+
+
     struct sockaddr_in send_addr = addrbyname(address, port);
 
     startup(s_server, send_addr);
@@ -58,7 +60,7 @@ void startup(int s_server, struct sockaddr_in send_addr)
             }
 
             if (server_pkt.type == NETWORK_START_ACK) {
-                printf("connected!\n");
+                printf("Controller: connected to server!\n");
                 break;
             }
         }
@@ -109,7 +111,9 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
 
 
     for (;;) {
-        if (stop_thread) {
+        if (kill_thread) {
+            close(s_data);
+            close(s_server);
             return;
         }
         read_mask = mask;
@@ -123,7 +127,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                     printf("data stream ended, exiting...\n");
                     close(s_data);
                     close(s_server);
-                    exit(0);
+                    return;
                 }
 
                 // Start burst
@@ -264,10 +268,10 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
 
 int setup_data_socket(bool android)
 {
-    int s, s2;
-    socklen_t len, len2;
+    int s;
+    socklen_t len;
 
-    struct sockaddr_un addr1, addr2;
+    struct sockaddr_un addr1;
 
     if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
     {
@@ -275,7 +279,7 @@ int setup_data_socket(bool android)
         exit(1);
     }
 
-    printf("Trying to connect...\n");
+    printf("Controller: Trying to connect...\n");
 
     const char name[] = "\0my.local.socket.address"; // fix android socket error
     if (android) {
@@ -291,35 +295,21 @@ int setup_data_socket(bool android)
     }
    
     unlink(addr1.sun_path);
+    printf("Controller: before bind\n");
     if (bind(s, (struct sockaddr *)&addr1, len) == -1) {
         perror("bind");
         exit(1);
     }
+    printf("Controller: after bind\n");
 
     if (listen(s, 5) == -1) {
         perror("listen");
         exit(1);
     }
 
-    printf("Waiting for a connection...\n");
+    printf("Controller: Connected to data generator.\n");
 
-    if (android) {
-        const char name2[] = "\0my2.local.socket.address"; // fix android socket error
-        memcpy(addr2.sun_path, name2, sizeof(name2) - 1); // fix android socket error
-        len2 = strlen(addr2.sun_path) + sizeof(name); // fix android socket error
-        addr2.sun_path[0] = 0; // fix android socket error
-    } else {
-        len2 = sizeof(addr1);
-    }
-    
-    if ((s2 = accept(s, (struct sockaddr *)&addr2, &len2)) == -1) {
-        perror("accept");
-        exit(1);
-    }
-
-    printf("Connected.\n");
-
-    return s2;
+    return s;
 }
 
 int setup_server_socket(int port, bool android)
@@ -336,8 +326,7 @@ int setup_server_socket(int port, bool android)
     name.sin_addr.s_addr = INADDR_ANY;
     name.sin_port = htons(port);
 
-    // bind is done separaltely when running on the android side
-    if (!android && bind( s_recv, (struct sockaddr *)&name, sizeof(name) ) < 0 ) {
+    if (bind( s_recv, (struct sockaddr *)&name, sizeof(name) ) < 0 ) {
         perror("bind error\n");
         exit(1);
     }
@@ -372,9 +361,8 @@ double estimate_change(double rate){
     return 0;
 }
 
-void stop_running_thread() {
-    stop_thread = true;
+void stop_controller_thread() {
+    kill_thread = true;
 }
-
 //if (reportedRate < rate)
 // max (reportedRate - (rate - reportedRate), .5 * reportedRate)

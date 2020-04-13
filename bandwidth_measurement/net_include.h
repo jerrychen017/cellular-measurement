@@ -37,8 +37,6 @@
 #define SOCK_PATH "/tmp/unix_socket"
 // #define SOCK_PATH "my.local.socket.address" termux
 
-static bool stop_thread = false;
-
 enum NetworkPacketType
 {
     NETWORK_DATA,

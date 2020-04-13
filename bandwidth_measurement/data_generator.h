@@ -11,5 +11,6 @@ int setup_socket(bool android);
  * start_generator is called in android ndk to run data generator 
  */
 int start_generator(bool android);
+void stop_data_generator_thread();
 
 #endif

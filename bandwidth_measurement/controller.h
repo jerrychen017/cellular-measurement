@@ -17,6 +17,6 @@ struct sockaddr_in addrbyname(const char *hostname, int port);
  * start_controller is called in android ndk to run controller 
  */
 int start_controller(const char* address, int port, bool android);
-void stop_running_thread();
+void stop_controller_thread();
 
 #endif
