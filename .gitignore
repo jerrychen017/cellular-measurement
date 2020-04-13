@@ -38,6 +38,7 @@
 controller
 data_generator
 server
+bandwidth_server
 
 # Debug files
 *.dSYM/

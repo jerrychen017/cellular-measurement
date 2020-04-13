@@ -19,4 +19,4 @@ data_generator: data_generator_main.o data_generator.o bandwidth_utils.o
 	$(CC) $(CFLAGS) $*.c
 
 clean:
-	rm *.o server controller data_generator
+	rm *.o bandwidth_server controller data_generator
