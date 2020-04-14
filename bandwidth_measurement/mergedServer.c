@@ -19,7 +19,7 @@ int main(int argc, char **argv)
 {
 
     // argc error checking
-    if (argc != 4)
+    if (argc != 5)
     {
         printf("Usage: echo_server <portBandwidth> <portInteractive> <EWMA/RunningAvg> <max-num-users> \n");
         exit(0);
