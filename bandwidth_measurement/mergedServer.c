@@ -33,7 +33,7 @@ int main(int argc, char **argv)
 
     // Bandwidth application socket
     int s_bw = setup_server_socket(portBandwidth);
-    int s_inter = setup_server_socket(s_inter);
+    int s_inter = setup_server_socket(portInteractive);
     receive(s_bw, s_inter, predMode, max_num_users);
 
     return 0;
