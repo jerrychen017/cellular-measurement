@@ -129,6 +129,10 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                     close(s_server);
                     return;
                 }
+                if (len != sizeof(data_pkt.data)) {
+                    printf("ipc error, size not correct");
+                    exit(1);
+                }
 
                 // Start burst
                 if (seq % INTERVAL_SIZE == INTERVAL_SIZE - BURST_SIZE) {
