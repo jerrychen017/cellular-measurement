@@ -1,5 +1,6 @@
 #ifndef BANDWIDTH_NET_INCLUDE_H
 #define BANDWIDTH_NET_INCLUDE_H
+
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -80,7 +81,6 @@ typedef struct data_packet_
     packet_header hdr;
     char data[PACKET_SIZE - sizeof(packet_header)];
 } data_packet;
-#endif
 
 enum PacketType
 {
@@ -156,3 +156,4 @@ typedef struct User
     struct sockaddr_in socket_addr;
 } User;
 
+#endif
