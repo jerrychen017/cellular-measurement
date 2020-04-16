@@ -205,12 +205,15 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                         }
                     }
 
-                    sprintf(feedbackBuf, "adjusted rate to %.4f\n", reportedRate);
-                    sendFeedbackMessage(feedbackBuf);
 
                     pkt.rate = recv_pkt.hdr.rate >= MAX_SPEED ? MAX_SPEED : reportedRate;
+
                     send(s_data, &pkt, sizeof(pkt), 0);
                     rate = pkt.rate;
+
+                    sprintf(feedbackBuf, "%.4f", rate);
+                    sendFeedbackMessage(feedbackBuf);
+
                 }
             }
         } else {

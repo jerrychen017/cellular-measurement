@@ -58,9 +58,9 @@ int start_generator(bool android) {
                 else if (pkt.type == LOCAL_CONTROL)
 		        {
                     // adjust speed n
-                    printf("received LOCAL_CONTROL message\n");
+//                    printf("received LOCAL_CONTROL message\n");
                     speed = pkt.rate;
-                    printf("SPEED: %f\n", speed);
+//                    printf("SPEED: %f\n", speed);
                     if (speed <= 0) {
                         perror("negative speed &\n");
                         exit(1);
@@ -131,7 +131,6 @@ int setup_socket(bool android)
         exit(1);
     }
 
-    printf("Data Generator: Trying to connect...\n");
 
     if (android) {
         memset(&controller, 0, sizeof(controller)); // fix android connect error 
@@ -146,10 +145,19 @@ int setup_socket(bool android)
         len = strlen(controller.sun_path) + sizeof(controller.sun_family);
     }
 
-    if (connect(sk, (struct sockaddr *)&controller, len) == -1)
-    {
-        perror("Data Generator: connect error\n");
-        exit(1);
+
+    struct timeval timeout;
+    while (true) {
+        printf("Data Generator: Trying to connect...\n");
+
+        if (connect(sk, (struct sockaddr *) &controller, len) != -1) {
+            break;
+        }
+        timeout.tv_sec = 1;
+        timeout.tv_usec = 0;
+
+        // Try again after 1 second
+        select(0, NULL, NULL, NULL, &timeout);
     }
 
     printf("Data Generator: Connected.\n");
