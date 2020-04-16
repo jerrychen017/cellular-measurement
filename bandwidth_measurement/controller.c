@@ -158,8 +158,14 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                     // After receiving half of the packets, we can start sending
                     if (burst_seq_recv == BURST_SIZE / 2) {
                         burst_seq_send = 0;
+
+                        sendto_dbg(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
+                                   (struct sockaddr *) &send_addr, sizeof(send_addr));
+                        burst_seq_send++;
+
                         gettimeofday(&tmPrev, NULL);
-                        timeout = speed_to_interval(0);
+                        expectedTimeout = speed_to_interval(rate * BURST_FACTOR);
+                        timeout = expectedTimeout;
                     }
 
                     burst_seq_recv++;
@@ -250,7 +256,6 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
 
                 expectedTimeout = diffTime(baseTimeout, tmExtra);
                 timeout = expectedTimeout;
-                // printf("EXPECTEDTIMEOUT %.4f \n", expectedTimeout.tv_usec / 1000.0);
                 tmPrev = tmNow;
                 // We are done
                 if (burst_seq_send == BURST_SIZE) {

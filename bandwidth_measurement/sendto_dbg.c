@@ -18,7 +18,7 @@ int sendto_dbg(int s, void *buf, int len, int flags,
     if (mySeq >= BURST_SIZE - 1) {
         double rate = interval_to_speed(diffTime(sendTimes[mySeq % BURST_SIZE],
                 sendTimes[(mySeq + 1) % BURST_SIZE]), BURST_SIZE - 1);
-        printf("Actual speed %.4f\n", rate);
+//        printf("Actual speed %.4f\n", rate);
     }
     mySeq++;
 

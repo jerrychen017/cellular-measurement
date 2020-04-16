@@ -57,10 +57,8 @@ int start_generator(bool android) {
                 }
                 else if (pkt.type == LOCAL_CONTROL)
 		        {
-                    // adjust speed n
-//                    printf("received LOCAL_CONTROL message\n");
+                    // adjust speed
                     speed = pkt.rate;
-//                    printf("SPEED: %f\n", speed);
                     if (speed <= 0) {
                         perror("negative speed &\n");
                         exit(1);
