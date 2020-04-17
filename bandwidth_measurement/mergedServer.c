@@ -131,6 +131,7 @@ void receive(int s_bw, int s_inter, int predMode, int max_num_users)
 
                     sendto_dbg(s_bw, &ack_pkt, sizeof(packet_header), 0,
                             (struct sockaddr *) &from_addr, from_len);
+                    continue;
                 }
 
 
