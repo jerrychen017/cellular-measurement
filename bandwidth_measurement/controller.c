@@ -78,7 +78,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
     static char feedbackBuf[256];
 
     struct sockaddr_in server_addr;
-    socklen_t server_addr_len;
+    socklen_t server_addr_len = sizeof(server_addr);
 
     fd_set mask;
     fd_set read_mask;
@@ -93,6 +93,9 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
     
     data_packet data_pkt;
     data_packet recv_pkt;
+
+    typed_packet control_pkt;
+    memset(&control_pkt, 0, sizeof(typed_packet));
 
     // Variables to deal with burst
     int burst_seq_recv = -1; // index of burst we have received from data
@@ -201,9 +204,9 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                 // Check if we have a decrepancy in our sending rates at sender and receiver
                 if(recv_pkt.hdr.type == NETWORK_REPORT){
                     double reportedRate = 0.0;
-                    typed_packet pkt;
-                    pkt.type = LOCAL_CONTROL;
                     reportedRate = recv_pkt.hdr.rate;
+
+
                     if (reportedRate < rate){
                         // set new rate to the max of less than reported rate to flush queue
                         double newRate = reportedRate - .5 * (rate - reportedRate);
@@ -215,11 +218,12 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                         }
                     }
 
+                    rate = recv_pkt.hdr.rate >= MAX_SPEED ? MAX_SPEED : reportedRate;
 
-                    pkt.rate = recv_pkt.hdr.rate >= MAX_SPEED ? MAX_SPEED : reportedRate;
+                    control_pkt.rate = rate;
+                    control_pkt.type = LOCAL_CONTROL;
 
-                    send(s_data, &pkt, sizeof(pkt), 0);
-                    rate = pkt.rate;
+                    send(s_data, &control_pkt, sizeof(control_pkt), 0);
 
                     sprintf(feedbackBuf, "%.4f", rate);
                     sendFeedbackMessage(feedbackBuf);
@@ -321,6 +325,7 @@ int setup_data_socket(bool android)
     }
 
     // Received connection
+    len2 = sizeof(addr2);
     if ((s2 = accept(s, (struct sockaddr *)&addr2, &len2)) == -1) {
         perror("accept");
         exit(1);
