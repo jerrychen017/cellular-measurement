@@ -221,7 +221,9 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                 // Check if we have a decrepancy in our sending rates at sender and receiver
                 if(recv_pkt.hdr.type == NETWORK_REPORT || recv_pkt.hdr.type == NETWORK_BURST_REPORT) {
                     double reportedRate = recv_pkt.hdr.rate;
-                    double newRate = 0.0;
+                    double newRate;
+
+                    printf("feedback from %d on cur seq %d\n", seq, recv_pkt.hdr.seq_num);
                     if (recv_pkt.hdr.type == NETWORK_BURST_REPORT) {
                         newRate = 0.95 * reportedRate;
                     }
