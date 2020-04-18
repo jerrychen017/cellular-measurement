@@ -55,6 +55,7 @@ enum NetworkPacketType
     NETWORK_DATA,
     NETWORK_BURST,  // data packet that is sent at a higher rate to probe for bandwidth
     NETWORK_REPORT,
+    NETWORK_BURST_REPORT,
     NETWORK_START,
     NETWORK_START_ACK
 };

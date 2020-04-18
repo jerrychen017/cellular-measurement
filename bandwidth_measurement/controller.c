@@ -219,23 +219,25 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                 }
 
                 // Check if we have a decrepancy in our sending rates at sender and receiver
-                if(recv_pkt.hdr.type == NETWORK_REPORT){
-                    double reportedRate = 0.0;
-                    reportedRate = recv_pkt.hdr.rate;
-
-
-                    if (reportedRate < rate){
-                        // set new rate to the max of less than reported rate to flush queue
-                        double newRate = reportedRate - .5 * (rate - reportedRate);
-                        if(newRate < 0.75*reportedRate){
-                            reportedRate = 0.75*reportedRate;
+                if(recv_pkt.hdr.type == NETWORK_REPORT || recv_pkt.hdr.type == NETWORK_BURST_REPORT) {
+                    double reportedRate = recv_pkt.hdr.rate;
+                    double newRate = 0.0;
+                    if (recv_pkt.hdr.type == NETWORK_BURST_REPORT) {
+                        newRate = 0.95 * reportedRate;
+                    }
+                    else {
+                        if (reportedRate >= rate) {
+                            continue;
                         }
-                        else{
-                            reportedRate = newRate;
+                        // set new rate to the max of less than reported rate to flush queue
+                        newRate = reportedRate - .5 * (rate - reportedRate);
+                        if(newRate < 0.75*reportedRate) {
+                            newRate = 0.75*reportedRate;
                         }
                     }
 
-                    rate = recv_pkt.hdr.rate >= MAX_SPEED ? MAX_SPEED : reportedRate;
+
+                    rate = recv_pkt.hdr.rate >= MAX_SPEED ? MAX_SPEED : newRate;
 
                     control_pkt.rate = rate;
                     control_pkt.type = LOCAL_CONTROL;

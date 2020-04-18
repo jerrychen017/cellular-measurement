@@ -183,7 +183,7 @@ void receive(int s_bw, int s_inter, int predMode, int max_num_users)
                         if (burstSeq - 1 != bFirst) {
                             calculated_speed = interval_to_speed(tm_diff, (burstSeq - 1) - bFirst);
                             printf("Burst calculated speed of %.4f Mbps\n", calculated_speed);
-                            report_pkt.type = NETWORK_REPORT;
+                            report_pkt.type = NETWORK_BURST_REPORT;
                             report_pkt.rate = calculated_speed;
                             report_pkt.seq_num = 0;
 
