@@ -1,5 +1,8 @@
 #include "controller.h"
 #include "feedbackLogger.h"
+#include "net_utils.h"
+
+
 static bool kill_thread = false;
 int start_controller(const char* address, int port, bool android)
 {
@@ -11,7 +14,11 @@ int start_controller(const char* address, int port, bool android)
 
     startup(s_server, send_addr);
 
-    int s_data = setup_data_socket(android);
+    socklen_t my_len, datagen_len;
+    struct sockaddr_un my_addr = get_datagen_addr(android, &my_len);
+    struct sockaddr_un datagen_addr = get_controller_addr(android, &datagen_len);
+    int s_data = setup_unix_socket(&datagen_addr, &my_addr, datagen_len, my_len);
+
     typed_packet pkt;
     pkt.type = LOCAL_START;
     send(s_data, &pkt, sizeof(pkt.type), 0);
@@ -282,60 +289,6 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
     }
 }
 
-int setup_data_socket(bool android)
-{
-    int s, s2;
-    socklen_t len, len2;
-
-    struct sockaddr_un addr1, addr2;
-
-    // Create socket that listens for connections
-    if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
-    {
-        perror("socket error\n");
-        exit(1);
-    }
-
-    printf("Controller: Trying to connect...\n");
-
-    const char name[] = "\0my.local.socket.address"; // fix android socket error
-    if (android) {
-        memset(&addr1, 0, sizeof(addr1)); // fix android socket error
-        addr1.sun_family = AF_UNIX;
-        memcpy(addr1.sun_path, name, sizeof(name) - 1); // fix android socket error
-        len = strlen(addr1.sun_path) + sizeof(name); // fix android socket error
-        addr1.sun_path[0] = 0; // fix android socket error
-    } else {
-        addr1.sun_family = AF_UNIX;
-        strcpy(addr1.sun_path, SOCK_PATH);
-        len = strlen(addr1.sun_path) + sizeof(addr1.sun_family);
-    }
-   
-    unlink(addr1.sun_path);
-    printf("Controller: before bind\n");
-    if (bind(s, (struct sockaddr *)&addr1, len) == -1) {
-        perror("bind");
-        exit(1);
-    }
-    printf("Controller: after bind\n");
-
-    if (listen(s, 5) == -1) {
-        perror("listen");
-        exit(1);
-    }
-
-    // Received connection
-    len2 = sizeof(addr2);
-    if ((s2 = accept(s, (struct sockaddr *)&addr2, &len2)) == -1) {
-        perror("accept");
-        exit(1);
-    }
-
-    printf("Controller: Connected to data generator.\n");
-    close(s); // close the original socket
-    return s2;
-}
-
 int setup_server_socket(int port, bool android)
 {
     struct sockaddr_in name;
@@ -358,28 +311,7 @@ int setup_server_socket(int port, bool android)
     return s_recv;
 }
 
-struct sockaddr_in addrbyname(const char *hostname, int port)
-{
-    int host_num;
-    struct hostent h_ent, *p_h_ent;
 
-    struct sockaddr_in addr;
-
-    p_h_ent = gethostbyname(hostname);
-    if (p_h_ent == NULL) {
-        printf("gethostbyname error.\n");
-        exit(1);
-    }
-
-    memcpy( &h_ent, p_h_ent, sizeof(h_ent));
-    memcpy( &host_num, h_ent.h_addr_list[0], sizeof(host_num) );
-
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = host_num;
-    addr.sin_port = htons(port);
-
-    return addr;
-}
 
 double estimate_change(double rate){
     return 0;

@@ -35,8 +35,11 @@
 #define MAX_SPEED 10 // 10 Mbps
 #define START_SPEED 1.0 // 1.0 Mbps
 
-#define SOCK_PATH "/tmp/unix_socket"
-// #define SOCK_PATH "my.local.socket.address" termux
+#define SOCK_CONTROLER "/tmp/controller"
+#define SOCK_DATAGEN "/tmp/datagenerator"
+
+#define ANDROID_SOCK_DATAGEN "\0local.datagenerator"
+#define ANDROID_SOCK_CONTROLLER "\0local.controller"
 
 // Constants for interactive application
 #define PORT 9008

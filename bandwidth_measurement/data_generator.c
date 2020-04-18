@@ -1,10 +1,15 @@
 #include "data_generator.h"
+#include "net_utils.h"
+
 static bool stop_thread = false;
 int start_generator(bool android) {
 
     stop_thread = false;
-    int s = setup_socket(android);
 
+    socklen_t my_len, send_len;
+    struct sockaddr_un my_addr = get_datagen_addr(android, &my_len);
+    struct sockaddr_un send_addr = get_controller_addr(android, &send_len);
+    int s = setup_unix_socket(&send_addr, &my_addr, send_len, my_len);
 
     // Select loop stuff
     fd_set mask;
@@ -113,53 +118,6 @@ int start_generator(bool android) {
      }
 
      return 0;
-}
-
-
-int setup_socket(bool android)
-{
-    int sk;
-    int len;
-
-    struct sockaddr_un controller;
-
-    if ((sk = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
-    {
-        perror("socket error\n");
-        exit(1);
-    }
-
-
-    if (android) {
-        memset(&controller, 0, sizeof(controller)); // fix android connect error 
-        controller.sun_family = AF_UNIX;
-        const char name[] = "\0my.local.socket.address"; // fix android connect error 
-        memcpy(controller.sun_path, name, sizeof(name) - 1); // fix android connect error 
-        len = strlen(controller.sun_path) + sizeof(name); // fix android connect error 
-        controller.sun_path[0] = 0; // fix android connect error 
-    } else {
-        controller.sun_family = AF_UNIX;
-        strcpy(controller.sun_path, SOCK_PATH);
-        len = strlen(controller.sun_path) + sizeof(controller.sun_family);
-    }
-
-
-    struct timeval timeout;
-    while (true) {
-        printf("Data Generator: Trying to connect...\n");
-
-        if (connect(sk, (struct sockaddr *) &controller, len) != -1) {
-            break;
-        }
-        timeout.tv_sec = 1;
-        timeout.tv_usec = 0;
-
-        // Try again after 1 second
-        select(0, NULL, NULL, NULL, &timeout);
-    }
-
-    printf("Data Generator: Connected.\n");
-    return sk;
 }
 
 void stop_data_generator_thread() {

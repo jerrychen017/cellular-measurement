@@ -6,17 +6,14 @@ LDFLAGS = -lpthread -lrt
 
 all: controller data_generator mergedServer
 
-# server: server.o bandwidth_utils.o sendto_dbg.o
-# 	$(CC) -o server server.o bandwidth_utils.o sendto_dbg.o
-
 mergedServer: mergedServer.o bandwidth_utils.o sendto_dbg.o
 	$(CC) -o server mergedServer.o bandwidth_utils.o sendto_dbg.o
 
-controller: controller_main.o controller.o bandwidth_utils.o feedbackLogger.o sendto_dbg.o
-	$(CC) -o controller controller_main.o controller.o bandwidth_utils.o feedbackLogger.o sendto_dbg.o
+controller: controller_main.o controller.o bandwidth_utils.o net_utils.o feedbackLogger.o sendto_dbg.o
+	$(CC) -o controller controller_main.o controller.o bandwidth_utils.o net_utils.o feedbackLogger.o sendto_dbg.o
 
-data_generator: data_generator_main.o data_generator.o bandwidth_utils.o
-	$(CC) -o data_generator data_generator_main.o data_generator.o bandwidth_utils.o
+data_generator: data_generator_main.o data_generator.o bandwidth_utils.o net_utils.o
+	$(CC) -o data_generator data_generator_main.o data_generator.o bandwidth_utils.o net_utils.o
 
 %.o:    %.c
 	$(CC) $(CFLAGS) $*.c

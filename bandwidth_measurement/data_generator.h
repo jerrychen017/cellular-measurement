@@ -5,8 +5,6 @@
 
 #define DATA_SIZE (PACKET_SIZE - sizeof(packet_header))
 
-int setup_socket(bool android);
-
 /**
  * start_generator is called in android ndk to run data generator 
  */
