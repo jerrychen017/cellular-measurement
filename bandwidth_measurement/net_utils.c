@@ -33,7 +33,7 @@ struct sockaddr_un get_controller_addr(bool android, socklen_t *len)
         addr.sun_path[0] = 0; // fix android socket error
     } else {
         addr.sun_family = AF_UNIX;
-        strcpy(addr.sun_path, SOCK_CONTROLER);
+        strcpy(addr.sun_path, SOCK_CONTROLLER);
         *len = strlen(addr.sun_path) + sizeof(addr.sun_family);
     }
 
@@ -41,24 +41,18 @@ struct sockaddr_un get_controller_addr(bool android, socklen_t *len)
 }
 
 /* Setup unix socket, binds/connects to addr */
-int setup_unix_socket(struct sockaddr_un *send_addr, struct sockaddr_un *recv_addr,
-        socklen_t send_len, socklen_t recv_len)
+int setup_unix_socket(struct sockaddr_un addr, socklen_t len)
 {
     int s;
-    struct sockaddr_un controller;
 
     if ((s = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1) {
         perror("socket error\n");
         exit(1);
     }
 
-    if (bind(s, (struct sockaddr *) &recv_addr, send_len) == -1) {
+    unlink(addr.sun_path);
+    if (bind(s, (struct sockaddr *) &addr, len) == -1) {
         perror("bind");
-        exit(1);
-    }
-
-    if (connect(s, (struct sockaddr *) &send_addr, recv_len) == -1) {
-        perror("connect");
         exit(1);
     }
 

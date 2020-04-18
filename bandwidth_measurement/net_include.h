@@ -35,7 +35,7 @@
 #define MAX_SPEED 10 // 10 Mbps
 #define START_SPEED 1.0 // 1.0 Mbps
 
-#define SOCK_CONTROLER "/tmp/controller"
+#define SOCK_CONTROLLER "/tmp/controller"
 #define SOCK_DATAGEN "/tmp/datagenerator"
 
 #define ANDROID_SOCK_DATAGEN "\0local.datagenerator"

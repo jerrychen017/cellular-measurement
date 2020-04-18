@@ -2,6 +2,8 @@
 #include "feedbackLogger.h"
 #include "net_utils.h"
 
+void startup(int s_server, struct sockaddr_in send_addr);
+void control(int s_server, int s_data, struct sockaddr_in send_addr);
 
 static bool kill_thread = false;
 int start_controller(const char* address, int port, bool android)
@@ -14,10 +16,18 @@ int start_controller(const char* address, int port, bool android)
 
     startup(s_server, send_addr);
 
+    // setup unix socket
     socklen_t my_len, datagen_len;
-    struct sockaddr_un my_addr = get_datagen_addr(android, &my_len);
-    struct sockaddr_un datagen_addr = get_controller_addr(android, &datagen_len);
-    int s_data = setup_unix_socket(&datagen_addr, &my_addr, datagen_len, my_len);
+    struct sockaddr_un my_addr = get_controller_addr(android, &my_len);
+    struct sockaddr_un datagen_addr = get_datagen_addr(android, &datagen_len);
+    int s_data = setup_unix_socket(my_addr, my_len);
+
+    if (connect(s_data, (struct sockaddr *) &datagen_addr, datagen_len) < 0) {
+        perror(NULL);
+        printf("connect error, datagen not running \n");
+        exit(1);
+    }
+
 
     typed_packet pkt;
     pkt.type = LOCAL_START;

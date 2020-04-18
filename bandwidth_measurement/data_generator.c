@@ -9,7 +9,7 @@ int start_generator(bool android) {
     socklen_t my_len, send_len;
     struct sockaddr_un my_addr = get_datagen_addr(android, &my_len);
     struct sockaddr_un send_addr = get_controller_addr(android, &send_len);
-    int s = setup_unix_socket(&send_addr, &my_addr, send_len, my_len);
+    int s = setup_unix_socket(my_addr, my_len);
 
     // Select loop stuff
     fd_set mask;
@@ -84,7 +84,8 @@ int start_generator(bool android) {
             }
             else
             {
-                send(s, buffer, DATA_SIZE , 0);
+                sendto(s, buffer, DATA_SIZE , 0,
+                    (struct sockaddr *) &send_addr, send_len);
 
                 gettimeofday(&tmNow, NULL);
                 if (seq != 0) {
