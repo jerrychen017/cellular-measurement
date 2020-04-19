@@ -34,6 +34,7 @@
 #define MIN_SPEED 0.1   // 100 Kbps
 #define MAX_SPEED 10 // 10 Mbps
 #define START_SPEED 1.0 // 1.0 Mbps
+#define GRACE_PERIOD 3 // number of tolerated delayed packets
 
 #define SOCK_CONTROLLER "/tmp/controller"
 #define SOCK_DATAGEN "/tmp/datagenerator"

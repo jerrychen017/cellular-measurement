@@ -64,6 +64,8 @@ void receive(int s_bw, int s_inter, int predMode, int max_num_users)
     double ewmaRate = 0;
     // only use measurements after we have received WINDOW_SIZE packets at current rate
     int numAtCurRate = 0;
+    // number of packets below threshold
+    int numBelowThreshold = 0; 
 
     // next expected seq number
     int seq = 0;
@@ -221,12 +223,20 @@ void receive(int s_bw, int s_inter, int predMode, int max_num_users)
 
                     // Send report packet if we are under 90 percent of expected rate
                     if (calcRate <= THRESHOLD * expectedRate) {
-                        report_pkt.type = NETWORK_REPORT;
-                        report_pkt.rate = calcRate;
-                        report_pkt.seq_num = currSeq;
-                        sendto_dbg(s_bw, &report_pkt, sizeof(report_pkt), 0,
+                        if (numBelowThreshold == GRACE_PERIOD) {
+                            report_pkt.type = NETWORK_REPORT;
+                            report_pkt.rate = calcRate;
+                            report_pkt.seq_num = currSeq;
+                            sendto_dbg(s_bw, &report_pkt, sizeof(report_pkt), 0,
                                    (struct sockaddr *) &from_addr, from_len);
-                        printf("Computed rate %.4f below threshold, actual rate %.4f\n", calcRate, expectedRate);
+                            printf("Computed rate %.4f below threshold, actual rate %.4f\n", calcRate, expectedRate);
+                            numBelowThreshold = 0; 
+                        } else {
+                            numBelowThreshold++; 
+                        }
+                    } else {
+                        // reset numBelowThreshold when received non-delayed packet within the grace period
+                        numBelowThreshold = 0; 
                     }
                 }
 
