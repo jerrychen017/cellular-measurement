@@ -236,6 +236,9 @@ void receive(int s_bw, int s_inter, int predMode, int max_num_users)
                         }
                     } else {
                         // reset numBelowThreshold when received non-delayed packet within the grace period
+                        if (numBelowThreshold != 0) {
+                            printf("num threshold is %d\n", numBelowThreshold);
+                        }
                         numBelowThreshold = 0; 
                     }
                 }
