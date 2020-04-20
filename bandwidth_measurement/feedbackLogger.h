@@ -11,6 +11,7 @@
 #define EXTERNC
 #endif
 EXTERNC void sendFeedbackMessage(char* str);
+EXTERNC void sendFeedbackBandwidth(double d);
 #undef EXTERNC
 
 

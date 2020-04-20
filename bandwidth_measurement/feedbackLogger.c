@@ -5,3 +5,8 @@ void sendFeedbackMessage(char* str)
 {
     printf("%s\n", str);
 }
+
+void sendFeedbackBandwidth(double d)
+{
+    printf("%f\n", d);
+}
