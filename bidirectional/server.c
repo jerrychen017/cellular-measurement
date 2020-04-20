@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     data_packet data_pkt;
     packet_header ack_pkt;
     pthread_t tid; // thread id 
-    struct arg send_args; // arguments to be passed to send_bandwidth
+    struct send_bandwidth_args send_args; // arguments to be passed to send_bandwidth
 
     for (;;) {
         read_mask = mask;

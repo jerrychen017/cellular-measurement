@@ -2,8 +2,9 @@
 #include "net_utils.h"
 
 static bool stop_thread = false;
-int start_generator(bool android) {
-
+int start_generator(void * args) {
+    struct data_generator_args * received_args = (struct data_generator_args *) args; 
+    bool android = received_args->android; 
     stop_thread = false;
 
     socklen_t my_len, send_len;

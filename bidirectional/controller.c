@@ -6,12 +6,11 @@ void startup(int s_server, struct sockaddr_in send_addr);
 void control(int s_server, int s_data, struct sockaddr_in send_addr);
 
 static bool kill_thread = false;
-int start_controller(const char* address, int port, bool android)
+int start_controller(bool android, const char* address, int port, struct sockaddr_in sk_addr)
 {
     kill_thread = false;
+    
     int s_server = setup_server_socket(port, android);
-
-
     struct sockaddr_in send_addr = addrbyname(address, port);
 
     startup(s_server, send_addr);
