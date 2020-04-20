@@ -246,7 +246,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
 
                     send(s_data, &control_pkt, sizeof(control_pkt), 0);
 
-                    sendFeedbackDouble(rate); // send rate as a double to Java through JNI
+                    sendFeedbackBandwidth(rate); // send rate as a double to Java through JNI
 
                 }
             }
