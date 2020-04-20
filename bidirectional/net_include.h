@@ -14,6 +14,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/un.h>
+#include <pthread.h>
 #include <unistd.h>
 #include <time.h>
 #include <float.h>
@@ -58,7 +59,9 @@ enum NetworkPacketType
     NETWORK_REPORT,
     NETWORK_BURST_REPORT,
     NETWORK_START,
-    NETWORK_START_ACK
+    NETWORK_START_ACK, 
+    NETWORK_STOP, 
+    NETWORK_BUSY
 };
 
 enum LocalPacketType
