@@ -2,9 +2,14 @@
 #include "net_utils.h"
 
 static bool stop_thread = false;
-void * start_generator(void * args) {
-    struct data_generator_args * received_args = (struct data_generator_args *) args; 
-    bool android = received_args->android; 
+void * start_generator_pthread(void * args) {
+    struct data_generator_args * received_args = (struct data_generator_args *) args;
+    bool android = received_args->android;
+    start_generator(android);
+    return NULL;
+}
+void start_generator(bool android) {
+
     stop_thread = false;
 
     socklen_t my_len, send_len;
@@ -41,7 +46,7 @@ void * start_generator(void * args) {
     {
         if (stop_thread) {
             close(s);
-            return 0;
+            return;
         }
 
         read_mask = mask;
@@ -54,7 +59,7 @@ void * start_generator(void * args) {
                 int len = recv(s, &pkt, sizeof(typed_packet), 0);
                 if (len <= 0) {
                     printf("controller disconnected, exiting\n");
-                    return 0;
+                    return;
                 }
                 if (pkt.type == LOCAL_START)
                 {
@@ -119,8 +124,7 @@ void * start_generator(void * args) {
         }
 
      }
-
-     return NULL;
+     return;
 }
 
 void stop_data_generator_thread() {

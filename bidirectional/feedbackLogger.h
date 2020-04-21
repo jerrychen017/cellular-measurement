@@ -11,6 +11,8 @@
 #define EXTERNC
 #endif
 EXTERNC void sendFeedbackMessage(char* str);
+EXTERNC void sendFeedbackBandwidth(double d);
+EXTERNC void javaStartBandwidth();
 #undef EXTERNC
 
 

@@ -5,9 +5,9 @@
 
 void * send_bandwidth(void * args) {
     struct send_bandwidth_args * recv_args = (struct send_bandwidth_args *) args;
-    int ret; 
+    int ret;
     pthread_t tid; // thread id for data generator
-    struct data_generator_args send_args; 
+    struct data_generator_args send_args;
 
     // port
     int port = recv_args->port;
@@ -16,8 +16,8 @@ void * send_bandwidth(void * args) {
     // address
     struct sockaddr_in addr = recv_args->addr;
 
-    send_args.android = recv_args->android; 
-    pthread_create(&tid, NULL, &start_generator, (void *)&send_args);
+    send_args.android = recv_args->android;
+    pthread_create(&tid, NULL, &start_generator_pthread, (void *)&send_args);
 
     ret = start_controller(recv_args->android, addr, sk); 
     

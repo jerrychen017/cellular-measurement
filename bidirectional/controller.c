@@ -138,6 +138,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
 
         if (num > 0) {
             if (FD_ISSET(s_data, &read_mask)) {
+//                printf("receive data from datagen\n");
                 int len = recv(s_data, data_pkt.data, sizeof(data_pkt.data), 0); 
                 if (len == 0) {
                     printf("data stream ended, exiting...\n");
@@ -170,6 +171,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     // Pass to server during normal operation
                     sendto_dbg(s_server, &data_pkt, sizeof(data_pkt), 0,
                             (struct sockaddr *) &send_addr, sizeof(send_addr));
+//                    printf("send data to server\n");
                 } else {
                     // printf("storing packet seq %d, in spot %d\n", seq, burst_seq_recv);
                     // printf("TIMEOUT %.4f EXEPECTEDTIMEOUT %.4f\n", timeout.tv_usec / 1000.0, expectedTimeout.tv_usec / 1000.0);
@@ -243,7 +245,8 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     sendto(s_data, &control_pkt, sizeof(control_pkt), 0, &data_addr, data_len);
 
                     sprintf(feedbackBuf, "%.4f", rate);
-                    sendFeedbackMessage(feedbackBuf);
+//                    sendFeedbackMessage(feedbackBuf);
+                    printf("%.4f\n", rate);
 
                 }
             }
