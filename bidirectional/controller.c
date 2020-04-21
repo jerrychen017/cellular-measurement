@@ -54,7 +54,7 @@ void startup(int s_server, struct sockaddr_in send_addr)
         server_pkt.seq_num = 0;
         server_pkt.rate = 0;
 
-        printf("Connecting to server...\n");
+        printf("Connecting to server on PORT %d...\n", send_addr.sin_port);
         sendto(s_server, &server_pkt, sizeof(packet_header), 0, 
                 (struct sockaddr *) &send_addr, sizeof(send_addr));
 
