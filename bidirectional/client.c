@@ -26,6 +26,50 @@ int main(int argc, char *argv[])
 
     // bind socket
     int sk = setup_bound_socket(CLIENT_RECEIVE_PORT);
-    receive_bandwidth(sk, pred_mode);
+    fd_set mask;
+    fd_set read_mask;
+    struct timeval timeout;
+    FD_ZERO(&mask);
+    FD_SET(sk, &mask);
+    int num, len; 
+    data_packet data_pkt;
+    packet_header ack_pkt;
+    struct sockaddr_in from_addr;
+    socklen_t from_len = sizeof(from_addr);
+    for (;;) {
+        read_mask = mask;
+        timeout.tv_sec = TIMEOUT_SEC;
+        timeout.tv_usec = TIMEOUT_USEC;
+
+        num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
+
+        if (num > 0) {
+            if (FD_ISSET(sk, &read_mask)) {
+                len = recvfrom(sk, &data_pkt, sizeof(data_packet), 0,
+                               (struct sockaddr *) &from_addr, &from_len);
+                if (len < 0) {
+                    perror("socket error");
+                    exit(1);
+                }
+
+                if (data_pkt.hdr.type == NETWORK_START) {
+                    // TODO: get parameters from recv packet
+                    ack_pkt.type = NETWORK_START_ACK;
+                    ack_pkt.rate = 0;
+                    ack_pkt.seq_num = 0;
+
+                    sendto_dbg(sk, &ack_pkt, sizeof(packet_header), 0,
+                            (struct sockaddr *) &from_addr, from_len);
+            
+                    receive_bandwidth(sk, pred_mode);
+                 }
+            }
+
+        } else {
+            printf(".");
+            fflush(0);
+        }
+    }
+    
     return 0;
 }

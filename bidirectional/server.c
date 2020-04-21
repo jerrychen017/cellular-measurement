@@ -67,8 +67,7 @@ int main(int argc, char **argv)
                     send_args.port = SERVER_SEND_PORT;
                     pthread_create(&tid, NULL, &send_bandwidth, (void *)&send_args);
 
-                    int sk_recv = setup_bound_socket(SERVER_RECEIVE_PORT);
-                    receive_bandwidth(sk_recv, predMode);
+                    receive_bandwidth(s_bw, predMode);
                     // TODO: stop thread
                  }
             }
