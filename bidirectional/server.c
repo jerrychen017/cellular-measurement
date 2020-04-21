@@ -30,6 +30,7 @@ int main(int argc, char **argv)
     int len;
     struct sockaddr_in from_addr;
     socklen_t from_len = sizeof(from_addr);
+    FD_ZERO(&mask);
     FD_SET(s_bw, &mask);
 
     data_packet data_pkt;
