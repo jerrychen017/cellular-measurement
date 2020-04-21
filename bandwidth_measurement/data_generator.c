@@ -23,6 +23,7 @@ int start_generator(bool android) {
     bool start = false;
     typed_packet pkt;
     char buffer[DATA_SIZE];
+    memset(buffer, 0, DATA_SIZE);
 
     struct timeval tmPrev;
     struct timeval tmNow;
