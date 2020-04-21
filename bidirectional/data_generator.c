@@ -24,7 +24,8 @@ void * start_generator(void * args) {
     bool start = false;
     typed_packet pkt;
     char buffer[DATA_SIZE];
-
+    memset(buffer, 0, DATA_SIZE);
+    
     struct timeval tmPrev;
     struct timeval tmNow;
     double speed = 1.0;
