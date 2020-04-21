@@ -70,6 +70,7 @@ int main(int argc, char **argv)
                     from_addr.sin_port = htons(SERVER_SEND_PORT); // use SERVER SEND PORT           
                     send_args.addr = from_addr;
                     send_args.port = SERVER_SEND_PORT;
+                    send_args.android = false; 
                     pthread_create(&tid, NULL, &send_bandwidth, (void *)&send_args);
 
                     receive_bandwidth(s_bw, predMode);
