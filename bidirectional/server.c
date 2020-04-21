@@ -62,7 +62,8 @@ int main(int argc, char **argv)
 
                     sendto_dbg(s_bw, &ack_pkt, sizeof(packet_header), 0,
                             (struct sockaddr *) &from_addr, from_len);
-                    
+
+                    from_addr.sin_port = htons(SERVER_SEND_PORT); // use SERVER SEND PORT           
                     send_args.addr = from_addr;
                     send_args.port = SERVER_SEND_PORT;
                     pthread_create(&tid, NULL, &send_bandwidth, (void *)&send_args);
