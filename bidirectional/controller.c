@@ -10,7 +10,7 @@ int start_controller(bool android, struct sockaddr_in send_addr, int s_server)
 {
     kill_thread = false;
 
-    startup(s_server, send_addr);
+    // startup(s_server, send_addr);
 
     // setup unix socket
     socklen_t my_len, datagen_len;
@@ -18,12 +18,11 @@ int start_controller(bool android, struct sockaddr_in send_addr, int s_server)
     struct sockaddr_un datagen_addr = get_datagen_addr(android, &datagen_len);
     int s_data = setup_unix_socket(my_addr, my_len);
 
-//    if (connect(s_data, (struct sockaddr *) &datagen_addr, datagen_len) < 0) {
-//        perror(NULL);
-//        printf("connect error, datagen not running \n");
-//        exit(1);
-//    }
-
+    //    if (connect(s_data, (struct sockaddr *) &datagen_addr, datagen_len) < 0) {
+    //        perror(NULL);
+    //        printf("connect error, datagen not running \n");
+    //        exit(1);
+    //    }
 
     typed_packet pkt;
     pkt.type = LOCAL_START;
@@ -48,15 +47,16 @@ void startup(int s_server, struct sockaddr_in send_addr)
 
     FD_ZERO(&mask);
     FD_SET(s_server, &mask);
-    while (1) {
+    while (1)
+    {
         // create NETWORK_START packet
         server_pkt.type = NETWORK_START;
         server_pkt.seq_num = 0;
         server_pkt.rate = 0;
 
         printf("Connecting to server on PORT %d...\n", send_addr.sin_port);
-        sendto(s_server, &server_pkt, sizeof(packet_header), 0, 
-                (struct sockaddr *) &send_addr, sizeof(send_addr));
+        sendto(s_server, &server_pkt, sizeof(packet_header), 0,
+               (struct sockaddr *)&send_addr, sizeof(send_addr));
 
         // reset select loop
         read_mask = mask;
@@ -64,26 +64,28 @@ void startup(int s_server, struct sockaddr_in send_addr)
         timeout.tv_usec = TIMEOUT_USEC;
 
         num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
-        
-        if (num > 0) {
-            int len = recv(s_server, &server_pkt, sizeof(server_pkt), 0); 
-            if (len < 0) {
+
+        if (num > 0)
+        {
+            int len = recv(s_server, &server_pkt, sizeof(server_pkt), 0);
+            if (len < 0)
+            {
                 perror("socket error\n");
                 exit(1);
             }
 
-            if (server_pkt.type == NETWORK_START_ACK) {
+            if (server_pkt.type == NETWORK_START_ACK)
+            {
                 printf("Controller: connected to server!\n");
                 break;
             }
         }
-        else {
+        else
+        {
             printf("timeout, trying again\n");
         }
     }
-
 }
-
 
 /* Main event loop */
 void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sockaddr_un data_addr, socklen_t data_len)
@@ -103,7 +105,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
 
     struct timeval timeout;
     struct timeval expectedTimeout;
-    
+
     data_packet data_pkt;
     data_packet recv_pkt;
 
@@ -125,9 +127,10 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
     expectedTimeout.tv_sec = 0;
     expectedTimeout.tv_usec = 0;
 
-
-    for (;;) {
-        if (kill_thread) {
+    for (;;)
+    {
+        if (kill_thread)
+        {
             close(s_data);
             close(s_server);
             return;
@@ -136,53 +139,62 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
         // printf("TIMEOUT %.4f\n", timeout.tv_usec / 1000.0);
         num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
 
-        if (num > 0) {
-            if (FD_ISSET(s_data, &read_mask)) {
-//                printf("receive data from datagen\n");
-                int len = recv(s_data, data_pkt.data, sizeof(data_pkt.data), 0); 
-                if (len == 0) {
+        if (num > 0)
+        {
+            if (FD_ISSET(s_data, &read_mask))
+            {
+                //                printf("receive data from datagen\n");
+                int len = recv(s_data, data_pkt.data, sizeof(data_pkt.data), 0);
+                if (len == 0)
+                {
                     printf("data stream ended, exiting...\n");
                     close(s_data);
                     close(s_server);
                     return;
                 }
-                if (len != sizeof(data_pkt.data)) {
+                if (len != sizeof(data_pkt.data))
+                {
                     printf("ipc error, size not correct");
                     exit(1);
                 }
 
                 // Start burst
-                if (seq % INTERVAL_SIZE == INTERVAL_SIZE - BURST_SIZE) {
+                if (seq % INTERVAL_SIZE == INTERVAL_SIZE - BURST_SIZE)
+                {
                     // printf("starting burst at seq %d\n", seq);
-                    burst_seq_recv = 0; 
+                    burst_seq_recv = 0;
                 }
 
                 data_pkt.hdr.type = burst_seq_recv == -1 ? NETWORK_DATA : NETWORK_BURST;
                 data_pkt.hdr.seq_num = seq;
                 data_pkt.hdr.rate = burst_seq_recv == -1 ? rate : rate * BURST_FACTOR;
 
-
-                if (burst_seq_recv == -1) {
-                    if (burst_seq_send != -1) {
+                if (burst_seq_recv == -1)
+                {
+                    if (burst_seq_send != -1)
+                    {
                         printf("Error: burst not done, on seq %d\n", burst_seq_send);
                         exit(1);
                     }
 
                     // Pass to server during normal operation
                     sendto_dbg(s_server, &data_pkt, sizeof(data_pkt), 0,
-                            (struct sockaddr *) &send_addr, sizeof(send_addr));
-//                    printf("send data to server\n");
-                } else {
+                               (struct sockaddr *)&send_addr, sizeof(send_addr));
+                    //                    printf("send data to server\n");
+                }
+                else
+                {
                     // printf("storing packet seq %d, in spot %d\n", seq, burst_seq_recv);
                     // printf("TIMEOUT %.4f EXEPECTEDTIMEOUT %.4f\n", timeout.tv_usec / 1000.0, expectedTimeout.tv_usec / 1000.0);
                     pkt_buffer[burst_seq_recv] = data_pkt;
-                    
+
                     // After receiving half of the packets, we can start sending
-                    if (burst_seq_recv == BURST_SIZE / 2) {
+                    if (burst_seq_recv == BURST_SIZE / 2)
+                    {
                         burst_seq_send = 0;
 
                         sendto_dbg(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
-                                   (struct sockaddr *) &send_addr, sizeof(send_addr));
+                                   (struct sockaddr *)&send_addr, sizeof(send_addr));
                         burst_seq_send++;
 
                         gettimeofday(&tmPrev, NULL);
@@ -193,13 +205,15 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     burst_seq_recv++;
 
                     // We have recieved all the packets in the burst, so we can stop storing
-                    if (burst_seq_recv == BURST_SIZE) {
+                    if (burst_seq_recv == BURST_SIZE)
+                    {
                         burst_seq_recv = -1;
                         //temp fix for burst out of ordering/slow
-                        while (burst_seq_send != -1 && burst_seq_send < BURST_SIZE) {
+                        while (burst_seq_send != -1 && burst_seq_send < BURST_SIZE)
+                        {
                             // printf("sending packet at end %d of burst\n", burst_seq_send);
                             sendto_dbg(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
-                                    (struct sockaddr *) &send_addr, sizeof(send_addr));
+                                       (struct sockaddr *)&send_addr, sizeof(send_addr));
                             burst_seq_send++;
                         }
                         burst_seq_send = -1;
@@ -207,9 +221,11 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                 }
                 seq++;
             }
-            if (FD_ISSET(s_server, &read_mask)) {
+            if (FD_ISSET(s_server, &read_mask))
+            {
                 int len = recvfrom(s_server, &recv_pkt, sizeof(data_packet), 0, (struct sockaddr *)&server_addr, &server_addr_len);
-                if (len <= 0) {
+                if (len <= 0)
+                {
                     printf("data stream ended, exiting...\n");
                     close(s_data);
                     close(s_server);
@@ -217,25 +233,29 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                 }
 
                 // Check if we have a decrepancy in our sending rates at sender and receiver
-                if(recv_pkt.hdr.type == NETWORK_REPORT || recv_pkt.hdr.type == NETWORK_BURST_REPORT) {
+                if (recv_pkt.hdr.type == NETWORK_REPORT || recv_pkt.hdr.type == NETWORK_BURST_REPORT)
+                {
                     double reportedRate = recv_pkt.hdr.rate;
                     double newRate;
 
                     // printf("feedback from %d on cur seq %d\n", seq, recv_pkt.hdr.seq_num);
-                    if (recv_pkt.hdr.type == NETWORK_BURST_REPORT) {
+                    if (recv_pkt.hdr.type == NETWORK_BURST_REPORT)
+                    {
                         newRate = 0.95 * reportedRate;
                     }
-                    else {
-                        if (reportedRate >= rate) {
+                    else
+                    {
+                        if (reportedRate >= rate)
+                        {
                             continue;
                         }
                         // set new rate to the max of less than reported rate to flush queue
                         newRate = reportedRate - .5 * (rate - reportedRate);
-                        if(newRate < 0.75*reportedRate) {
-                            newRate = 0.75*reportedRate;
+                        if (newRate < 0.75 * reportedRate)
+                        {
+                            newRate = 0.75 * reportedRate;
                         }
                     }
-
 
                     rate = recv_pkt.hdr.rate >= MAX_SPEED ? MAX_SPEED : newRate;
 
@@ -245,39 +265,43 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     sendto(s_data, &control_pkt, sizeof(control_pkt), 0, &data_addr, data_len);
 
                     sprintf(feedbackBuf, "%.4f", rate);
-//                    sendFeedbackMessage(feedbackBuf);
+                    //                    sendFeedbackMessage(feedbackBuf);
                     printf("%.4f\n", rate);
-
                 }
             }
-        } else {
+        }
+        else
+        {
             // timeout
-            if (burst_seq_send == -1) {
+            if (burst_seq_send == -1)
+            {
                 printf("timeout while sending\n");
             }
-            else {  
-                if (burst_seq_send >= burst_seq_recv && burst_seq_recv != -1) {
+            else
+            {
+                if (burst_seq_send >= burst_seq_recv && burst_seq_recv != -1)
+                {
                     printf("Error: burst trying to send seq not received %d\n", burst_seq_send);
                     continue;
-//                    exit(1);
+                    //                    exit(1);
                 }
 
                 // printf("sending packet %d of burst\n", burst_seq_send);
 
                 sendto_dbg(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
-                        (struct sockaddr *) &send_addr, sizeof(send_addr));
+                           (struct sockaddr *)&send_addr, sizeof(send_addr));
                 burst_seq_send++;
 
-                
                 gettimeofday(&tmNow, NULL);
-                struct timeval baseTimeout = speed_to_interval(rate * BURST_FACTOR); 
+                struct timeval baseTimeout = speed_to_interval(rate * BURST_FACTOR);
                 struct timeval tmExtra = diffTime(diffTime(tmNow, tmPrev), expectedTimeout);
                 // printf("BASETIMEOUT %.4f EXTRATIME %.4f \n", baseTimeout.tv_usec / 1000.0, tmExtra.tv_usec / 1000.0);
 
-                while (gtTime(tmExtra, baseTimeout) && burst_seq_send < BURST_SIZE && burst_seq_send < burst_seq_recv) {
+                while (gtTime(tmExtra, baseTimeout) && burst_seq_send < BURST_SIZE && burst_seq_send < burst_seq_recv)
+                {
                     // printf("sending makeup packet %d of burst\n", burst_seq_send);
                     sendto_dbg(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
-                            (struct sockaddr *) &send_addr, sizeof(send_addr));
+                               (struct sockaddr *)&send_addr, sizeof(send_addr));
                     tmExtra = diffTime(tmExtra, baseTimeout);
                     burst_seq_send++;
                 }
@@ -286,7 +310,8 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                 timeout = expectedTimeout;
                 tmPrev = tmNow;
                 // We are done
-                if (burst_seq_send == BURST_SIZE) {
+                if (burst_seq_send == BURST_SIZE)
+                {
                     burst_seq_send = -1;
                 }
             }
@@ -295,20 +320,21 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
         // if we are not sending at burst, we can just send when the data
         // source gives us a packet. However, if we are sending a burst,
         // we want to timeout to send at a certain rate
-        if (burst_seq_send == -1) {
+        if (burst_seq_send == -1)
+        {
             timeout.tv_sec = TIMEOUT_SEC;
             timeout.tv_usec = TIMEOUT_USEC;
         }
     }
 }
 
-
-
-double estimate_change(double rate){
+double estimate_change(double rate)
+{
     return 0;
 }
 
-void stop_controller_thread() {
+void stop_controller_thread()
+{
     kill_thread = true;
 }
 //if (reportedRate < rate)
