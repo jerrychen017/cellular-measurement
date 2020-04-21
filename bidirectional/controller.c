@@ -27,7 +27,7 @@ int start_controller(bool android, struct sockaddr_in send_addr, int s_server)
 
     typed_packet pkt;
     pkt.type = LOCAL_START;
-    send(s_data, &pkt, sizeof(pkt.type), 0);
+    sendto(s_data, &pkt, sizeof(pkt.type), 0, &datagen_addr, datagen_len);
 
     control(s_server, s_data, send_addr, datagen_addr, datagen_len);
 
