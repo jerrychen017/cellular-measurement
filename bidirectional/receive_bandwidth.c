@@ -73,7 +73,7 @@ void receive_bandwidth(int s_bw, int predMode)
                     perror("socket error");
                     exit(1);
                 }
-                printf("received %d bytes, seq %d at rate %f\n", len, data_pkt.hdr.seq_num, data_pkt.hdr.rate );
+                // printf("received %d bytes, seq %d at rate %f\n", len, data_pkt.hdr.seq_num, data_pkt.hdr.rate );
 
                 // When we receive a new START message, reset the server
                 if (data_pkt.hdr.type == NETWORK_START) {
@@ -137,7 +137,7 @@ void receive_bandwidth(int s_bw, int predMode)
                         tm_diff = diffTime(barrivals[burstSeq - 1], barrivals[bFirst]);
                         if (burstSeq - 1 != bFirst) {
                             calculated_speed = interval_to_speed(tm_diff, (burstSeq - 1) - bFirst);
-                            printf("Burst calculated speed of %.4f Mbps\n", calculated_speed);
+                            // printf("Burst calculated speed of %.4f Mbps\n", calculated_speed);
                             report_pkt.type = NETWORK_BURST_REPORT;
                             report_pkt.rate = calculated_speed;
                             report_pkt.seq_num = currSeq;
@@ -159,7 +159,7 @@ void receive_bandwidth(int s_bw, int predMode)
                         tm_diff = diffTime(arrivals[currSeq % BURST_SIZE], arrivals[(currSeq - 1) % BURST_SIZE]);
                         calculated_speed = interval_to_speed(tm_diff, 1);
                         ewmaRate = (ALPHA * calculated_speed) + (1 - ALPHA) * ewmaRate;
-                        printf("Computed sending rate of %.4f Mbps\n", ewmaRate);
+                        // printf("Computed sending rate of %.4f Mbps\n", ewmaRate);
                         calcRate = ewmaRate;
 
                     }
@@ -171,7 +171,7 @@ void receive_bandwidth(int s_bw, int predMode)
                         tm_diff = diffTime(arrivals[currSeq % BURST_SIZE], arrivals[(currSeq + 1) % BURST_SIZE]);
                         calculated_speed = interval_to_speed(tm_diff, BURST_SIZE - 1);
                         calcRate = calculated_speed; //Figure out threshold
-                        printf("Computed sending rate of %.4f Mbps\n", calcRate);
+                        // printf("Computed sending rate of %.4f Mbps\n", calcRate);
                     }
 
                     // Send report packet if we are under 90 percent of expected rate
@@ -182,7 +182,7 @@ void receive_bandwidth(int s_bw, int predMode)
                             report_pkt.seq_num = currSeq;
                             sendto_dbg(s_bw, &report_pkt, sizeof(report_pkt), 0,
                                    (struct sockaddr *) &from_addr, from_len);
-                            printf("Computed rate %.4f below threshold, actual rate %.4f\n", calcRate, expectedRate);
+                            // printf("Computed rate %.4f below threshold, actual rate %.4f\n", calcRate, expectedRate);
                             numBelowThreshold = 0; 
                         } else {
                             numBelowThreshold++; 
@@ -190,7 +190,7 @@ void receive_bandwidth(int s_bw, int predMode)
                     } else {
                         // reset numBelowThreshold when received non-delayed packet within the grace period
                         if (numBelowThreshold != 0) {
-                            printf("num threshold is %d\n", numBelowThreshold);
+                            // printf("num threshold is %d\n", numBelowThreshold);
                         }
                         numBelowThreshold = 0; 
                     }
