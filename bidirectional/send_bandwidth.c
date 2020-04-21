@@ -11,6 +11,7 @@ void * send_bandwidth(void * args) {
 
     // port
     int port = recv_args->port;
+    printf("send_bandwidth called with port %d\n", port);
     int sk = setup_bound_socket(port);
     // address
     struct sockaddr_in addr = recv_args->addr;
