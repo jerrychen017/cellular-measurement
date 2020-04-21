@@ -72,6 +72,7 @@ int main(int argc, char **argv)
                     ack_pkt.seq_num = 0;
                     sendto_dbg(server_send_sk, &ack_pkt, sizeof(packet_header), 0,
                                (struct sockaddr *)&server_send_addr, server_send_len);
+                    printf("sending send ack\n");
                 }
             }
             if (FD_ISSET(server_recv_sk, &read_mask))
@@ -93,6 +94,7 @@ int main(int argc, char **argv)
                     ack_pkt.seq_num = 0;
                     sendto_dbg(server_recv_sk, &ack_pkt, sizeof(packet_header), 0,
                                (struct sockaddr *)&server_recv_addr, server_recv_len);
+                    printf("sending recv ack\n");
                 }
             }
         }

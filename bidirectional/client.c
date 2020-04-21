@@ -59,6 +59,7 @@ void start_client(const char *address, int pred_mode, bool android)
 
                 if (data_pkt.hdr.type == NETWORK_START_ACK)
                 {
+                    printf("got send ack\n");
                     got_send_ack = true;
                 }
             }
@@ -74,6 +75,7 @@ void start_client(const char *address, int pred_mode, bool android)
 
                 if (data_pkt.hdr.type == NETWORK_START_ACK)
                 {
+                    printf("got recv ack\n");
                     got_recv_ack = true;
                 }
             }
@@ -103,6 +105,8 @@ void start_client(const char *address, int pred_mode, bool android)
             pthread_create(&tid, NULL, &send_bandwidth_pthread, (void *)&send_args);
 
             receive_bandwidth(client_recv_sk, pred_mode);
+            got_send_ack = false;
+            got_recv_ack = false;
         }
     }
 }
