@@ -152,7 +152,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
 
                 // Start burst
                 if (seq % INTERVAL_SIZE == INTERVAL_SIZE - BURST_SIZE) {
-                    printf("starting burst at seq %d\n", seq);
+                    // printf("starting burst at seq %d\n", seq);
                     burst_seq_recv = 0; 
                 }
 
@@ -171,7 +171,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                     sendto_dbg(s_server, &data_pkt, sizeof(data_pkt), 0,
                             (struct sockaddr *) &send_addr, sizeof(send_addr));
                 } else {
-                    printf("storing packet seq %d, in spot %d\n", seq, burst_seq_recv);
+                    // printf("storing packet seq %d, in spot %d\n", seq, burst_seq_recv);
                     // printf("TIMEOUT %.4f EXEPECTEDTIMEOUT %.4f\n", timeout.tv_usec / 1000.0, expectedTimeout.tv_usec / 1000.0);
                     pkt_buffer[burst_seq_recv] = data_pkt;
                     
@@ -195,7 +195,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                         burst_seq_recv = -1;
                         //temp fix for burst out of ordering/slow
                         while (burst_seq_send != -1 && burst_seq_send < BURST_SIZE) {
-                            printf("sending packet at end %d of burst\n", burst_seq_send);
+                            // printf("sending packet at end %d of burst\n", burst_seq_send);
                             sendto_dbg(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
                                     (struct sockaddr *) &send_addr, sizeof(send_addr));
                             burst_seq_send++;
@@ -219,7 +219,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                     double reportedRate = recv_pkt.hdr.rate;
                     double newRate;
 
-                    printf("feedback from %d on cur seq %d\n", seq, recv_pkt.hdr.seq_num);
+                    // printf("feedback from %d on cur seq %d\n", seq, recv_pkt.hdr.seq_num);
                     if (recv_pkt.hdr.type == NETWORK_BURST_REPORT) {
                         newRate = 0.95 * reportedRate;
                     }
@@ -259,7 +259,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
 //                    exit(1);
                 }
 
-                printf("sending packet %d of burst\n", burst_seq_send);
+                // printf("sending packet %d of burst\n", burst_seq_send);
 
                 sendto_dbg(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
                         (struct sockaddr *) &send_addr, sizeof(send_addr));
@@ -272,7 +272,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                 // printf("BASETIMEOUT %.4f EXTRATIME %.4f \n", baseTimeout.tv_usec / 1000.0, tmExtra.tv_usec / 1000.0);
 
                 while (gtTime(tmExtra, baseTimeout) && burst_seq_send < BURST_SIZE && burst_seq_send < burst_seq_recv) {
-                    printf("sending makeup packet %d of burst\n", burst_seq_send);
+                    // printf("sending makeup packet %d of burst\n", burst_seq_send);
                     sendto_dbg(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
                             (struct sockaddr *) &send_addr, sizeof(send_addr));
                     tmExtra = diffTime(tmExtra, baseTimeout);

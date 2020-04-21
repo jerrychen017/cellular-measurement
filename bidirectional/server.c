@@ -54,6 +54,10 @@ int main(int argc, char **argv)
                     exit(1);
                 }
 
+                if (from_len != sizeof(from_addr)) { 
+                    printf("Warning: from_len doesn't match len of from_addr\n");
+                }
+
                 if (data_pkt.hdr.type == NETWORK_START) {
                     // TODO: get parameters from recv packet
                     ack_pkt.type = NETWORK_START_ACK;

@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
     fd_set mask;
     fd_set read_mask;
     struct timeval timeout;
+    
     FD_ZERO(&mask);
     FD_SET(sk, &mask);
     int num, len; 
@@ -51,7 +52,7 @@ int main(int argc, char *argv[])
                     perror("socket error");
                     exit(1);
                 }
-
+                printf("received a packet\n");
                 if (data_pkt.hdr.type == NETWORK_START) {
                     // TODO: get parameters from recv packet
                     ack_pkt.type = NETWORK_START_ACK;
