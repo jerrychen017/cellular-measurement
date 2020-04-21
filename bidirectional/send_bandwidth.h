@@ -4,6 +4,7 @@
 struct send_bandwidth_args {
     struct sockaddr_in addr; 
     int port; 
+    bool android; 
 };
 void * send_bandwidth(void * arg);
 

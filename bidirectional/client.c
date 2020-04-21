@@ -2,7 +2,7 @@
 #include "receive_bandwidth.h"
 #include "net_utils.h"
 
-void start_client(char * address, int pred_mode) {
+void start_client(char * address, int pred_mode, bool android) {
 
     pthread_t tid; // thread id
     struct sockaddr_in send_addr = addrbyname(address, CLIENT_SEND_PORT);
@@ -10,6 +10,7 @@ void start_client(char * address, int pred_mode) {
     struct send_bandwidth_args send_args; 
     send_args.addr = send_addr; 
     send_args.port = CLIENT_SEND_PORT;
+    send_args.android = android;
     pthread_create(&tid, NULL, &send_bandwidth, (void *)&send_args);
 
     // bind socket

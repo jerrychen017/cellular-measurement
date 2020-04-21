@@ -1,4 +1,5 @@
 #include "client.h"
+#include <stdbool.h>
 /**
     CLI Client 
 */
@@ -15,6 +16,6 @@ int main(int argc, char *argv[])
     // prediction mode 
     int pred_mode = atoi(argv[2]); 
 
-    start_client(address, pred_mode);    
+    start_client(address, pred_mode, false);    
     return 0;
 }

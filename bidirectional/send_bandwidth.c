@@ -16,7 +16,7 @@ void * send_bandwidth(void * args) {
     // address
     struct sockaddr_in addr = recv_args->addr;
 
-    send_args.android = false; 
+    send_args.android = recv_args->android; 
     pthread_create(&tid, NULL, &start_generator, (void *)&send_args);
 
     ret = start_controller(false, addr, sk); 
