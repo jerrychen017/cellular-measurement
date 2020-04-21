@@ -26,6 +26,9 @@ int main(int argc, char *argv[])
 
     // bind socket
     int sk = setup_bound_socket(CLIENT_RECEIVE_PORT);
+
+
+
     fd_set mask;
     fd_set read_mask;
     struct timeval timeout;
@@ -37,6 +40,21 @@ int main(int argc, char *argv[])
     packet_header ack_pkt;
     struct sockaddr_in from_addr;
     socklen_t from_len = sizeof(from_addr);
+
+    // send meaningless packet to server first in order to receive packets
+    ack_pkt.type = NETWORK_START;
+    ack_pkt.rate = 0;
+    ack_pkt.seq_num = 0;
+    send_addr.sin_port = htons(CLIENT_RECEIVE_PORT);
+    sendto_dbg(sk, &ack_pkt, sizeof(packet_header), 0,
+            (struct sockaddr *) &send_addr, sizeof(send_addr));
+    sendto_dbg(sk, &ack_pkt, sizeof(packet_header), 0,
+            (struct sockaddr *) &send_addr, sizeof(send_addr));
+    sendto_dbg(sk, &ack_pkt, sizeof(packet_header), 0,
+            (struct sockaddr *) &send_addr, sizeof(send_addr));
+    sendto_dbg(sk, &ack_pkt, sizeof(packet_header), 0,
+            (struct sockaddr *) &send_addr, sizeof(send_addr));
+
     for (;;) {
         read_mask = mask;
         timeout.tv_sec = TIMEOUT_SEC;
@@ -67,7 +85,9 @@ int main(int argc, char *argv[])
             }
 
         } else {
+            // TODO: BIG CONFUSION!!
             printf(".");
+
             fflush(0);
         }
     }
