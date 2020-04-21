@@ -1,21 +1,9 @@
 #include "send_bandwidth.h"
 #include "receive_bandwidth.h"
 #include "net_utils.h"
-/**
-    CLI Client 
-*/
-int main(int argc, char *argv[])
-{
-    // args error checking
-    if (argc != 3)
-    {
-        printf("client usage: client <server_address> <EWMA/RunningAvg>\n");
-        exit(1);
-    }
-    // address
-    char *address = argv[1];
-    // prediction mode 
-    int pred_mode = atoi(argv[2]); 
+
+void start_client(char * address, int pred_mode) {
+
     pthread_t tid; // thread id
     struct sockaddr_in send_addr = addrbyname(address, CLIENT_SEND_PORT);
     // arguments to be passed in the new thread
@@ -91,6 +79,4 @@ int main(int argc, char *argv[])
             fflush(0);
         }
     }
-    
-    return 0;
 }
