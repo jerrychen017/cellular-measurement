@@ -12,7 +12,7 @@ struct data_generator_args {
 /**
  * start_generator is called in android ndk to run data generator 
  */
-int start_generator(void * args);
+void * start_generator(void * args);
 void stop_data_generator_thread();
 
 #endif

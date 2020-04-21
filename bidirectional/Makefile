@@ -2,21 +2,19 @@ CC=gcc
 
 CFLAGS = -std=c99 -g -c -Wall -pedantic #-D_POSIX_SOURCE -D_GNU_SOURCE
 LDFLAGS = -lpthread -lrt
+COMMON = receive_bandwidth.o send_bandwidth.o net_utils.o sendto_dbg.o bandwidth_utils.o controller.o data_generator.o feedbackLogger.o
 # when running on rain1 server, add LDFLAGS to echo_server and echo_client
 
-all: controller data_generator mergedServer
+all: server client
 
-mergedServer: mergedServer.o bandwidth_utils.o sendto_dbg.o
-	$(CC) -o server mergedServer.o bandwidth_utils.o sendto_dbg.o
+server: server.o $(COMMON)
+	$(CC) -o server server.o $(COMMON)
 
-controller: controller_main.o controller.o bandwidth_utils.o net_utils.o feedbackLogger.o sendto_dbg.o
-	$(CC) -o controller controller_main.o controller.o bandwidth_utils.o net_utils.o feedbackLogger.o sendto_dbg.o
-
-data_generator: data_generator_main.o data_generator.o bandwidth_utils.o net_utils.o
-	$(CC) -o data_generator data_generator_main.o data_generator.o bandwidth_utils.o net_utils.o
+client: client.o $(COMMON)
+	$(CC) -o client client.o $(COMMON)
 
 %.o:    %.c
 	$(CC) $(CFLAGS) $*.c
 
 clean:
-	rm *.o server controller data_generator
+	rm *.o server client

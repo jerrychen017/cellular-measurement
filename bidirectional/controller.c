@@ -6,12 +6,9 @@ void startup(int s_server, struct sockaddr_in send_addr);
 void control(int s_server, int s_data, struct sockaddr_in send_addr);
 
 static bool kill_thread = false;
-int start_controller(bool android, const char* address, int port, struct sockaddr_in sk_addr)
+int start_controller(bool android, struct sockaddr_in send_addr, int s_server)
 {
     kill_thread = false;
-    
-    int s_server = setup_server_socket(port, android);
-    struct sockaddr_in send_addr = addrbyname(address, port);
 
     startup(s_server, send_addr);
 
@@ -300,28 +297,6 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
             timeout.tv_usec = TIMEOUT_USEC;
         }
     }
-}
-
-int setup_server_socket(int port, bool android)
-{
-    struct sockaddr_in name;
-
-    int s_recv = socket(AF_INET, SOCK_DGRAM, 0);  /* socket for receiving (udp) */
-    if (s_recv < 0) {
-        perror("socket recv error\n");
-        exit(1);
-    }
-
-    name.sin_family = AF_INET;
-    name.sin_addr.s_addr = INADDR_ANY;
-    name.sin_port = htons(port);
-
-    if (bind( s_recv, (struct sockaddr *)&name, sizeof(name) ) < 0 ) {
-        perror("bind error\n");
-        exit(1);
-    }
-
-    return s_recv;
 }
 
 

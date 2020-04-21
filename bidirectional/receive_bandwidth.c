@@ -1,9 +1,9 @@
 #include "receive_bandwidth.h"
 
-static TimingPacket timing, *recvTiming;
-static ReportPacket report, *recvReport;
-static ConnectPacket _connect, *recvConnect;
-static Packet pack, *packet = &pack;
+#define ALPHA 0.1  // closer to 0 is smoother, closer to 1 is quicker reaction (90 packets ~ 1Mbps) 0.2/0.1 for regular
+#define THRESHOLD 0.95 // percent drop threshold
+#define RECV_TIMEOUT_SEC 5
+#define RECV_TIMEOUT_USEC 0
 
 void receive_bandwidth(int s_bw, int predMode)
 {
@@ -60,8 +60,8 @@ void receive_bandwidth(int s_bw, int predMode)
 
     for (;;) {
         read_mask = mask;
-        timeout.tv_sec = TIMEOUT_SEC;
-        timeout.tv_usec = TIMEOUT_USEC;
+        timeout.tv_sec = RECV_TIMEOUT_SEC; 
+        timeout.tv_usec = RECV_TIMEOUT_USEC;
 
         num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
 
@@ -201,30 +201,8 @@ void receive_bandwidth(int s_bw, int predMode)
             }
 
         } else {
-            printf(".");
-            fflush(0);
+            printf("Stop receiving bandwidth, accepting new connection\n");
+            return; 
         }
     }
-}
-
-int setup_server_socket(int port)
-{
-    struct sockaddr_in name;
-
-    int s = socket(AF_INET, SOCK_DGRAM, 0);  /* socket for receiving (udp) */
-    if (s < 0) {
-        perror("socket error\n");
-        exit(1);
-    }
-
-    name.sin_family = AF_INET;
-    name.sin_addr.s_addr = INADDR_ANY;
-    name.sin_port = htons(port);
-
-    if (bind( s, (struct sockaddr *)&name, sizeof(name) ) < 0 ) {
-        perror("bind error\n");
-        exit(1);
-    }
-
-    return s;
 }

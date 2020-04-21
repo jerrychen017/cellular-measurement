@@ -52,6 +52,12 @@
 #define NUM_SEND 10
 #define NAME_LENGTH 100
 
+#define SERVER_RECEIVE_PORT 4579 // client sends and server listens on this port
+#define SERVER_SEND_PORT 4578  // server sends and client listens on this port
+#define SERVER_INTERACTIVE_PORT 4577 
+#define CLIENT_SEND_PORT 4579
+#define CLIENT_RECEIVE_PORT 4578
+
 enum NetworkPacketType
 {
     NETWORK_DATA,

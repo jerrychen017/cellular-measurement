@@ -1,5 +1,7 @@
 #include "receive_bandwidth.h"
 #include "send_bandwidth.h"
+#include "net_utils.h"
+#include "sendto_dbg.h"
 
 /**
  * Bidirectional server main function
@@ -9,16 +11,16 @@ int main(int argc, char **argv)
     // argc error checking
     if (argc != 3)
     {
-        printf("Usage: server <portBandwidth> <EWMA/RunningAvg>\n");
+        printf("Usage: server <EWMA/RunningAvg>\n");
         exit(0);
     }
     // get separate ports for bandwidth and interactive applications
-    int portBandwidth = atoi(argv[1]);
+    int portBandwidth = SERVER_RECEIVE_PORT;
     // toggle Prediction mode 0 for EMWA and 1 for RunningAvg
-    int predMode = atoi(argv[2]);
+    int predMode = atoi(argv[1]);  // TODO: setup this on the client side
 
     // Bandwidth application socket
-    int s_bw = setup_server_socket(portBandwidth);
+    int s_bw = setup_bound_socket(portBandwidth);
 
     // Select loop
     fd_set mask;
@@ -52,6 +54,7 @@ int main(int argc, char **argv)
                 }
 
                 if (data_pkt.hdr.type == NETWORK_START) {
+                    // TODO: get parameters from recv packet
                     ack_pkt.type = NETWORK_START_ACK;
                     ack_pkt.rate = 0;
                     ack_pkt.seq_num = 0;
@@ -60,8 +63,10 @@ int main(int argc, char **argv)
                             (struct sockaddr *) &from_addr, from_len);
                     
                     send_args.addr = from_addr;
+                    send_args.port = SERVER_SEND_PORT;
                     pthread_create(&tid, NULL, &send_bandwidth, (void *)&send_args);
                     receive_bandwidth(s_bw, predMode);
+                    // TODO: stop thread
                  }
             }
 

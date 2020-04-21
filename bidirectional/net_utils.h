@@ -6,4 +6,5 @@ struct sockaddr_un get_controller_addr(bool android, socklen_t *len);
 int setup_unix_socket(struct sockaddr_un addr, socklen_t len);
 
 struct sockaddr_in addrbyname(const char *hostname, int port);
+int setup_bound_socket(int port);
 #endif

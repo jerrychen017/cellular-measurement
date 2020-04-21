@@ -2,7 +2,7 @@
 #include "net_utils.h"
 
 static bool stop_thread = false;
-int start_generator(void * args) {
+void * start_generator(void * args) {
     struct data_generator_args * received_args = (struct data_generator_args *) args; 
     bool android = received_args->android; 
     stop_thread = false;
@@ -119,7 +119,7 @@ int start_generator(void * args) {
 
      }
 
-     return 0;
+     return NULL;
 }
 
 void stop_data_generator_thread() {

@@ -82,3 +82,25 @@ struct sockaddr_in addrbyname(const char *hostname, int port)
     return addr;
 }
 
+int setup_bound_socket(int port)
+{
+    struct sockaddr_in name;
+
+    int s_recv = socket(AF_INET, SOCK_DGRAM, 0);  /* socket for receiving (udp) */
+    if (s_recv < 0) {
+        perror("socket recv error\n");
+        exit(1);
+    }
+
+    name.sin_family = AF_INET;
+    name.sin_addr.s_addr = INADDR_ANY;
+    name.sin_port = htons(port);
+
+    if (bind( s_recv, (struct sockaddr *)&name, sizeof(name) ) < 0 ) {
+        perror("bind error\n");
+        exit(1);
+    }
+
+    return s_recv;
+}
+
