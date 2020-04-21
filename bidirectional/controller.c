@@ -3,7 +3,7 @@
 #include "net_utils.h"
 
 void startup(int s_server, struct sockaddr_in send_addr);
-void control(int s_server, int s_data, struct sockaddr_in send_addr);
+void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sockaddr_un data_addr, socklen_t data_len);
 
 static bool kill_thread = false;
 int start_controller(bool android, struct sockaddr_in send_addr, int s_server)
@@ -18,18 +18,18 @@ int start_controller(bool android, struct sockaddr_in send_addr, int s_server)
     struct sockaddr_un datagen_addr = get_datagen_addr(android, &datagen_len);
     int s_data = setup_unix_socket(my_addr, my_len);
 
-    if (connect(s_data, (struct sockaddr *) &datagen_addr, datagen_len) < 0) {
-        perror(NULL);
-        printf("connect error, datagen not running \n");
-        exit(1);
-    }
+//    if (connect(s_data, (struct sockaddr *) &datagen_addr, datagen_len) < 0) {
+//        perror(NULL);
+//        printf("connect error, datagen not running \n");
+//        exit(1);
+//    }
 
 
     typed_packet pkt;
     pkt.type = LOCAL_START;
     send(s_data, &pkt, sizeof(pkt.type), 0);
 
-    control(s_server, s_data, send_addr);
+    control(s_server, s_data, send_addr, datagen_addr, datagen_len);
 
     return 0;
 }
@@ -86,7 +86,7 @@ void startup(int s_server, struct sockaddr_in send_addr)
 
 
 /* Main event loop */
-void control(int s_server, int s_data, struct sockaddr_in send_addr)
+void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sockaddr_un data_addr, socklen_t data_len)
 {
     static char feedbackBuf[256];
 
@@ -240,7 +240,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr)
                     control_pkt.rate = rate;
                     control_pkt.type = LOCAL_CONTROL;
 
-                    send(s_data, &control_pkt, sizeof(control_pkt), 0);
+                    sendto(s_data, &control_pkt, sizeof(control_pkt), 0, &data_addr, data_len);
 
                     sprintf(feedbackBuf, "%.4f", rate);
                     sendFeedbackMessage(feedbackBuf);
