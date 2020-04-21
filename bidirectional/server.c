@@ -9,7 +9,7 @@
 int main(int argc, char **argv)
 {
     // argc error checking
-    if (argc != 3)
+    if (argc != 2)
     {
         printf("Usage: server <EWMA/RunningAvg>\n");
         exit(0);
