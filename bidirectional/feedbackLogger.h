@@ -10,9 +10,8 @@
 #else
 #define EXTERNC
 #endif
-EXTERNC void sendFeedbackMessage(char* str);
-EXTERNC void sendFeedbackBandwidth(double d);
-EXTERNC void javaStartBandwidth();
+EXTERNC void sendFeedbackUpload(double d);
+EXTERNC void sendFeedbackDownload(double d);
 #undef EXTERNC
 
 

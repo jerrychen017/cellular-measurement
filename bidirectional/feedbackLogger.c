@@ -1,12 +1,11 @@
 #include <stdio.h>
 #include "feedbackLogger.h"
 
-void sendFeedbackMessage(char* str)
-{
-    printf("%s\n", str);
+void sendFeedbackUpload(double d) {
+    printf("%f\n", d);
 }
 
-void sendFeedbackBandwidth(double d) {
+void sendFeedbackDownload(double d) {
     printf("%f\n", d);
 }
 

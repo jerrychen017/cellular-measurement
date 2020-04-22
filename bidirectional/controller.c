@@ -248,7 +248,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     sendto(s_data, &control_pkt, sizeof(control_pkt), 0, (struct sockaddr *)&data_addr, data_len);
 
                     sprintf(feedbackBuf, "%.4f", rate);
-                    sendFeedbackBandwidth(rate);
+                    sendFeedbackUpload(rate);
                     printf("%.4f\n", rate);
                 }
             }
