@@ -216,7 +216,7 @@ void receive_bandwidth(int s_bw, int predMode, struct sockaddr_in expected_addr)
                         calcRate = calculated_speed; //Figure out threshold
                         // printf("Computed sending rate of %.4f Mbps\n", calcRate);
                         if (currSeq % INTERVAL_SIZE == INTERVAL_SIZE / 2) {
-                            sendFeedbackDownload(calcRate);
+                            sendFeedbackDownload(data_pkt.hdr.rate);
                         }
                     }
 
