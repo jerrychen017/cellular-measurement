@@ -220,7 +220,11 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     // printf("feedback from %d on cur seq %d\n", seq, recv_pkt.hdr.seq_num);
                     if (recv_pkt.hdr.type == NETWORK_BURST_REPORT)
                     {
-                        newRate = 0.95 * reportedRate;
+                        if (reportedRate >= rate + 1) {
+                            newRate = rate + 1;
+                        } else {
+                            newRate = 0.95 * reportedRate;
+                        }
                     }
                     else
                     {
