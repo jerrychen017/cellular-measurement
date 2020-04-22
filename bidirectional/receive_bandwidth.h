@@ -5,7 +5,13 @@
 #include "bandwidth_utils.h"
 #include "sendto_dbg.h"
 
-
-void receive_bandwidth(int sk, int predMode);
+struct recv_bandwidth_args
+{
+    int sk;
+    int pred_mode;
+    struct sockaddr_in expected_addr;
+};
+void receive_bandwidth(int sk, int predMode, struct sockaddr_in expected_addr);
+void *receive_bandwidth_pthread(void *);
 
 #endif
