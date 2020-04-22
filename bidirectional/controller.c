@@ -220,7 +220,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     // printf("feedback from %d on cur seq %d\n", seq, recv_pkt.hdr.seq_num);
                     if (recv_pkt.hdr.type == NETWORK_BURST_REPORT)
                     {
-                        if (reportedRate >= rate + 1) {
+                        if (0.9 * reportedRate >= rate + 1) {
                             newRate = rate + 1;
                         } else {
                             newRate = 0.95 * reportedRate;
@@ -232,12 +232,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                         {
                             continue;
                         }
-                        // set new rate to the max of less than reported rate to flush queue
-                        newRate = reportedRate - .5 * (rate - reportedRate);
-                        if (newRate < 0.75 * reportedRate)
-                        {
-                            newRate = 0.75 * reportedRate;
-                        }
+                        newRate = reportedRate;
                     }
 
                     rate = recv_pkt.hdr.rate >= MAX_SPEED ? MAX_SPEED : newRate;
