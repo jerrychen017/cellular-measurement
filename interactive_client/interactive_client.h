@@ -1,6 +1,6 @@
 #ifndef INTERACTIVE_CLIENT_H
 #define INTERACTIVE_CLIENT_H
-#include "../bandwidth_measurement/net_include.h"
+#include "interactive_net_include.h"
 #include "../bandwidth_measurement/bandwidth_utils.h"
 
 int interactive_connect(const char name[NAME_LENGTH]);
