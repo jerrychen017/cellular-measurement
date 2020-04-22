@@ -10,82 +10,43 @@ int start_controller(bool android, struct sockaddr_in send_addr, int s_server)
 {
     kill_thread = false;
 
-    // startup(s_server, send_addr);
-
     // setup unix socket
     socklen_t my_len, datagen_len;
     struct sockaddr_un my_addr = get_controller_addr(android, &my_len);
     struct sockaddr_un datagen_addr = get_datagen_addr(android, &datagen_len);
     int s_data = setup_unix_socket(my_addr, my_len);
 
-    //    if (connect(s_data, (struct sockaddr *) &datagen_addr, datagen_len) < 0) {
-    //        perror(NULL);
-    //        printf("connect error, datagen not running \n");
-    //        exit(1);
-    //    }
-
-    typed_packet pkt;
-    pkt.type = LOCAL_START;
-    sendto(s_data, &pkt, sizeof(pkt.type), 0, &datagen_addr, datagen_len);
-
-    control(s_server, s_data, send_addr, datagen_addr, datagen_len);
-
-    return 0;
-}
-
-/* 
- * First pings server to reset it and wait for ack
- */
-void startup(int s_server, struct sockaddr_in send_addr)
-{
+    // connect with data generator
     fd_set mask;
     fd_set read_mask;
     int num;
     struct timeval timeout;
-
-    packet_header server_pkt;
+    
 
     FD_ZERO(&mask);
-    FD_SET(s_server, &mask);
-    while (1)
-    {
-        // create NETWORK_START packet
-        server_pkt.type = NETWORK_START;
-        server_pkt.seq_num = 0;
-        server_pkt.rate = 0;
+    FD_SET(s_data, &mask);
+    for (;;) {
+        printf("Connecting for data_generatorn");
 
-        printf("Connecting to server on PORT %d...\n", send_addr.sin_port);
-        sendto(s_server, &server_pkt, sizeof(packet_header), 0,
-               (struct sockaddr *)&send_addr, sizeof(send_addr));
+        typed_packet pkt;
+        pkt.type = LOCAL_START;
+        sendto(s_data, &pkt, sizeof(pkt.type), 0, (struct sockaddr *) &datagen_addr, datagen_len);
 
-        // reset select loop
-        read_mask = mask;
         timeout.tv_sec = TIMEOUT_SEC;
         timeout.tv_usec = TIMEOUT_USEC;
+        read_mask = mask;
 
         num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
-
-        if (num > 0)
-        {
-            int len = recv(s_server, &server_pkt, sizeof(server_pkt), 0);
-            if (len < 0)
-            {
-                perror("socket error\n");
-                exit(1);
-            }
-
-            if (server_pkt.type == NETWORK_START_ACK)
-            {
-                printf("Controller: connected to server!\n");
-                break;
-            }
-        }
-        else
-        {
-            printf("timeout, trying again\n");
+        if (num  > 0) {
+            recv(s_data, &pkt, sizeof(pkt.type), 0);
+            break;
         }
     }
+
+    control(s_server, s_data, send_addr, datagen_addr, datagen_len);
+    return 0;
 }
+
 
 /* Main event loop */
 void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sockaddr_un data_addr, socklen_t data_len)
@@ -143,7 +104,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
         {
             if (FD_ISSET(s_data, &read_mask))
             {
-                //                printf("receive data from datagen\n");
+                //printf("receive data from datagen\n");
                 int len = recv(s_data, data_pkt.data, sizeof(data_pkt.data), 0);
                 if (len == 0)
                 {
@@ -262,7 +223,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     control_pkt.rate = rate;
                     control_pkt.type = LOCAL_CONTROL;
 
-                    sendto(s_data, &control_pkt, sizeof(control_pkt), 0, &data_addr, data_len);
+                    sendto(s_data, &control_pkt, sizeof(control_pkt), 0, (struct sockaddr *) &data_addr, data_len);
 
                     sprintf(feedbackBuf, "%.4f", rate);
                     //                    sendFeedbackMessage(feedbackBuf);

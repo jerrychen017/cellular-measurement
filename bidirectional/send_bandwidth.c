@@ -7,6 +7,8 @@ void *send_bandwidth_pthread(void *args)
 {
     struct send_bandwidth_args *recv_args = (struct send_bandwidth_args *)args;
     send_bandwidth(recv_args->addr, recv_args->sk, recv_args->android);
+
+    return NULL;
 }
 
 void send_bandwidth(struct sockaddr_in addr, int sk, bool android)

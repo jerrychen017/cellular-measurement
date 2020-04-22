@@ -64,6 +64,10 @@ void start_generator(bool android) {
                 if (pkt.type == LOCAL_START)
                 {
                     printf("Starting data stream\n");
+
+                    sendto(s, &pkt, len , 0,
+                            (struct sockaddr *) &send_addr, send_len);
+                    
 		            start = true;
 		            expectedTimeout = speed_to_interval(speed);
                 }
