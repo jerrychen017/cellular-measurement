@@ -4,6 +4,12 @@
 #define THRESHOLD 0.95 // percent drop threshold
 #define RECV_TIMEOUT_SEC 5
 #define RECV_TIMEOUT_USEC 0
+static bool kill_thread = false;
+
+void stop_receiving_thread()
+{
+    kill_thread = true;
+}
 
 void *receive_bandwidth_pthread(void *args)
 {
@@ -14,6 +20,7 @@ void *receive_bandwidth_pthread(void *args)
 
 void receive_bandwidth(int s_bw, int predMode, struct sockaddr_in expected_addr)
 {
+    kill_thread = false;
     struct sockaddr_in from_addr;
     socklen_t from_len = sizeof(from_addr);
 
