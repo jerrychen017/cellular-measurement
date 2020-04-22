@@ -33,10 +33,10 @@ int main(int argc, char **argv)
     int len;
     // client address for server receiving bandwidth
     struct sockaddr_in server_recv_addr;
-    socklen_t server_recv_len;
+    socklen_t server_recv_len = sizeof(server_recv_addr);
     // client address for server sending bandwidth
     struct sockaddr_in server_send_addr;
-    socklen_t server_send_len;
+    socklen_t server_send_len = sizeof(server_send_addr);
 
     data_packet data_pkt;
     packet_header ack_pkt;
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
             fflush(0);
         }
 
-        if (got_send_addr && got_send_addr)
+        if (got_send_addr && got_recv_addr)
         {
             pthread_t tid;                        // thread id
             struct send_bandwidth_args send_args; // arguments to be passed to send_bandwidth
