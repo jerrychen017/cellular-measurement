@@ -28,13 +28,6 @@ void start_client(const char *address, int pred_mode, bool android)
     bool got_send_ack = false;
     bool got_recv_ack = false;
 
-    // start a new thread to run receive_bandwidth()
-    pthread_t tid; // thread id
-    struct recv_bandwidth_args send_args;
-    send_args.sk = client_recv_sk;
-    send_args.pred_mode = pred_mode;
-    pthread_create(&tid, NULL, &receive_bandwidth_pthread, (void *)&send_args);
-
     // initiate handshake process
     ack_pkt.type = NETWORK_START;
     ack_pkt.rate = 0;
@@ -103,10 +96,16 @@ void start_client(const char *address, int pred_mode, bool android)
 
         if (got_recv_ack && got_send_ack)
         {
+            // start a new thread to run receive_bandwidth()
+            pthread_t tid; // thread id
+            struct recv_bandwidth_args send_args;
+            send_args.sk = client_recv_sk;
+            send_args.pred_mode = pred_mode;
+            send_args.expected_addr = client_recv_addr;
+            pthread_create(&tid, NULL, &receive_bandwidth_pthread, (void *)&send_args);
 
             send_bandwidth(client_send_addr, client_send_sk, android);
-            got_send_ack = false;
-            got_recv_ack = false;
+            return;
         }
     }
 }

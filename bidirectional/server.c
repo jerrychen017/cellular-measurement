@@ -113,7 +113,7 @@ int main(int argc, char **argv)
             send_args.android = false;
             pthread_create(&tid, NULL, &send_bandwidth_pthread, (void *)&send_args);
 
-            receive_bandwidth(server_recv_sk, predMode);
+            receive_bandwidth(server_recv_sk, predMode, server_recv_addr);
             // TODO: stop thread
             got_send_addr = false;
             got_recv_addr = false;

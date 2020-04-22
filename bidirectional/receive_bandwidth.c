@@ -8,11 +8,11 @@
 void *receive_bandwidth_pthread(void *args)
 {
     struct recv_bandwidth_args *recv_args = (struct recv_bandwidth_args *)args;
-    receive_bandwidth(recv_args->sk, recv_args->pred_mode);
+    receive_bandwidth(recv_args->sk, recv_args->pred_mode, recv_args->expected_addr);
     return NULL;
 }
 
-void receive_bandwidth(int s_bw, int predMode)
+void receive_bandwidth(int s_bw, int predMode, struct sockaddr_in expected_addr)
 {
     struct sockaddr_in from_addr;
     socklen_t from_len = sizeof(from_addr);
@@ -88,10 +88,16 @@ void receive_bandwidth(int s_bw, int predMode)
                 // When we receive a new START message, reset the server
                 if (data_pkt.hdr.type == NETWORK_START)
                 {
-                    ack_pkt.type = NETWORK_BUSY;
+                    if (from_addr.sin_addr.s_addr == expected_addr.sin_addr.s_addr && from_addr.sin_port == expected_addr.sin_port)
+                    {
+                        ack_pkt.type = NETWORK_START_ACK;
+                    }
+                    else
+                    {
+                        ack_pkt.type = NETWORK_BUSY;
+                    }
                     ack_pkt.rate = 0;
                     ack_pkt.seq_num = 0;
-
                     sendto_dbg(s_bw, &ack_pkt, sizeof(packet_header), 0,
                                (struct sockaddr *)&from_addr, from_len);
                     continue;

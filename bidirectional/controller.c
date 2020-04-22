@@ -21,23 +21,24 @@ int start_controller(bool android, struct sockaddr_in send_addr, int s_server)
     fd_set read_mask;
     int num;
     struct timeval timeout;
-    
 
     FD_ZERO(&mask);
     FD_SET(s_data, &mask);
-    for (;;) {
+    for (;;)
+    {
         printf("Connecting for data_generatorn");
 
         typed_packet pkt;
         pkt.type = LOCAL_START;
-        sendto(s_data, &pkt, sizeof(pkt.type), 0, (struct sockaddr *) &datagen_addr, datagen_len);
+        sendto(s_data, &pkt, sizeof(pkt.type), 0, (struct sockaddr *)&datagen_addr, datagen_len);
 
         timeout.tv_sec = TIMEOUT_SEC;
         timeout.tv_usec = TIMEOUT_USEC;
         read_mask = mask;
 
         num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
-        if (num  > 0) {
+        if (num > 0)
+        {
             recv(s_data, &pkt, sizeof(pkt.type), 0);
             break;
         }
@@ -46,7 +47,6 @@ int start_controller(bool android, struct sockaddr_in send_addr, int s_server)
     control(s_server, s_data, send_addr, datagen_addr, datagen_len);
     return 0;
 }
-
 
 /* Main event loop */
 void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sockaddr_un data_addr, socklen_t data_len)
@@ -69,6 +69,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
 
     data_packet data_pkt;
     data_packet recv_pkt;
+    packet_header ack_pkt;
 
     typed_packet control_pkt;
     memset(&control_pkt, 0, sizeof(typed_packet));
@@ -193,6 +194,23 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     exit(0);
                 }
 
+                if (data_pkt.hdr.type == NETWORK_START)
+                {
+                    if (server_addr.sin_addr.s_addr == send_addr.sin_addr.s_addr && server_addr.sin_port == send_addr.sin_port)
+                    {
+                        ack_pkt.type = NETWORK_START_ACK;
+                    }
+                    else
+                    {
+                        ack_pkt.type = NETWORK_BUSY;
+                    }
+                    ack_pkt.rate = 0;
+                    ack_pkt.seq_num = 0;
+                    sendto(s_server, &ack_pkt, sizeof(packet_header), 0,
+                           (struct sockaddr *)&server_addr, server_addr_len);
+                    continue;
+                }
+
                 // Check if we have a decrepancy in our sending rates at sender and receiver
                 if (recv_pkt.hdr.type == NETWORK_REPORT || recv_pkt.hdr.type == NETWORK_BURST_REPORT)
                 {
@@ -223,7 +241,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     control_pkt.rate = rate;
                     control_pkt.type = LOCAL_CONTROL;
 
-                    sendto(s_data, &control_pkt, sizeof(control_pkt), 0, (struct sockaddr *) &data_addr, data_len);
+                    sendto(s_data, &control_pkt, sizeof(control_pkt), 0, (struct sockaddr *)&data_addr, data_len);
 
                     sprintf(feedbackBuf, "%.4f", rate);
                     //                    sendFeedbackMessage(feedbackBuf);
