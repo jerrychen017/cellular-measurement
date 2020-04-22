@@ -1,9 +1,16 @@
 #include "receive_bandwidth.h"
 
-#define ALPHA 0.1  // closer to 0 is smoother, closer to 1 is quicker reaction (90 packets ~ 1Mbps) 0.2/0.1 for regular
+#define ALPHA 0.1      // closer to 0 is smoother, closer to 1 is quicker reaction (90 packets ~ 1Mbps) 0.2/0.1 for regular
 #define THRESHOLD 0.95 // percent drop threshold
 #define RECV_TIMEOUT_SEC 5
 #define RECV_TIMEOUT_USEC 0
+
+void *receive_bandwidth_pthread(void *args)
+{
+    struct recv_bandwidth_args *recv_args = (struct recv_bandwidth_args *)args;
+    receive_bandwidth(recv_args->sk, recv_args->pred_mode);
+    return NULL;
+}
 
 void receive_bandwidth(int s_bw, int predMode)
 {
@@ -25,7 +32,7 @@ void receive_bandwidth(int s_bw, int predMode)
     // only use measurements after we have received WINDOW_SIZE packets at current rate
     int numAtCurRate = 0;
     // number of packets below threshold
-    int numBelowThreshold = 0; 
+    int numBelowThreshold = 0;
 
     // next expected seq number
     int seq = 0;
@@ -44,7 +51,6 @@ void receive_bandwidth(int s_bw, int predMode)
     memset(received, 0, sizeof(received));
     memset(breceived, 0, sizeof(breceived));
 
-
     // variables to store caclulations in
     double calculated_speed;
     struct timeval tm_diff;
@@ -58,56 +64,64 @@ void receive_bandwidth(int s_bw, int predMode)
     FD_ZERO(&mask);
     FD_SET(s_bw, &mask);
 
-    for (;;) {
+    for (;;)
+    {
         read_mask = mask;
-        timeout.tv_sec = RECV_TIMEOUT_SEC; 
+        timeout.tv_sec = RECV_TIMEOUT_SEC;
         timeout.tv_usec = RECV_TIMEOUT_USEC;
 
         num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
 
-        if (num > 0) {
-            if (FD_ISSET(s_bw, &read_mask)) {
+        if (num > 0)
+        {
+            if (FD_ISSET(s_bw, &read_mask))
+            {
                 len = recvfrom(s_bw, &data_pkt, sizeof(data_packet), 0,
-                               (struct sockaddr *) &from_addr, &from_len);
-                if (len < 0) {
+                               (struct sockaddr *)&from_addr, &from_len);
+                if (len < 0)
+                {
                     perror("socket error");
                     exit(1);
                 }
                 // printf("received %d bytes, seq %d at rate %f\n", len, data_pkt.hdr.seq_num, data_pkt.hdr.rate );
 
                 // When we receive a new START message, reset the server
-                if (data_pkt.hdr.type == NETWORK_START) {
+                if (data_pkt.hdr.type == NETWORK_START)
+                {
                     ack_pkt.type = NETWORK_BUSY;
                     ack_pkt.rate = 0;
                     ack_pkt.seq_num = 0;
 
                     sendto_dbg(s_bw, &ack_pkt, sizeof(packet_header), 0,
-                            (struct sockaddr *) &from_addr, from_len);
+                               (struct sockaddr *)&from_addr, from_len);
                     continue;
-                } else if (data_pkt.hdr.type == NETWORK_STOP) {
-                    
-                    return; 
                 }
+                else if (data_pkt.hdr.type == NETWORK_STOP)
+                {
 
+                    return;
+                }
 
                 double expectedRate = data_pkt.hdr.rate;
                 int currSeq = data_pkt.hdr.seq_num;
 
                 // keep track of how many packets we've received at the current rate
-                if (expectedRate != curRate) {
+                if (expectedRate != curRate)
+                {
                     curRate = expectedRate;
                     numAtCurRate = 0;
                 }
                 numAtCurRate++;
 
                 // out of order packet, drop
-                if (currSeq < seq) {
+                if (currSeq < seq)
+                {
                     continue;
                 }
 
-
                 // mark packets up to received seq as not received
-                for (; seq < currSeq; seq++) {
+                for (; seq < currSeq; seq++)
+                {
                     received[seq % BURST_SIZE] = 0;
                 }
                 // mark current pacekt as received and record arrival time
@@ -115,27 +129,34 @@ void receive_bandwidth(int s_bw, int predMode)
                 received[i] = 1;
                 gettimeofday(&arrivals[i], NULL);
 
-                if (data_pkt.hdr.type == NETWORK_BURST){
+                if (data_pkt.hdr.type == NETWORK_BURST)
+                {
                     // first burst packet we have received
-                    if (burstSeq == 0) {
+                    if (burstSeq == 0)
+                    {
                         memset(breceived, 0, sizeof(breceived));
                     }
 
                     // Calculate index within burst
                     int bursti = (currSeq % INTERVAL_SIZE) - (INTERVAL_SIZE - BURST_SIZE);
 
-                    if (bursti >= burstSeq) {
-                        if (burstSeq == 0) bFirst = bursti;
+                    if (bursti >= burstSeq)
+                    {
+                        if (burstSeq == 0)
+                            bFirst = bursti;
                         gettimeofday(&barrivals[bursti], NULL);
                         breceived[i] = 1;
                         burstSeq = bursti + 1;
                     }
                 }
-                else {
+                else
+                {
                     // burst just finished, send report
-                    if (burstSeq != 0) {
+                    if (burstSeq != 0)
+                    {
                         tm_diff = diffTime(barrivals[burstSeq - 1], barrivals[bFirst]);
-                        if (burstSeq - 1 != bFirst) {
+                        if (burstSeq - 1 != bFirst)
+                        {
                             calculated_speed = interval_to_speed(tm_diff, (burstSeq - 1) - bFirst);
                             // printf("Burst calculated speed of %.4f Mbps\n", calculated_speed);
                             report_pkt.type = NETWORK_BURST_REPORT;
@@ -143,7 +164,7 @@ void receive_bandwidth(int s_bw, int predMode)
                             report_pkt.seq_num = currSeq;
 
                             sendto_dbg(s_bw, &report_pkt, sizeof(report_pkt), 0,
-                                       (struct sockaddr *) &from_addr, from_len);
+                                       (struct sockaddr *)&from_addr, from_len);
                             burstSeq = 0;
                         }
                     }
@@ -153,19 +174,22 @@ void receive_bandwidth(int s_bw, int predMode)
                     double calcRate = expectedRate;
 
                     // EWMA
-                    if (predMode == 0 && numAtCurRate >= 2) {
-                        if (!received[(currSeq - 1) % BURST_SIZE]) continue;
+                    if (predMode == 0 && numAtCurRate >= 2)
+                    {
+                        if (!received[(currSeq - 1) % BURST_SIZE])
+                            continue;
 
                         tm_diff = diffTime(arrivals[currSeq % BURST_SIZE], arrivals[(currSeq - 1) % BURST_SIZE]);
                         calculated_speed = interval_to_speed(tm_diff, 1);
                         ewmaRate = (ALPHA * calculated_speed) + (1 - ALPHA) * ewmaRate;
                         // printf("Computed sending rate of %.4f Mbps\n", ewmaRate);
                         calcRate = ewmaRate;
-
                     }
                     // Running Avg
-                    if (predMode == 1 && numAtCurRate >= BURST_SIZE) {
-                        if (!received[(currSeq + 1) % BURST_SIZE]) continue;
+                    if (predMode == 1 && numAtCurRate >= BURST_SIZE)
+                    {
+                        if (!received[(currSeq + 1) % BURST_SIZE])
+                            continue;
 
                         // Wrap around average of packets
                         tm_diff = diffTime(arrivals[currSeq % BURST_SIZE], arrivals[(currSeq + 1) % BURST_SIZE]);
@@ -175,34 +199,42 @@ void receive_bandwidth(int s_bw, int predMode)
                     }
 
                     // Send report packet if we are under 90 percent of expected rate
-                    if (calcRate <= THRESHOLD * expectedRate) {
-                        if (numBelowThreshold == GRACE_PERIOD) {
+                    if (calcRate <= THRESHOLD * expectedRate)
+                    {
+                        if (numBelowThreshold == GRACE_PERIOD)
+                        {
                             report_pkt.type = NETWORK_REPORT;
                             report_pkt.rate = calcRate;
                             report_pkt.seq_num = currSeq;
                             sendto_dbg(s_bw, &report_pkt, sizeof(report_pkt), 0,
-                                   (struct sockaddr *) &from_addr, from_len);
+                                       (struct sockaddr *)&from_addr, from_len);
                             // printf("Computed rate %.4f below threshold, actual rate %.4f\n", calcRate, expectedRate);
-                            numBelowThreshold = 0; 
-                        } else {
-                            numBelowThreshold++; 
+                            numBelowThreshold = 0;
                         }
-                    } else {
+                        else
+                        {
+                            numBelowThreshold++;
+                        }
+                    }
+                    else
+                    {
                         // reset numBelowThreshold when received non-delayed packet within the grace period
-                        if (numBelowThreshold != 0) {
+                        if (numBelowThreshold != 0)
+                        {
                             // printf("num threshold is %d\n", numBelowThreshold);
                         }
-                        numBelowThreshold = 0; 
+                        numBelowThreshold = 0;
                     }
                 }
 
                 // increment seq
                 seq = currSeq + 1;
             }
-
-        } else {
+        }
+        else
+        {
             printf("Stop receiving bandwidth, accepting new connection\n");
-            return; 
+            return;
         }
     }
 }
