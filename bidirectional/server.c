@@ -114,7 +114,9 @@ int main(int argc, char **argv)
             pthread_create(&tid, NULL, &send_bandwidth_pthread, (void *)&send_args);
 
             receive_bandwidth(server_recv_sk, predMode, server_recv_addr);
-            // TODO: stop thread
+            stop_controller_thread();
+            stop_data_generator_thread();
+            pthread_join(tid, NULL);
             got_send_addr = false;
             got_recv_addr = false;
         }

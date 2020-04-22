@@ -73,6 +73,11 @@ void receive_bandwidth(int s_bw, int predMode, struct sockaddr_in expected_addr)
 
     for (;;)
     {
+        if (kill_thread)
+        {
+            close(s_bw);
+            return;
+        }
         read_mask = mask;
         timeout.tv_sec = RECV_TIMEOUT_SEC;
         timeout.tv_usec = RECV_TIMEOUT_USEC;

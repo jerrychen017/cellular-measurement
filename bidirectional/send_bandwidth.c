@@ -20,6 +20,6 @@ void send_bandwidth(struct sockaddr_in addr, int sk, bool android)
     pthread_create(&tid, NULL, &start_generator_pthread, (void *)&send_args);
 
     start_controller(android, addr, sk);
-
+    pthread_join(tid, NULL);
     return;
 }
