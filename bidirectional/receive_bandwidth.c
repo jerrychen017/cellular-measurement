@@ -76,6 +76,13 @@ void receive_bandwidth(int s_bw, int predMode, struct sockaddr_in expected_addr)
     {
         if (kill_thread)
         {
+            // send out NETWORK_STOP
+            report_pkt.type = NETWORK_STOP;
+            report_pkt.rate = 0;
+            report_pkt.seq_num = 0;
+
+            sendto_dbg(s_bw, &report_pkt, sizeof(report_pkt), 0,
+                       (struct sockaddr *)&from_addr, from_len);
             close(s_bw);
             return;
         }
@@ -117,7 +124,7 @@ void receive_bandwidth(int s_bw, int predMode, struct sockaddr_in expected_addr)
                 }
                 else if (data_pkt.hdr.type == NETWORK_STOP)
                 {
-
+                    close(s_bw);
                     return;
                 }
 
@@ -256,6 +263,7 @@ void receive_bandwidth(int s_bw, int predMode, struct sockaddr_in expected_addr)
         else
         {
             printf("Stop receiving bandwidth, accepting new connection\n");
+            close(s_bw);
             return;
         }
     }
