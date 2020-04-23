@@ -93,6 +93,12 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
     {
         if (kill_thread)
         {
+
+            ack_pkt.type = NETWORK_STOP;
+            ack_pkt.rate = 0;
+            ack_pkt.seq_num = 0;
+            sendto(s_server, &ack_pkt, sizeof(packet_header), 0,
+                   (struct sockaddr *)&server_addr, server_addr_len);
             close(s_data);
             close(s_server);
             return;
@@ -209,6 +215,13 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     sendto(s_server, &ack_pkt, sizeof(packet_header), 0,
                            (struct sockaddr *)&server_addr, server_addr_len);
                     continue;
+                }
+
+                if (data_pkt.hdr.type == NETWORK_STOP)
+                {
+                    close(s_data);
+                    close(s_server);
+                    return;
                 }
 
                 // Check if we have a decrepancy in our sending rates at sender and receiver
