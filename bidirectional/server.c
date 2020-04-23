@@ -119,6 +119,7 @@ int main(int argc, char **argv)
             pthread_join(tid, NULL);
             // re-open socket that was closed by controller process
             server_send_sk = setup_bound_socket(SERVER_SEND_PORT);
+            server_recv_sk = setup_bound_socket(SERVER_RECEIVE_PORT);
             got_send_addr = false;
             got_recv_addr = false;
         }
