@@ -321,11 +321,6 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
     }
 }
 
-double estimate_change(double rate)
-{
-    return 0;
-}
-
 void stop_controller_thread()
 {
     kill_thread = true;

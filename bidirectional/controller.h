@@ -5,8 +5,6 @@
 #include "bandwidth_utils.h"
 #include "sendto_dbg.h"
 
-double estimate_change(double rate);
-
 /**
  * start_controller is called in android ndk to run controller 
  */
