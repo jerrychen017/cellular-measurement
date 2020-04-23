@@ -37,10 +37,14 @@ void start_client(const char *address, int pred_mode, bool android)
         ack_pkt.type = NETWORK_START;
         ack_pkt.rate = 0;
         ack_pkt.seq_num = 0;
-        sendto_dbg(client_send_sk, &ack_pkt, sizeof(packet_header), 0,
-                   (struct sockaddr *)&client_send_addr, sizeof(client_send_addr));
-        sendto_dbg(client_recv_sk, &ack_pkt, sizeof(packet_header), 0,
-                   (struct sockaddr *)&client_recv_addr, sizeof(client_recv_addr));
+        if (!got_send_ack) {
+            sendto_dbg(client_send_sk, &ack_pkt, sizeof(packet_header), 0,
+                       (struct sockaddr *)&client_send_addr, sizeof(client_send_addr));
+        }
+        if (!got_recv_ack) {
+            sendto_dbg(client_recv_sk, &ack_pkt, sizeof(packet_header), 0,
+                       (struct sockaddr *)&client_recv_addr, sizeof(client_recv_addr));
+        }
 
         num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
 
