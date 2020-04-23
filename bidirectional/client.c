@@ -33,7 +33,7 @@ void start_client(const char *address, int pred_mode, bool android)
         read_mask = mask;
         timeout.tv_sec = TIMEOUT_SEC;
         timeout.tv_usec = TIMEOUT_USEC;
-        
+
         ack_pkt.type = NETWORK_START;
         ack_pkt.rate = 0;
         ack_pkt.seq_num = 0;
@@ -61,6 +61,12 @@ void start_client(const char *address, int pred_mode, bool android)
                     printf("got send ack\n");
                     got_send_ack = true;
                 }
+
+                if (data_pkt.hdr.type == NETWORK_BUSY)
+                {
+                    // exit the server is busy
+                    return;
+                }
             }
             if (FD_ISSET(client_recv_sk, &read_mask))
             {
@@ -76,6 +82,12 @@ void start_client(const char *address, int pred_mode, bool android)
                 {
                     printf("got recv ack\n");
                     got_recv_ack = true;
+                }
+
+                if (data_pkt.hdr.type == NETWORK_BUSY)
+                {
+                    // exit the server is busy
+                    return;
                 }
             }
         }
