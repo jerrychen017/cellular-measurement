@@ -150,7 +150,6 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                 data_pkt.hdr.seq_num = seq;
                 data_pkt.hdr.rate = burst_seq_recv == -1 ? rate : rate * BURST_FACTOR;
                 data_pkt.hdr.burst_start = burst_seq_recv == -1 ? 0 : seq - burst_seq_recv;
-
                 if (burst_seq_recv == -1)
                 {
                     if (burst_seq_send != -1)

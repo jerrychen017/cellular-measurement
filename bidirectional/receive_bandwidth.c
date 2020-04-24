@@ -69,7 +69,7 @@ void receive_bandwidth(int s_bw, int predMode, struct sockaddr_in expected_addr)
     packet_header ack_pkt;
 
     memset(&ack_pkt, 0, sizeof(packet_header));
-    memset(&report_pkt, 0, sizeof(data_packet));
+    memset(&report_pkt, 0, sizeof(packet_header));
     memset(&data_pkt, 0, sizeof(data_packet));
 
     // Add file descriptors to fdset
