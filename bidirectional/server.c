@@ -39,7 +39,6 @@ int main(int argc, char **argv)
     socklen_t server_send_len = sizeof(server_send_addr);
 
     start_packet recv_pkt;
-    start_packet *recvPkt;
     packet_header ack_pkt;
     memset(&ack_pkt, 0, sizeof(packet_header));
     memset(&recv_pkt, 0, sizeof(start_packet));
@@ -68,11 +67,9 @@ int main(int argc, char **argv)
                     perror("socket error");
                     exit(1);
                 }
-                recvPkt = (struct start_packet*) &buf;
-                char new_buf[4];
-                memcpy(new_buf, buf, sizeof(recv_pkt.type));
-                printf("BUFFF type size is %d\n", *((int*)new_buf));
-                printf("STRUCT burst size is %d\n", recvPkt->params.burst_size);
+                int offset = 0;
+                memcpy(recv_pkt.type, buf + offset, sizeof(recv_pkt.type));
+                printf("STRUCT type size is %d\n", recv_pkt.type);
                 if (recv_pkt.type == NETWORK_START)
                 {
                     got_send_addr = true;
