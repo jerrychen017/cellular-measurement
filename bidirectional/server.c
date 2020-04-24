@@ -43,14 +43,11 @@ int main(int argc, char **argv)
     packet_header ack_pkt;
     memset(&ack_pkt, 0, sizeof(packet_header));
     memset(&recv_pkt, 0, sizeof(start_packet));
-    struct parameters recv_params;
 
     bool got_recv_addr = false;
     bool got_send_addr = false;
     
-    char buf[sizeof(start_packet)];
-
-    printf("THIS IS THE SIZE: %d\n", sizeof(buf));
+    char buf[sizeof(start_packet)]; //Buffer for the serialized struct
 
     for (;;)
     {
@@ -72,7 +69,9 @@ int main(int argc, char **argv)
                     exit(1);
                 }
                 recvPkt = (struct start_packet*) &buf;
-                printf("BUFFF burst size is %d\n", buf[1]);
+                char new_buf[4];
+                memcpy(new_buf, buf, sizeof(start_pkt.type));
+                printf("BUFFF type size is %d\n", *((int*)new_buf));
                 printf("STRUCT burst size is %d\n", recvPkt->params.burst_size);
                 if (recv_pkt.type == NETWORK_START)
                 {
