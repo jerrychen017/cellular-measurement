@@ -46,6 +46,8 @@ int main(int argc, char **argv)
 
     bool got_recv_addr = false;
     bool got_send_addr = false;
+    
+    char buf[sizeof(start_packet)];
 
     for (;;)
     {
@@ -59,7 +61,7 @@ int main(int argc, char **argv)
         {
             if (FD_ISSET(server_send_sk, &read_mask))
             {
-                len = recvfrom(server_send_sk, &recv_pkt, sizeof(start_packet), 0,
+                len = recvfrom(server_send_sk, &buf, sizeof(buf), 0,
                                (struct sockaddr *)&server_send_addr, &server_send_len);
                 if (len < 0)
                 {
