@@ -2,10 +2,13 @@
 #include "feedbackLogger.h"
 #include "net_utils.h"
 
-void startup(int s_server, struct sockaddr_in send_addr);
+static bool kill_thread = false;
+
 void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sockaddr_un data_addr, socklen_t data_len, struct parameters params);
 
-static bool kill_thread = false;
+double adjustRate(double current, double reported, double min, double max, bool burst);
+void handleStartPacket(int s, struct sockaddr_in from, struct sockaddr_in expected);
+
 int start_controller(bool android, struct sockaddr_in send_addr, int s_server, struct parameters params)
 {
     kill_thread = false;
@@ -45,6 +48,8 @@ int start_controller(bool android, struct sockaddr_in send_addr, int s_server, s
     }
 
     control(s_server, s_data, send_addr, datagen_addr, datagen_len, params);
+    close(s_data);
+    close(s_server);
     return 0;
 }
 
@@ -56,7 +61,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
     int BURST_SIZE = params.burst_size;
     int INTERVAL_SIZE = params.interval_size;
     double INTERVAL_TIME = params.interval_time;
-    bool INSTANT_BURST = params.instant_burst;
+    int INSTANT_BURST = params.instant_burst;
     int BURST_FACTOR = params.burst_factor;
     double MIN_SPEED = params.min_speed;
     double MAX_SPEED = params.max_speed;
@@ -79,8 +84,6 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
 
     data_packet data_pkt;
     data_packet recv_pkt;
-    packet_header ack_pkt;
-    memset(&ack_pkt, 0, sizeof(packet_header));
     memset(&data_pkt, 0, sizeof(data_packet));
     memset(&recv_pkt, 0, sizeof(data_packet));
 
@@ -98,6 +101,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
     int seq = 0;
     int last_burst = 0;
     double rate = START_SPEED;
+
     timeout.tv_sec = TIMEOUT_SEC;
     timeout.tv_usec = TIMEOUT_USEC;
     expectedTimeout.tv_sec = 0;
@@ -107,15 +111,12 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
     {
         if (kill_thread)
         {
+            packet_header signal_pkt;
+            memset(&signal_pkt, 0, sizeof(packet_header));
 
-            ack_pkt.type = NETWORK_STOP;
-            ack_pkt.rate = 0;
-            ack_pkt.seq_num = 0;
-            ack_pkt.burst_start = 0;
-            sendto(s_server, &ack_pkt, sizeof(packet_header), 0,
+            signal_pkt.type = NETWORK_STOP;
+            sendto(s_server, &signal_pkt, sizeof(packet_header), 0,
                    (struct sockaddr *)&server_addr, server_addr_len);
-            close(s_data);
-            close(s_server);
             return;
         }
         read_mask = mask;
@@ -131,8 +132,6 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                 if (len == 0)
                 {
                     printf("data stream ended, exiting...\n");
-                    close(s_data);
-                    close(s_server);
                     return;
                 }
                 if (len != sizeof(data_pkt.data))
@@ -219,6 +218,12 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                         burst_seq_send = -1;
                     }
                 }
+
+
+                if (seq % INTERVAL_SIZE == INTERVAL_SIZE / 2) {
+                    sendFeedbackUpload(rate);
+                }
+
                 seq++;
             }
             if (FD_ISSET(s_server, &read_mask))
@@ -227,34 +232,17 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                 if (len <= 0)
                 {
                     printf("data stream ended, exiting...\n");
-                    close(s_data);
-                    close(s_server);
-                    exit(0);
+                    return;
                 }
 
                 if (data_pkt.hdr.type == NETWORK_START)
                 {
-                    if (server_addr.sin_addr.s_addr == send_addr.sin_addr.s_addr && server_addr.sin_port == send_addr.sin_port)
-                    {
-                        ack_pkt.type = NETWORK_START_ACK;
-                    }
-                    else
-                    {
-                        ack_pkt.type = NETWORK_BUSY;
-                    }
-                    ack_pkt.rate = 0;
-                    ack_pkt.seq_num = 0;
-                    ack_pkt.burst_start = 0;
-
-                    sendto(s_server, &ack_pkt, sizeof(packet_header), 0,
-                           (struct sockaddr *)&server_addr, server_addr_len);
+                    handleStartPacket(s_server, server_addr, send_addr);
                     continue;
                 }
 
                 if (data_pkt.hdr.type == NETWORK_STOP)
                 {
-                    close(s_data);
-                    close(s_server);
                     return;
                 }
 
@@ -262,41 +250,14 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                 if (recv_pkt.hdr.type == NETWORK_REPORT || recv_pkt.hdr.type == NETWORK_BURST_REPORT)
                 {
                     double reportedRate = recv_pkt.hdr.rate;
-                    double newRate;
-
-                    // printf("feedback from %d on cur seq %d\n", seq, recv_pkt.hdr.seq_num);
-                    if (recv_pkt.hdr.type == NETWORK_BURST_REPORT)
-                    {
-                        if (0.9 * reportedRate >= rate + 1)
-                        {
-                            newRate = rate + 1;
-                        }
-                        else
-                        {
-                            newRate = 0.95 * reportedRate;
-                        }
-                    }
-                    else
-                    {
-                        if (reportedRate >= rate)
-                        {
-                            newRate = rate;
-                        }
-                        else
-                        {
-                            newRate = reportedRate;
-                        }
-                    }
-
+                    bool burst = recv_pkt.hdr.type == NETWORK_BURST_REPORT;
                     // Adjust rate
-                    rate = newRate >= MAX_SPEED ? MAX_SPEED : newRate;
-                    last_burst = seq;
+                    rate = adjustRate(rate, reportedRate, MIN_SPEED, MAX_SPEED, burst);
 
                     control_pkt.rate = rate;
                     control_pkt.type = LOCAL_CONTROL;
 
                     sendto(s_data, &control_pkt, sizeof(control_pkt), 0, (struct sockaddr *)&data_addr, data_len);
-
                     sendFeedbackUpload(rate);
                     printf("Adjusted rate to %.4f\n", rate);
                 }
@@ -311,10 +272,6 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
             }
             else
             {
-                if (INSTANT_BURST) {
-                    continue;
-                }
-
                 if (burst_seq_send >= burst_seq_recv && burst_seq_recv != -1)
                 {
                     printf("Error: burst trying to send seq not received %d\n", burst_seq_send);
@@ -364,9 +321,54 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
     }
 }
 
+
+/* Given feeback from server, adjust to rate */
+double adjustRate(double current, double reported, double min, double max, bool burst)
+{
+    double newRate = current;
+
+    // feedback on burst
+    if (burst)
+    {
+        if (0.9 * reported >= current + 1)
+        {
+            newRate = current + 1;
+        }
+        else
+        {
+            newRate = 0.9 * reported;
+        }
+    }
+    // Non burst feedback
+    else if (reported < current)
+    {
+        newRate = reported;
+    }
+    newRate = newRate >= max ? max : newRate;
+    newRate = newRate <= min ? min : newRate;
+    return newRate;
+}
+
+/* Reply to extraneous NETWORK_START packet */
+void handleStartPacket(int s, struct sockaddr_in from, struct sockaddr_in expected)
+{
+    packet_header ack_pkt;
+    memset(&ack_pkt, 0, sizeof(packet_header));
+
+    if (from.sin_addr.s_addr == expected.sin_addr.s_addr && from.sin_port == expected.sin_port)
+    {
+        ack_pkt.type = NETWORK_START_ACK;
+    }
+    else
+    {
+        ack_pkt.type = NETWORK_BUSY;
+    }
+
+    sendto(s, &ack_pkt, sizeof(packet_header), 0,
+            (struct sockaddr *)&from, sizeof(from));
+}
+
 void stop_controller_thread()
 {
     kill_thread = true;
 }
-//if (reportedRate < rate)
-// max (reportedRate - (rate - reportedRate), .5 * reportedRate)

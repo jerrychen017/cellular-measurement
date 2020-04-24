@@ -58,6 +58,7 @@
 #define CLIENT_SEND_PORT 4579
 #define CLIENT_RECEIVE_PORT 4578
 
+// #pragma pack(1)
 struct parameters
 {
     int burst_size;    // number of packets in increased speed burst
@@ -70,6 +71,7 @@ struct parameters
     double max_speed;
     double start_speed;
 };
+// #pragma pack(0)
 
 enum NetworkPacketType
 {
