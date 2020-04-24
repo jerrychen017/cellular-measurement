@@ -21,12 +21,19 @@ void start_client(const char *address, int pred_mode, bool android, struct param
     int num, len;
 
     data_packet data_pkt;
-    packet_header ack_pkt;
+    data_packet send_pkt;
     struct sockaddr_in from_addr;
     socklen_t from_len = sizeof(from_addr);
 
     bool got_send_ack = false;
     bool got_recv_ack = false;
+
+    // initialize send packet
+    send_pkt.hdr.type = NETWORK_START;
+    send_pkt.hdr.rate = 0;
+    send_pkt.hdr.seq_num = 0;
+    send_pkt.hdr.burst_start = 0;
+    memcpy(send_pkt.data, &params, sizeof(struct parameters));
 
     for (;;)
     {
@@ -34,21 +41,14 @@ void start_client(const char *address, int pred_mode, bool android, struct param
         timeout.tv_sec = TIMEOUT_SEC;
         timeout.tv_usec = TIMEOUT_USEC;
 
-        memset(&ack_pkt, 0, sizeof(packet_header));
-
-        ack_pkt.type = NETWORK_START;
-        ack_pkt.rate = 0;
-        ack_pkt.seq_num = 0;
-        ack_pkt.burst_start = 0;
-
         if (!got_send_ack)
         {
-            sendto_dbg(client_send_sk, &ack_pkt, sizeof(packet_header), 0,
+            sendto_dbg(client_send_sk, &send_pkt, sizeof(data_packet), 0,
                        (struct sockaddr *)&client_send_addr, sizeof(client_send_addr));
         }
         if (!got_recv_ack)
         {
-            sendto_dbg(client_recv_sk, &ack_pkt, sizeof(packet_header), 0,
+            sendto_dbg(client_recv_sk, &send_pkt, sizeof(data_packet), 0,
                        (struct sockaddr *)&client_recv_addr, sizeof(client_recv_addr));
         }
 
@@ -115,9 +115,10 @@ void start_client(const char *address, int pred_mode, bool android, struct param
             send_args.sk = client_recv_sk;
             send_args.pred_mode = pred_mode;
             send_args.expected_addr = client_recv_addr;
+            send_args.params = params;
             pthread_create(&tid, NULL, &receive_bandwidth_pthread, (void *)&send_args);
 
-            send_bandwidth(client_send_addr, client_send_sk, android);
+            send_bandwidth(client_send_addr, client_send_sk, android, params);
             return;
         }
     }

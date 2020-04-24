@@ -15,9 +15,11 @@ int main(int argc, char *argv[])
     }
     // address
     char *address = argv[1];
-    // prediction mode 
-    int pred_mode = atoi(argv[2]); 
+    // prediction mode
+    int pred_mode = atoi(argv[2]);
 
-    start_client(address, pred_mode, false);    
+        struct parameters params;
+
+    start_client(address, pred_mode, false, params);
     return 0;
 }
