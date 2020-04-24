@@ -2,7 +2,7 @@
 #include "receive_bandwidth.h"
 #include "net_utils.h"
 
-void start_client(const char *address, int pred_mode, bool android)
+void start_client(const char *address, int pred_mode, bool android, struct parameters params)
 {
 
     int client_send_sk = setup_bound_socket(CLIENT_SEND_PORT);
@@ -41,11 +41,13 @@ void start_client(const char *address, int pred_mode, bool android)
         ack_pkt.seq_num = 0;
         ack_pkt.burst_start = 0;
 
-        if (!got_send_ack) {
+        if (!got_send_ack)
+        {
             sendto_dbg(client_send_sk, &ack_pkt, sizeof(packet_header), 0,
                        (struct sockaddr *)&client_send_addr, sizeof(client_send_addr));
         }
-        if (!got_recv_ack) {
+        if (!got_recv_ack)
+        {
             sendto_dbg(client_recv_sk, &ack_pkt, sizeof(packet_header), 0,
                        (struct sockaddr *)&client_recv_addr, sizeof(client_recv_addr));
         }

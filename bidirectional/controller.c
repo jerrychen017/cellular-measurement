@@ -3,10 +3,10 @@
 #include "net_utils.h"
 
 void startup(int s_server, struct sockaddr_in send_addr);
-void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sockaddr_un data_addr, socklen_t data_len);
+void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sockaddr_un data_addr, socklen_t data_len, struct parameters params);
 
 static bool kill_thread = false;
-int start_controller(bool android, struct sockaddr_in send_addr, int s_server)
+int start_controller(bool android, struct sockaddr_in send_addr, int s_server, struct parameters params)
 {
     kill_thread = false;
 
@@ -44,13 +44,24 @@ int start_controller(bool android, struct sockaddr_in send_addr, int s_server)
         }
     }
 
-    control(s_server, s_data, send_addr, datagen_addr, datagen_len);
+    control(s_server, s_data, send_addr, datagen_addr, datagen_len, params);
     return 0;
 }
 
 /* Main event loop */
-void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sockaddr_un data_addr, socklen_t data_len)
+void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sockaddr_un data_addr, socklen_t data_len, struct parameters params)
 {
+    // parameter variables
+    int BURST_SIZE = params.burst_size;
+    int INTERVAL_SIZE = params.interval_size;
+    double INTERVAL_TIME = params.interval_time;
+    bool INSTANT_BURST = params.instant_burst;
+    int BURST_FACTOR = params.burst_factor;
+    double MIN_SPEED = params.min_speed;
+    double MAX_SPEED = params.max_speed;
+    double START_SPEED = params.start_speed;
+    int GRACE_PERIOD = params.grace_period;
+
     struct sockaddr_in server_addr;
     socklen_t server_addr_len = sizeof(server_addr);
 
@@ -129,17 +140,19 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     exit(1);
                 }
 
-
                 // Start burst
-                if (/*INTERVAL_TIME */ 0 != 0) {
-                    if (seq - last_burst >= INTERVAL_SIZE /*calculate*/ ) {
+                if (/*INTERVAL_TIME */ 0 != 0)
+                {
+                    if (seq - last_burst >= INTERVAL_SIZE /*calculate*/)
+                    {
                         burst_seq_recv = 0;
                         last_burst = seq;
                     }
-
                 }
-                else {
-                    if (seq - last_burst >= INTERVAL_SIZE) {
+                else
+                {
+                    if (seq - last_burst >= INTERVAL_SIZE)
+                    {
                         printf("starting burst at seq %d\n", seq);
                         burst_seq_recv = 0;
                         last_burst = seq;
@@ -248,9 +261,12 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     // printf("feedback from %d on cur seq %d\n", seq, recv_pkt.hdr.seq_num);
                     if (recv_pkt.hdr.type == NETWORK_BURST_REPORT)
                     {
-                        if (0.9 * reportedRate >= rate + 1) {
+                        if (0.9 * reportedRate >= rate + 1)
+                        {
                             newRate = rate + 1;
-                        } else {
+                        }
+                        else
+                        {
                             newRate = 0.95 * reportedRate;
                         }
                     }
@@ -259,11 +275,12 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                         if (reportedRate >= rate)
                         {
                             newRate = rate;
-                        } else {
+                        }
+                        else
+                        {
                             newRate = reportedRate;
                         }
                     }
-
 
                     // Adjust rate
                     rate = newRate >= MAX_SPEED ? MAX_SPEED : newRate;

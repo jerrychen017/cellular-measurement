@@ -6,12 +6,12 @@
 void *send_bandwidth_pthread(void *args)
 {
     struct send_bandwidth_args *recv_args = (struct send_bandwidth_args *)args;
-    send_bandwidth(recv_args->addr, recv_args->sk, recv_args->android);
+    send_bandwidth(recv_args->addr, recv_args->sk, recv_args->android, recv_args->params);
 
     return NULL;
 }
 
-void send_bandwidth(struct sockaddr_in addr, int sk, bool android)
+void send_bandwidth(struct sockaddr_in addr, int sk, bool android, struct parameters params)
 {
     struct data_generator_args send_args;
     pthread_t tid; // thread id for data generator
@@ -19,7 +19,7 @@ void send_bandwidth(struct sockaddr_in addr, int sk, bool android)
     send_args.android = android;
     pthread_create(&tid, NULL, &start_generator_pthread, (void *)&send_args);
 
-    start_controller(android, addr, sk);
+    start_controller(android, addr, sk, params);
     pthread_join(tid, NULL);
     return;
 }

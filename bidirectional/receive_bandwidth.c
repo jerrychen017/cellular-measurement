@@ -15,12 +15,23 @@ void stop_receiving_thread()
 void *receive_bandwidth_pthread(void *args)
 {
     struct recv_bandwidth_args *recv_args = (struct recv_bandwidth_args *)args;
-    receive_bandwidth(recv_args->sk, recv_args->pred_mode, recv_args->expected_addr);
+    receive_bandwidth(recv_args->sk, recv_args->pred_mode, recv_args->expected_addr, recv_args->params);
     return NULL;
 }
 
-void receive_bandwidth(int s_bw, int predMode, struct sockaddr_in expected_addr)
+void receive_bandwidth(int s_bw, int predMode, struct sockaddr_in expected_addr, struct parameters params)
 {
+    // parameter variables
+    int BURST_SIZE = params.burst_size;
+    int INTERVAL_SIZE = params.interval_size;
+    double INTERVAL_TIME = params.interval_time;
+    bool INSTANT_BURST = params.instant_burst;
+    int BURST_FACTOR = params.burst_factor;
+    double MIN_SPEED = params.min_speed;
+    double MAX_SPEED = params.max_speed;
+    double START_SPEED = params.start_speed;
+    int GRACE_PERIOD = params.grace_period;
+
     kill_thread = false;
     struct sockaddr_in from_addr;
     socklen_t from_len = sizeof(from_addr);
@@ -171,15 +182,16 @@ void receive_bandwidth(int s_bw, int predMode, struct sockaddr_in expected_addr)
                     // Calculate index within burst
                     int bursti = data_pkt.hdr.seq_num - data_pkt.hdr.burst_start;
 
-                    if (bursti >= BURST_SIZE) {
+                    if (bursti >= BURST_SIZE)
+                    {
                         printf("invalid burst index %d\n", bursti);
                         exit(1);
                     }
                     gettimeofday(&barrivals[bursti], NULL);
                     breceived[bursti] = 1;
 
-                    bStart = bursti < bStart ? bursti : bStart ;
-                    bEnd = bursti > bEnd ? bursti : bEnd ;
+                    bStart = bursti < bStart ? bursti : bStart;
+                    bEnd = bursti > bEnd ? bursti : bEnd;
                 }
                 else
                 {
@@ -232,7 +244,8 @@ void receive_bandwidth(int s_bw, int predMode, struct sockaddr_in expected_addr)
                         calculated_speed = interval_to_speed(tm_diff, BURST_SIZE - 1);
                         calcRate = calculated_speed; //Figure out threshold
                         // printf("Computed sending rate of %.4f Mbps\n", calcRate);
-                        if (currSeq % INTERVAL_SIZE == INTERVAL_SIZE / 2) {
+                        if (currSeq % INTERVAL_SIZE == INTERVAL_SIZE / 2)
+                        {
                             sendFeedbackDownload(data_pkt.hdr.rate);
                         }
                     }

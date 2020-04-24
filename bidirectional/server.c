@@ -42,6 +42,7 @@ int main(int argc, char **argv)
     packet_header ack_pkt;
     memset(&ack_pkt, 0, sizeof(packet_header));
     memset(&data_pkt, 0, sizeof(data_packet));
+    struct parameters recv_params;
 
     bool got_recv_addr = false;
     bool got_send_addr = false;
@@ -69,6 +70,9 @@ int main(int argc, char **argv)
                 {
                     got_send_addr = true;
 
+                    // save parameters
+                    memcpy(&recv_params, data_pkt.data, sizeof(struct parameters));
+
                     ack_pkt.type = NETWORK_START_ACK;
                     ack_pkt.rate = 0;
                     ack_pkt.seq_num = 0;
@@ -92,6 +96,9 @@ int main(int argc, char **argv)
                 {
                     got_recv_addr = true;
 
+                    // save parameters
+                    memcpy(&recv_params, data_pkt.data, sizeof(struct parameters));
+
                     ack_pkt.type = NETWORK_START_ACK;
                     ack_pkt.rate = 0;
                     ack_pkt.seq_num = 0;
@@ -114,9 +121,10 @@ int main(int argc, char **argv)
             send_args.addr = server_send_addr;
             send_args.sk = server_send_sk;
             send_args.android = false;
+            send_args.params = recv_params;
             pthread_create(&tid, NULL, &send_bandwidth_pthread, (void *)&send_args);
 
-            receive_bandwidth(server_recv_sk, predMode, server_recv_addr);
+            receive_bandwidth(server_recv_sk, predMode, server_recv_addr, recv_params);
             stop_controller_thread();
             stop_data_generator_thread();
             pthread_join(tid, NULL);

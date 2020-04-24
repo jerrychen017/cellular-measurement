@@ -29,13 +29,13 @@
 #define PACKET_SIZE 1400
 
 // controller constants
-#define BURST_SIZE 10 // number of packets in increased speed burst
-#define BURST_FACTOR 2
-#define INTERVAL_SIZE 500 // one burst per INTERVAL_SIZE packets, should make this a multiple of BURST_SIZE
-#define MIN_SPEED 0.1   // 100 Kbps
-#define MAX_SPEED 10 // 10 Mbps
-#define START_SPEED 1.0 // 1.0 Mbps
-#define GRACE_PERIOD 10 // number of tolerated delayed packets
+// #define BURST_SIZE 10 // number of packets in increased speed burst
+// #define BURST_FACTOR 2
+// #define INTERVAL_SIZE 500 // one burst per INTERVAL_SIZE packets, should make this a multiple of BURST_SIZE
+// #define MIN_SPEED 0.1   // 100 Kbps
+// #define MAX_SPEED 10 // 10 Mbps
+// #define START_SPEED 1.0 // 1.0 Mbps
+// #define GRACE_PERIOD 10 // number of tolerated delayed packets
 
 #define SOCK_CONTROLLER "/tmp/controller"
 #define SOCK_DATAGEN "/tmp/datagenerator"
@@ -53,20 +53,33 @@
 #define NAME_LENGTH 100
 
 #define SERVER_RECEIVE_PORT 4579 // client sends and server listens on this port
-#define SERVER_SEND_PORT 4578  // server sends and client listens on this port
-#define SERVER_INTERACTIVE_PORT 4577 
+#define SERVER_SEND_PORT 4578    // server sends and client listens on this port
+#define SERVER_INTERACTIVE_PORT 4577
 #define CLIENT_SEND_PORT 4579
 #define CLIENT_RECEIVE_PORT 4578
+
+struct parameters
+{
+    int burst_size;    // number of packets in increased speed burst
+    int interval_size; // one burst per INTERVAL_SIZE packets, should make this a multiple of BURST_SIZE
+    double interval_time;
+    bool instant_burst;
+    int burst_factor;
+    double min_speed;
+    double max_speed;
+    double start_speed;
+    int grace_period;
+};
 
 enum NetworkPacketType
 {
     NETWORK_DATA,
-    NETWORK_BURST,  // data packet that is sent at a higher rate to probe for bandwidth
+    NETWORK_BURST, // data packet that is sent at a higher rate to probe for bandwidth
     NETWORK_REPORT,
     NETWORK_BURST_REPORT,
     NETWORK_START,
-    NETWORK_START_ACK, 
-    NETWORK_STOP, 
+    NETWORK_START_ACK,
+    NETWORK_STOP,
     NETWORK_BUSY
 };
 
@@ -80,7 +93,7 @@ typedef struct typed_packet_
 {
     int type;
     double rate;
-    char data[PACKET_SIZE - sizeof(int)- sizeof(double)];
+    char data[PACKET_SIZE - sizeof(int) - sizeof(double)];
 } typed_packet;
 
 typedef struct packet_header_
@@ -96,6 +109,5 @@ typedef struct data_packet_
     packet_header hdr;
     char data[PACKET_SIZE - sizeof(packet_header)];
 } data_packet;
-
 
 #endif

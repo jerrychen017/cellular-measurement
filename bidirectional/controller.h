@@ -8,7 +8,7 @@
 /**
  * start_controller is called in android ndk to run controller 
  */
-int start_controller(bool android, struct sockaddr_in send_addr, int s_server);
+int start_controller(bool android, struct sockaddr_in send_addr, int s_server, struct parameters params);
 void stop_controller_thread();
 
 #endif
