@@ -2,13 +2,15 @@
 #include "net_utils.h"
 
 static bool stop_thread = false;
-void * start_generator_pthread(void * args) {
-    struct data_generator_args * received_args = (struct data_generator_args *) args;
+void *start_generator_pthread(void *args)
+{
+    struct data_generator_args *received_args = (struct data_generator_args *)args;
     bool android = received_args->android;
     start_generator(android);
     return NULL;
 }
-void start_generator(bool android) {
+void start_generator(bool android)
+{
 
     stop_thread = false;
 
@@ -30,7 +32,7 @@ void start_generator(bool android) {
     typed_packet pkt;
     char buffer[DATA_SIZE];
     memset(buffer, 0, DATA_SIZE);
-    
+
     struct timeval tmPrev;
     struct timeval tmNow;
     double speed = 1.0;
@@ -44,7 +46,8 @@ void start_generator(bool android) {
 
     for (;;)
     {
-        if (stop_thread) {
+        if (stop_thread)
+        {
             close(s);
             return;
         }
@@ -53,11 +56,13 @@ void start_generator(bool android) {
 
         num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
 
-        if (num > 0) {
+        if (num > 0)
+        {
             if (FD_ISSET(s, &read_mask))
             {
                 int len = recv(s, &pkt, sizeof(typed_packet), 0);
-                if (len <= 0) {
+                if (len <= 0)
+                {
                     printf("controller disconnected, exiting\n");
                     return;
                 }
@@ -65,29 +70,31 @@ void start_generator(bool android) {
                 {
                     printf("Starting data stream\n");
 
-                    sendto(s, &pkt, len , 0,
-                            (struct sockaddr *) &send_addr, send_len);
-                    
-		            start = true;
-		            expectedTimeout = speed_to_interval(speed);
+                    sendto(s, &pkt, len, 0,
+                           (struct sockaddr *)&send_addr, send_len);
+
+                    start = true;
+                    expectedTimeout = speed_to_interval(speed);
                 }
                 else if (pkt.type == LOCAL_CONTROL)
-		        {
+                {
                     // adjust speed
                     speed = pkt.rate;
-                    if (speed <= 0) {
+                    if (speed <= 0)
+                    {
                         perror("negative speed &\n");
                         exit(1);
                     }
-                    if (speed > MAX_SPEED) {
-                        perror("exceed max speed\n");
-                        exit(1);
-                    }
-		            // expectedTimeout = diffTime(speed_to_interval(speed), timeout);
+                    // if (speed > MAX_SPEED) {
+                    //     perror("exceed max speed\n");
+                    //     exit(1);
+                    // }
+                    // expectedTimeout = diffTime(speed_to_interval(speed), timeout);
                 }
             }
         }
-        else {
+        else
+        {
             //timeout
             if (!start)
             {
@@ -95,15 +102,17 @@ void start_generator(bool android) {
             }
             else
             {
-                sendto(s, buffer, DATA_SIZE , 0,
-                    (struct sockaddr *) &send_addr, send_len);
+                sendto(s, buffer, DATA_SIZE, 0,
+                       (struct sockaddr *)&send_addr, send_len);
 
                 gettimeofday(&tmNow, NULL);
-                if (seq != 0) {
+                if (seq != 0)
+                {
                     // Account for kernel returning from select loop late
-                    struct timeval baseTimeout = speed_to_interval(speed); 
+                    struct timeval baseTimeout = speed_to_interval(speed);
                     struct timeval tmExtra = diffTime(diffTime(tmNow, tmPrev), expectedTimeout);
-                    while (gtTime(tmExtra, baseTimeout)) {
+                    while (gtTime(tmExtra, baseTimeout))
+                    {
                         seq++;
                         send(s, buffer, DATA_SIZE, 0);
                         tmExtra = diffTime(tmExtra, baseTimeout);
@@ -120,17 +129,20 @@ void start_generator(bool android) {
         }
 
         // timeout limit
-        if (!start) {
+        if (!start)
+        {
             timeout.tv_sec = TIMEOUT_SEC;
             timeout.tv_usec = TIMEOUT_USEC;
-        } else {
+        }
+        else
+        {
             timeout = expectedTimeout;
         }
-
-     }
-     return;
+    }
+    return;
 }
 
-void stop_data_generator_thread() {
+void stop_data_generator_thread()
+{
     stop_thread = true;
 }
