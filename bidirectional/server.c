@@ -47,6 +47,9 @@ int main(int argc, char **argv)
     bool got_recv_addr = false;
     bool got_send_addr = false;
 
+    char buf[sizeof(start_packet)];
+    char buf2[sizeof(start_packet)];
+
     for (;;)
     {
         read_mask = mask;
@@ -59,7 +62,7 @@ int main(int argc, char **argv)
         {
             if (FD_ISSET(server_send_sk, &read_mask))
             {
-                len = recvfrom(server_send_sk, &recv_pkt, sizeof(start_packet), 0,
+                len = recvfrom(server_send_sk, &buf, sizeof(start_packet), 0,
                                (struct sockaddr *)&server_send_addr, &server_send_len);
                 if (len < 0)
                 {
@@ -81,7 +84,7 @@ int main(int argc, char **argv)
             }
             if (FD_ISSET(server_recv_sk, &read_mask))
             {
-                len = recvfrom(server_recv_sk, &recv_pkt, sizeof(start_packet), 0,
+                len = recvfrom(server_recv_sk, &buf2, sizeof(start_packet), 0,
                                (struct sockaddr *)&server_recv_addr, &server_recv_len);
                 if (len < 0)
                 {
@@ -114,7 +117,7 @@ int main(int argc, char **argv)
             struct parameters recv_params;
             recv_params = recv_pkt.params;
 
-            printf("burst size is %d\n", recv_params.burst_size);
+            printf("burst size is %d\n", buf[1]);
             printf("interval_size is %d\n", recv_params.interval_size);
             printf("interval_time is %f\n", recv_params.interval_time);
             printf("instant_burst is %d\n", recv_params.instant_burst);
