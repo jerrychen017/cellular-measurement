@@ -1,7 +1,7 @@
 #ifndef ECHO_CLIENT_H
 #define ECHO_CLIENT_H
-#include "../bandwidth_measurement/net_include.h"
-#include "../bandwidth_measurement/bandwidth_utils.h"
+#include "interactive_net_include.h"
+#include "../bidirectional/bandwidth_utils.h"
 
 int client_bind(const char* address, int port);
 char * echo_send(const char* address, int port, int seq);
