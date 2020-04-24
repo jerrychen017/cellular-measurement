@@ -51,8 +51,6 @@ int start_controller(bool android, struct sockaddr_in send_addr, int s_server)
 /* Main event loop */
 void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sockaddr_un data_addr, socklen_t data_len)
 {
-    static char feedbackBuf[256];
-
     struct sockaddr_in server_addr;
     socklen_t server_addr_len = sizeof(server_addr);
 
@@ -243,23 +241,23 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     {
                         if (reportedRate >= rate)
                         {
-                            continue;
+                            newRate = rate;
+                        } else {
+                            newRate = reportedRate;
                         }
-                        newRate = reportedRate;
                     }
 
-                    rate = recv_pkt.hdr.rate >= MAX_SPEED ? MAX_SPEED : newRate;
+
+                    // Adjust rate
+                    rate = newRate >= MAX_SPEED ? MAX_SPEED : newRate;
 
                     control_pkt.rate = rate;
                     control_pkt.type = LOCAL_CONTROL;
 
                     sendto(s_data, &control_pkt, sizeof(control_pkt), 0, (struct sockaddr *)&data_addr, data_len);
 
-                    if (recv_pkt.hdr.type != NETWORK_BURST_REPORT) {
-                        sprintf(feedbackBuf, "%.4f", rate);
-                        sendFeedbackUpload(rate);
-                    }
-                    printf("%.4f\n", rate);
+                    sendFeedbackUpload(rate);
+                    printf("Adjusted rate to %.4f\n", rate);
                 }
             }
         }

@@ -184,7 +184,7 @@ void receive_bandwidth(int s_bw, int predMode, struct sockaddr_in expected_addr)
                         if (burstSeq - 1 != bFirst)
                         {
                             calculated_speed = interval_to_speed(tm_diff, (burstSeq - 1) - bFirst);
-                            // printf("Burst calculated speed of %.4f Mbps\n", calculated_speed);
+                            printf("Burst calculated speed of %.4f Mbps\n", calculated_speed);
                             report_pkt.type = NETWORK_BURST_REPORT;
                             report_pkt.rate = calculated_speed;
                             report_pkt.seq_num = currSeq;
