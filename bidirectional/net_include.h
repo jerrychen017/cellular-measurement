@@ -62,13 +62,13 @@ struct parameters
 {
     int burst_size;    // number of packets in increased speed burst
     int interval_size; // one burst per INTERVAL_SIZE packets, should make this a multiple of BURST_SIZE
-    double interval_time;
+    int grace_period;
     int instant_burst;
     int burst_factor;
+    double interval_time;
     double min_speed;
     double max_speed;
     double start_speed;
-    int grace_period;
 };
 
 enum NetworkPacketType
