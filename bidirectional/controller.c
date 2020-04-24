@@ -68,8 +68,8 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
     double START_SPEED = params.start_speed;
     int GRACE_PERIOD = params.grace_period;
 
-    struct sockaddr_in server_addr;
-    socklen_t server_addr_len = sizeof(server_addr);
+    struct sockaddr_in from_addr;
+    socklen_t from_addr_len = sizeof(from_addr);
 
     fd_set mask;
     fd_set read_mask;
@@ -116,7 +116,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
 
             signal_pkt.type = NETWORK_STOP;
             sendto(s_server, &signal_pkt, sizeof(packet_header), 0,
-                   (struct sockaddr *)&server_addr, server_addr_len);
+                   (struct sockaddr *)&send_addr, sizeof(send_addr));
             return;
         }
         read_mask = mask;
@@ -228,7 +228,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
             }
             if (FD_ISSET(s_server, &read_mask))
             {
-                int len = recvfrom(s_server, &recv_pkt, sizeof(data_packet), 0, (struct sockaddr *)&server_addr, &server_addr_len);
+                int len = recvfrom(s_server, &recv_pkt, sizeof(data_packet), 0, (struct sockaddr *)&from_addr, &from_addr_len);
                 if (len <= 0)
                 {
                     printf("data stream ended, exiting...\n");
@@ -237,7 +237,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
 
                 if (data_pkt.hdr.type == NETWORK_START)
                 {
-                    handleStartPacket(s_server, server_addr, send_addr);
+                    handleStartPacket(s_server, from_addr, send_addr);
                     continue;
                 }
 

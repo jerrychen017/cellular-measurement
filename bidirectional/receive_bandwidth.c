@@ -97,7 +97,7 @@ void receive_bandwidth(int s_bw, int predMode, struct sockaddr_in expected_addr,
             report_pkt.seq_num = 0;
 
             sendto_dbg(s_bw, &report_pkt, sizeof(report_pkt), 0,
-                       (struct sockaddr *)&from_addr, from_len);
+                       (struct sockaddr *)&expected_addr, sizeof(expected_addr));
             close(s_bw);
             return;
         }
