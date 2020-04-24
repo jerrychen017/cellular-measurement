@@ -71,6 +71,7 @@ struct parameters
     double max_speed;
     double start_speed;
 };
+#pragma pack(0)
 
 enum NetworkPacketType
 {
