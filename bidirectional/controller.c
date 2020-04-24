@@ -84,6 +84,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
     data_packet pkt_buffer[BURST_SIZE];
 
     int seq = 0;
+    int last_burst = 0;
     double rate = START_SPEED;
     timeout.tv_sec = TIMEOUT_SEC;
     timeout.tv_usec = TIMEOUT_USEC;
@@ -128,11 +129,21 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     exit(1);
                 }
 
+
                 // Start burst
-                if (seq % INTERVAL_SIZE == INTERVAL_SIZE - BURST_SIZE)
-                {
-                    // printf("starting burst at seq %d\n", seq);
-                    burst_seq_recv = 0;
+                if (/*INTERVAL_TIME */ 0 != 0) {
+                    if (seq - last_burst >= INTERVAL_SIZE /*calculate*/ ) {
+                        burst_seq_recv = 0;
+                        last_burst = seq;
+                    }
+
+                }
+                else {
+                    if (seq - last_burst >= INTERVAL_SIZE) {
+                        printf("starting burst at seq %d\n", seq);
+                        burst_seq_recv = 0;
+                        last_burst = seq;
+                    }
                 }
 
                 data_pkt.hdr.type = burst_seq_recv == -1 ? NETWORK_DATA : NETWORK_BURST;
@@ -257,6 +268,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
 
                     // Adjust rate
                     rate = newRate >= MAX_SPEED ? MAX_SPEED : newRate;
+                    last_burst = seq;
 
                     control_pkt.rate = rate;
                     control_pkt.type = LOCAL_CONTROL;
