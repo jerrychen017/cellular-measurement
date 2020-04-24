@@ -50,6 +50,8 @@ int main(int argc, char **argv)
     
     char buf[sizeof(start_packet)];
 
+    printf("THIS IS THE SIZE: %d\n", sizeof(buf));
+
     for (;;)
     {
         read_mask = mask;
