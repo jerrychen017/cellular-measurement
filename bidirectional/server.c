@@ -70,7 +70,8 @@ int main(int argc, char **argv)
                     exit(1);
                 }
                 recvPkt = (struct start_packet*) &buf;
-                printf("BUFFF burst size is %d\n", recvPkt->params.burst_size);
+                printf("BUFFF burst size is %d\n", buf[1]);
+                printf("STRUCT burst size is %d\n", recvPkt->params.burst_size);
                 if (recv_pkt.type == NETWORK_START)
                 {
                     got_send_addr = true;
