@@ -70,7 +70,7 @@ int main(int argc, char **argv)
                 }
                 recvPkt = (struct start_packet*) &buf;
                 char new_buf[4];
-                memcpy(new_buf, buf, sizeof(start_pkt.type));
+                memcpy(new_buf, buf, sizeof(recv_pkt.type));
                 printf("BUFFF type size is %d\n", *((int*)new_buf));
                 printf("STRUCT burst size is %d\n", recvPkt->params.burst_size);
                 if (recv_pkt.type == NETWORK_START)
