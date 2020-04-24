@@ -55,7 +55,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
     int BURST_SIZE = params.burst_size;
     int INTERVAL_SIZE = params.interval_size;
     double INTERVAL_TIME = params.interval_time;
-    bool INSTANT_BURST = params.instant_burst;
+    int INSTANT_BURST = params.instant_burst;
     int BURST_FACTOR = params.burst_factor;
     double MIN_SPEED = params.min_speed;
     double MAX_SPEED = params.max_speed;
