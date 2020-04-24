@@ -153,7 +153,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                 {
                     if (seq - last_burst >= INTERVAL_SIZE)
                     {
-                        printf("starting burst at seq %d\n", seq);
+                        // printf("starting burst at seq %d\n", seq);
                         burst_seq_recv = 0;
                         last_burst = seq;
                     }

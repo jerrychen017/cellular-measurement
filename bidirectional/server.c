@@ -38,10 +38,10 @@ int main(int argc, char **argv)
     struct sockaddr_in server_send_addr;
     socklen_t server_send_len = sizeof(server_send_addr);
 
-    data_packet data_pkt;
+    start_packet recv_pkt;
     packet_header ack_pkt;
     memset(&ack_pkt, 0, sizeof(packet_header));
-    memset(&data_pkt, 0, sizeof(data_packet));
+    memset(&recv_pkt, 0, sizeof(start_packet));
     struct parameters recv_params;
 
     bool got_recv_addr = false;
@@ -59,19 +59,16 @@ int main(int argc, char **argv)
         {
             if (FD_ISSET(server_send_sk, &read_mask))
             {
-                len = recvfrom(server_send_sk, &data_pkt, sizeof(data_packet), 0,
+                len = recvfrom(server_send_sk, &recv_pkt, sizeof(start_packet), 0,
                                (struct sockaddr *)&server_send_addr, &server_send_len);
                 if (len < 0)
                 {
                     perror("socket error");
                     exit(1);
                 }
-                if (data_pkt.hdr.type == NETWORK_START)
+                if (recv_pkt.type == NETWORK_START)
                 {
                     got_send_addr = true;
-
-                    // save parameters
-                    memcpy(&recv_params, data_pkt.data, sizeof(struct parameters));
 
                     ack_pkt.type = NETWORK_START_ACK;
                     ack_pkt.rate = 0;
@@ -84,7 +81,7 @@ int main(int argc, char **argv)
             }
             if (FD_ISSET(server_recv_sk, &read_mask))
             {
-                len = recvfrom(server_recv_sk, &data_pkt, sizeof(data_packet), 0,
+                len = recvfrom(server_recv_sk, &recv_pkt, sizeof(start_packet), 0,
                                (struct sockaddr *)&server_recv_addr, &server_recv_len);
                 if (len < 0)
                 {
@@ -92,12 +89,9 @@ int main(int argc, char **argv)
                     exit(1);
                 }
 
-                if (data_pkt.hdr.type == NETWORK_START)
+                if (recv_pkt.type == NETWORK_START)
                 {
                     got_recv_addr = true;
-
-                    // save parameters
-                    memcpy(&recv_params, data_pkt.data, sizeof(struct parameters));
 
                     ack_pkt.type = NETWORK_START_ACK;
                     ack_pkt.rate = 0;
@@ -116,6 +110,18 @@ int main(int argc, char **argv)
 
         if (got_send_addr && got_recv_addr)
         {
+
+            struct parameters recv_params;
+            recv_params.burst_size = recv_pkt.burst_size;
+            recv_params.interval_size = recv_pkt.interval_size;
+            recv_params.interval_time = recv_pkt.interval_time;
+            recv_params.instant_burst = recv_pkt.instant_burst;
+            recv_params.burst_factor = recv_pkt.burst_factor;
+            recv_params.min_speed = recv_pkt.min_speed;
+            recv_params.max_speed = recv_pkt.max_speed;
+            recv_params.start_speed = recv_pkt.start_speed;
+            recv_params.grace_period = recv_pkt.grace_period;
+
             pthread_t tid;                        // thread id
             struct send_bandwidth_args send_args; // arguments to be passed to send_bandwidth
             send_args.addr = server_send_addr;

@@ -93,8 +93,21 @@ typedef struct typed_packet_
 {
     int type;
     double rate;
-    char data[PACKET_SIZE - sizeof(int) - sizeof(double)];
 } typed_packet;
+
+typedef struct start_packet_
+{
+    int type;
+    int burst_size;
+    int interval_size;
+    double interval_time;
+    bool instant_burst;
+    int burst_factor;
+    double min_speed;
+    double max_speed;
+    double start_speed;
+    int grace_period;
+} start_packet;
 
 typedef struct packet_header_
 {
