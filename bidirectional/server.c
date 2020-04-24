@@ -112,15 +112,7 @@ int main(int argc, char **argv)
         {
 
             struct parameters recv_params;
-            recv_params.burst_size = recv_pkt.burst_size;
-            recv_params.interval_size = recv_pkt.interval_size;
-            recv_params.interval_time = recv_pkt.interval_time;
-            recv_params.instant_burst = recv_pkt.instant_burst;
-            recv_params.burst_factor = recv_pkt.burst_factor;
-            recv_params.min_speed = recv_pkt.min_speed;
-            recv_params.max_speed = recv_pkt.max_speed;
-            recv_params.start_speed = recv_pkt.start_speed;
-            recv_params.grace_period = recv_pkt.grace_period;
+            recv_params = recv_pkt.params;
 
             printf("burst size is %d\n", recv_params.burst_size);
             printf("interval_size is %d\n", recv_params.interval_size);
@@ -131,6 +123,7 @@ int main(int argc, char **argv)
             printf("max_speed is %f\n", recv_params.max_speed);
             printf("start_speed is %f\n", recv_params.start_speed);
             printf("grace_period is %d\n", recv_params.grace_period);
+            printf("size of params is %d\n", sizeof(recv_params));
 
             pthread_t tid;                        // thread id
             struct send_bandwidth_args send_args; // arguments to be passed to send_bandwidth

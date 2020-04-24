@@ -98,15 +98,7 @@ typedef struct typed_packet_
 typedef struct start_packet_
 {
     int type;
-    int burst_size;
-    int interval_size;
-    double interval_time;
-    bool instant_burst;
-    int burst_factor;
-    double min_speed;
-    double max_speed;
-    double start_speed;
-    int grace_period;
+    struct parameters params;
 } start_packet;
 
 typedef struct packet_header_
