@@ -7,7 +7,7 @@
 
 #include "net_include.h"
 #include "bandwidth_utils.h"
-static struct timeval sendTimes[BURST_SIZE];
+//static struct timeval sendTimes[BURST_SIZE];
 static int mySeq = 0;
 
 int sendto_dbg(int s, void *buf, int len, int flags,
