@@ -87,6 +87,7 @@ typedef struct packet_header_
 {
     int type;
     int seq_num;
+    int burst_start;
     double rate;
 } packet_header;
 

@@ -49,10 +49,10 @@ void receive_bandwidth(int s_bw, int predMode, struct sockaddr_in expected_addr)
     // whether we have received a packet in window
     int received[BURST_SIZE];
 
-    // analogous to above for bursts
-    int burstSeq = 0;
-    // first burst packet received
-    int bFirst = 0;
+    // whether we are in a burst
+    bool burst = false;
+    // First and last sequence numbers we receive
+    int bStart = BURST_SIZE, bEnd = -1;
     struct timeval barrivals[BURST_SIZE];
     int breceived[BURST_SIZE];
 
@@ -67,6 +67,10 @@ void receive_bandwidth(int s_bw, int predMode, struct sockaddr_in expected_addr)
     data_packet data_pkt;
     packet_header report_pkt;
     packet_header ack_pkt;
+
+    memset(&ack_pkt, 0, sizeof(packet_header));
+    memset(&report_pkt, 0, sizeof(data_packet));
+    memset(&data_pkt, 0, sizeof(data_packet));
 
     // Add file descriptors to fdset
     FD_ZERO(&mask);
@@ -158,32 +162,34 @@ void receive_bandwidth(int s_bw, int predMode, struct sockaddr_in expected_addr)
                 if (data_pkt.hdr.type == NETWORK_BURST)
                 {
                     // first burst packet we have received
-                    if (burstSeq == 0)
+                    if (!burst)
                     {
                         memset(breceived, 0, sizeof(breceived));
+                        burst = true;
                     }
 
                     // Calculate index within burst
-                    int bursti = (currSeq % INTERVAL_SIZE) - (INTERVAL_SIZE - BURST_SIZE);
+                    int bursti = data_pkt.hdr.seq_num - data_pkt.hdr.burst_start;
 
-                    if (bursti >= burstSeq)
-                    {
-                        if (burstSeq == 0)
-                            bFirst = bursti;
-                        gettimeofday(&barrivals[bursti], NULL);
-                        breceived[i] = 1;
-                        burstSeq = bursti + 1;
+                    if (bursti >= BURST_SIZE) {
+                        printf("invalid burst index %d\n", bursti);
+                        exit(1);
                     }
+                    gettimeofday(&barrivals[bursti], NULL);
+                    breceived[bursti] = 1;
+
+                    bStart = bursti < bStart ? bursti : bStart ;
+                    bEnd = bursti > bEnd ? bursti : bEnd ;
                 }
                 else
                 {
                     // burst just finished, send report
-                    if (burstSeq != 0)
+                    if (burst)
                     {
-                        tm_diff = diffTime(barrivals[burstSeq - 1], barrivals[bFirst]);
-                        if (burstSeq - 1 != bFirst)
+                        tm_diff = diffTime(barrivals[bEnd], barrivals[bStart]);
+                        if (bEnd != bStart)
                         {
-                            calculated_speed = interval_to_speed(tm_diff, (burstSeq - 1) - bFirst);
+                            calculated_speed = interval_to_speed(tm_diff, bEnd - bStart);
                             printf("Burst calculated speed of %.4f Mbps\n", calculated_speed);
                             report_pkt.type = NETWORK_BURST_REPORT;
                             report_pkt.rate = calculated_speed;
@@ -191,7 +197,11 @@ void receive_bandwidth(int s_bw, int predMode, struct sockaddr_in expected_addr)
 
                             sendto_dbg(s_bw, &report_pkt, sizeof(report_pkt), 0,
                                        (struct sockaddr *)&from_addr, from_len);
-                            burstSeq = 0;
+
+                            // Reset burst stuff
+                            burst = false;
+                            bStart = BURST_SIZE;
+                            bEnd = -1;
                         }
                     }
 

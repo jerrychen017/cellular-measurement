@@ -68,6 +68,9 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
     data_packet data_pkt;
     data_packet recv_pkt;
     packet_header ack_pkt;
+    memset(&ack_pkt, 0, sizeof(packet_header));
+    memset(&data_pkt, 0, sizeof(data_packet));
+    memset(&recv_pkt, 0, sizeof(data_packet));
 
     typed_packet control_pkt;
     memset(&control_pkt, 0, sizeof(typed_packet));
@@ -95,6 +98,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
             ack_pkt.type = NETWORK_STOP;
             ack_pkt.rate = 0;
             ack_pkt.seq_num = 0;
+            ack_pkt.burst_start = 0;
             sendto(s_server, &ack_pkt, sizeof(packet_header), 0,
                    (struct sockaddr *)&server_addr, server_addr_len);
             close(s_data);
@@ -134,6 +138,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                 data_pkt.hdr.type = burst_seq_recv == -1 ? NETWORK_DATA : NETWORK_BURST;
                 data_pkt.hdr.seq_num = seq;
                 data_pkt.hdr.rate = burst_seq_recv == -1 ? rate : rate * BURST_FACTOR;
+                data_pkt.hdr.burst_start = burst_seq_recv == -1 ? 0 : seq - burst_seq_recv;
 
                 if (burst_seq_recv == -1)
                 {
@@ -210,6 +215,8 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     }
                     ack_pkt.rate = 0;
                     ack_pkt.seq_num = 0;
+                    ack_pkt.burst_start = 0;
+
                     sendto(s_server, &ack_pkt, sizeof(packet_header), 0,
                            (struct sockaddr *)&server_addr, server_addr_len);
                     continue;

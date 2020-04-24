@@ -40,6 +40,8 @@ int main(int argc, char **argv)
 
     data_packet data_pkt;
     packet_header ack_pkt;
+    memset(&ack_pkt, 0, sizeof(packet_header));
+    memset(&data_pkt, 0, sizeof(data_packet));
 
     bool got_recv_addr = false;
     bool got_send_addr = false;
@@ -70,6 +72,7 @@ int main(int argc, char **argv)
                     ack_pkt.type = NETWORK_START_ACK;
                     ack_pkt.rate = 0;
                     ack_pkt.seq_num = 0;
+                    ack_pkt.burst_start = 0;
                     sendto_dbg(server_send_sk, &ack_pkt, sizeof(packet_header), 0,
                                (struct sockaddr *)&server_send_addr, server_send_len);
                     printf("sending send ack\n");

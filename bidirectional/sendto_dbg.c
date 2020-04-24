@@ -13,6 +13,7 @@ static int mySeq = 0;
 int sendto_dbg(int s, void *buf, int len, int flags,
 	       const struct sockaddr *to, int tolen )
 {
+    /*
     gettimeofday(&sendTimes[mySeq % BURST_SIZE], NULL);
 
     if (mySeq >= BURST_SIZE - 1) {
@@ -21,7 +22,7 @@ int sendto_dbg(int s, void *buf, int len, int flags,
 //        printf("Actual speed %.4f\n", rate);
     }
     mySeq++;
-
+    */
 
     return sendto( s, buf, len, flags, to, tolen );
 }

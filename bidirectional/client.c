@@ -34,9 +34,13 @@ void start_client(const char *address, int pred_mode, bool android)
         timeout.tv_sec = TIMEOUT_SEC;
         timeout.tv_usec = TIMEOUT_USEC;
 
+        memset(&ack_pkt, 0, sizeof(packet_header));
+
         ack_pkt.type = NETWORK_START;
         ack_pkt.rate = 0;
         ack_pkt.seq_num = 0;
+        ack_pkt.burst_start = 0;
+
         if (!got_send_ack) {
             sendto_dbg(client_send_sk, &ack_pkt, sizeof(packet_header), 0,
                        (struct sockaddr *)&client_send_addr, sizeof(client_send_addr));
