@@ -68,7 +68,7 @@ int main(int argc, char **argv)
                     exit(1);
                 }
                 int offset = 0;
-                memcpy(recv_pkt.type, buf + offset, sizeof(recv_pkt.type));
+                memcpy(&recv_pkt.type, buf + offset, sizeof(recv_pkt.type));
                 printf("STRUCT type size is %d\n", recv_pkt.type);
                 if (recv_pkt.type == NETWORK_START)
                 {
