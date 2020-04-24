@@ -122,6 +122,16 @@ int main(int argc, char **argv)
             recv_params.start_speed = recv_pkt.start_speed;
             recv_params.grace_period = recv_pkt.grace_period;
 
+            printf("burst size is %d\n", recv_params.burst_size);
+            printf("interval_size is %d\n", recv_params.interval_size);
+            printf("interval_time is %f\n", recv_params.interval_time);
+            printf("instant_burst is %d\n", recv_params.instant_burst);
+            printf("burst_factor is %d\n", recv_params.burst_factor);
+            printf("min_speed is %f\n", recv_params.min_speed);
+            printf("max_speed is %f\n", recv_params.max_speed);
+            printf("start_speed is %f\n", recv_params.start_speed);
+            printf("grace_period is %d\n", recv_params.grace_period);
+
             pthread_t tid;                        // thread id
             struct send_bandwidth_args send_args; // arguments to be passed to send_bandwidth
             send_args.addr = server_send_addr;
