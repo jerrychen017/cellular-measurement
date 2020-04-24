@@ -48,6 +48,7 @@ int start_controller(bool android, struct sockaddr_in send_addr, int s_server, s
     return 0;
 }
 
+
 /* Main event loop */
 void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sockaddr_un data_addr, socklen_t data_len, struct parameters params)
 {
@@ -183,7 +184,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     pkt_buffer[burst_seq_recv] = data_pkt;
 
                     // After receiving half of the packets, we can start sending
-                    if (burst_seq_recv == BURST_SIZE / 2)
+                    if (!INSTANT_BURST && burst_seq_recv == BURST_SIZE / 2)
                     {
                         burst_seq_send = 0;
 
@@ -202,6 +203,11 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     if (burst_seq_recv == BURST_SIZE)
                     {
                         burst_seq_recv = -1;
+
+                        if (INSTANT_BURST) {
+                            burst_seq_send = 0;
+                        }
+
                         //temp fix for burst out of ordering/slow
                         while (burst_seq_send != -1 && burst_seq_send < BURST_SIZE)
                         {
@@ -305,6 +311,10 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
             }
             else
             {
+                if (INSTANT_BURST) {
+                    continue;
+                }
+
                 if (burst_seq_send >= burst_seq_recv && burst_seq_recv != -1)
                 {
                     printf("Error: burst trying to send seq not received %d\n", burst_seq_send);
