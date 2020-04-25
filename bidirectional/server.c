@@ -69,6 +69,26 @@ int main(int argc, char **argv)
                 }
                 int offset = 0;
                 memcpy(&recv_pkt.type, buf + offset, sizeof(recv_pkt.type));
+                offset += sizeof(recv_pkt.type);
+                memcpy(&recv_pkt.params.burst_size, buf + offset, sizeof(recv_pkt.params.burst_size));
+                offset += sizeof(recv_pkt.params.burst_size);
+                memcpy(&recv_pkt.params.interval_size, buf + offset, sizeof(recv_pkt.params.interval_size));
+                offset += sizeof(recv_pkt.params.interval_size);
+                memcpy(&recv_pkt.params.grace_period , buf + offset, sizeof(recv_pkt.params.grace_period));
+                offset += sizeof(recv_pkt.params.grace_period);
+                memcpy(&recv_pkt.params.instant_burst , buf + offset, sizeof(recv_pkt.params.instant_burst));
+                offset += sizeof(recv_pkt.params.instant_burst);
+                memcpy(&recv_pkt.params.burst_factor , buf + offset, sizeof(recv_pkt.params.burst_factor));
+                offset += sizeof(recv_pkt.params.burst_factor);
+                memcpy(&recv_pkt.params.interval_time, buf + offset, sizeof(recv_pkt.params.interval_time));
+                offset += sizeof(recv_pkt.params.interval_time);
+                memcpy(&recv_pkt.params.min_speed, buf + offset, sizeof(recv_pkt.params.min_speed));
+                offset += sizeof(recv_pkt.params.min_speed);
+                memcpy(&recv_pkt.params.max_speed, buf + offset, sizeof(recv_pkt.params.max_speed));
+                offset += sizeof(recv_pkt.params.max_speed);
+                memcpy(&recv_pkt.params.start_speed, buf + offset, sizeof(recv_pkt.params.start_speed));
+                offset += sizeof(recv_pkt.params.start_speed);
+                
                 printf("STRUCT type size is %d\n", recv_pkt.type);
                 if (recv_pkt.type == NETWORK_START)
                 {
