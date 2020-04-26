@@ -8,16 +8,6 @@
  */
 int main(int argc, char **argv)
 {
-    // argc error checking
-    if (argc != 2)
-    {
-        printf("Usage: server <EWMA/RunningAvg>\n");
-        exit(0);
-    }
-
-    // toggle Prediction mode 0 for EMWA and 1 for RunningAvg
-    int predMode = atoi(argv[1]); // TODO: setup this on the client side
-
     // start handshake process. use two different port for sending and receiving
     int server_send_sk = setup_bound_socket(SERVER_SEND_PORT);
     int server_recv_sk = setup_bound_socket(SERVER_RECEIVE_PORT);
