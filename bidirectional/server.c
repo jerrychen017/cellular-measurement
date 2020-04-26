@@ -130,6 +130,7 @@ int main(int argc, char **argv)
             printf("max_speed is %f\n", recv_params.max_speed);
             printf("start_speed is %f\n", recv_params.start_speed);
             printf("grace_period is %d\n", recv_params.grace_period);
+            printf("pred_mode is %d\n", recv_params.pred_mode);
             printf("size of params is %d\n", sizeof(recv_params));
 
             pthread_t tid;                        // thread id
