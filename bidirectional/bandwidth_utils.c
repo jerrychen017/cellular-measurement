@@ -53,3 +53,64 @@ int gtTime(struct timeval left, struct timeval right)
     return (left.tv_sec > right.tv_sec) ||
         (left.tv_sec == right.tv_sec && left.tv_usec > right.tv_usec);
 }
+
+void deserializeStruct(start_packet *recv_pkt, char* buf){
+    int offset = 0;
+    memcpy(&recv_pkt->type, buf + offset, sizeof(recv_pkt->type));
+    offset += sizeof(recv_pkt->type);
+    memcpy(&recv_pkt->params.burst_size, buf + offset, sizeof(recv_pkt->params.burst_size));
+    offset += sizeof(recv_pkt->params.burst_size);
+    memcpy(&recv_pkt->params.interval_size, buf + offset, sizeof(recv_pkt->params.interval_size));
+    offset += sizeof(recv_pkt->params.interval_size);
+    memcpy(&recv_pkt->params.grace_period , buf + offset, sizeof(recv_pkt->params.grace_period));
+    offset += sizeof(recv_pkt->params.grace_period);
+    memcpy(&recv_pkt->params.instant_burst , buf + offset, sizeof(recv_pkt->params.instant_burst));
+    offset += sizeof(recv_pkt->params.instant_burst);
+    memcpy(&recv_pkt->params.burst_factor, buf + offset, sizeof(recv_pkt->params.burst_factor));
+    offset += sizeof(recv_pkt->params.burst_factor);
+    memcpy(&recv_pkt->params.pred_mode, buf + offset, sizeof(recv_pkt->params.pred_mode));
+    offset += sizeof(recv_pkt->params.pred_mode);
+    memcpy(&recv_pkt->params.alpha , buf + offset, sizeof(recv_pkt->params.alpha));
+    offset += sizeof(recv_pkt->params.alpha);
+    memcpy(&recv_pkt->params.threshold , buf + offset, sizeof(recv_pkt->params.threshold));
+    offset += sizeof(recv_pkt->params.threshold);
+    memcpy(&recv_pkt->params.interval_time, buf + offset, sizeof(recv_pkt->params.interval_time));
+    offset += sizeof(recv_pkt->params.interval_time);
+    memcpy(&recv_pkt->params.min_speed, buf + offset, sizeof(recv_pkt->params.min_speed));
+    offset += sizeof(recv_pkt->params.min_speed);
+    memcpy(&recv_pkt->params.max_speed, buf + offset, sizeof(recv_pkt->params.max_speed));
+    offset += sizeof(recv_pkt->params.max_speed);
+    memcpy(&recv_pkt->params.start_speed, buf + offset, sizeof(recv_pkt->params.start_speed));
+    offset += sizeof(recv_pkt->params.start_speed);
+}
+
+// manually serialize to ensure no extra struct paddting
+void serializeStruct(start_packet *send_pkt, char* buf){
+    int offset = 0;
+    memcpy(buf + offset, &send_pkt->type, sizeof(send_pkt->type));
+    offset += sizeof(send_pkt->type);
+    memcpy(buf + offset , &send_pkt->params.burst_size, sizeof(send_pkt->params.burst_size));
+    offset += sizeof(send_pkt->params.burst_size);
+    memcpy(buf + offset , &send_pkt->params.interval_size, sizeof(send_pkt->params.interval_size));
+    offset += sizeof(send_pkt->params.interval_size);
+    memcpy(buf + offset , &send_pkt->params.grace_period, sizeof(send_pkt->params.grace_period));
+    offset += sizeof(send_pkt->params.grace_period);
+    memcpy(buf + offset , &send_pkt->params.instant_burst, sizeof(send_pkt->params.instant_burst));
+    offset += sizeof(send_pkt->params.instant_burst);
+    memcpy(buf + offset , &send_pkt->params.burst_factor, sizeof(send_pkt->params.burst_factor));
+    offset += sizeof(send_pkt->params.burst_factor);
+    memcpy(buf + offset, &send_pkt->params.pred_mode, sizeof(send_pkt->params.pred_mode));
+    offset += sizeof(send_pkt->params.pred_mode);
+    memcpy(buf + offset, &send_pkt->params.alpha, sizeof(send_pkt->params.alpha));
+    offset += sizeof(send_pkt->params.alpha);
+    memcpy(buf + offset, &send_pkt->params.threshold, sizeof(send_pkt->params.threshold));
+    offset += sizeof(send_pkt->params.threshold);
+    memcpy(buf + offset, &send_pkt->params.interval_time, sizeof(send_pkt->params.interval_time));
+    offset += sizeof(send_pkt->params.interval_time);
+    memcpy(buf + offset, &send_pkt->params.min_speed, sizeof(send_pkt->params.min_speed));
+    offset += sizeof(send_pkt->params.min_speed);
+    memcpy(buf + offset , &send_pkt->params.max_speed, sizeof(send_pkt->params.max_speed));
+    offset += sizeof(send_pkt->params.max_speed);
+    memcpy(buf + offset , &send_pkt->params.start_speed, sizeof(send_pkt->params.start_speed));
+    offset += sizeof(send_pkt->params.start_speed);
+}

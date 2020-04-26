@@ -1,8 +1,6 @@
 #include "receive_bandwidth.h"
 #include "feedbackLogger.h"
 
-#define ALPHA 0.1      // closer to 0 is smoother, closer to 1 is quicker reaction (90 packets ~ 1Mbps) 0.2/0.1 for regular
-#define THRESHOLD 0.95 // percent drop threshold
 #define RECV_TIMEOUT_SEC 5
 #define RECV_TIMEOUT_USEC 0
 static bool kill_thread = false;
@@ -15,11 +13,11 @@ void stop_receiving_thread()
 void *receive_bandwidth_pthread(void *args)
 {
     struct recv_bandwidth_args *recv_args = (struct recv_bandwidth_args *)args;
-    receive_bandwidth(recv_args->sk, recv_args->pred_mode, recv_args->expected_addr, recv_args->params);
+    receive_bandwidth(recv_args->sk, recv_args->expected_addr, recv_args->params);
     return NULL;
 }
 
-void receive_bandwidth(int s_bw, int predMode, struct sockaddr_in expected_addr, struct parameters params)
+void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parameters params)
 {
     // parameter variables
     int BURST_SIZE = params.burst_size;
@@ -31,6 +29,9 @@ void receive_bandwidth(int s_bw, int predMode, struct sockaddr_in expected_addr,
     double MAX_SPEED = params.max_speed;
     double START_SPEED = params.start_speed;
     int GRACE_PERIOD = params.grace_period;
+    double THRESHOLD = params.threshold;
+    double ALPHA = params.alpha;
+    int pred_mode = params.pred_mode;
 
     kill_thread = false;
     struct sockaddr_in from_addr;
@@ -222,7 +223,7 @@ void receive_bandwidth(int s_bw, int predMode, struct sockaddr_in expected_addr,
                     double calcRate = expectedRate;
 
                     // EWMA
-                    if (predMode == 0 && numAtCurRate >= 2)
+                    if (pred_mode == 0 && numAtCurRate >= 2)
                     {
                         if (!received[(currSeq - 1) % BURST_SIZE])
                             continue;
@@ -234,7 +235,7 @@ void receive_bandwidth(int s_bw, int predMode, struct sockaddr_in expected_addr,
                         calcRate = ewmaRate;
                     }
                     // Running Avg
-                    if (predMode == 1 && numAtCurRate >= BURST_SIZE)
+                    if (pred_mode == 1 && numAtCurRate >= BURST_SIZE)
                     {
                         if (!received[(currSeq + 1) % BURST_SIZE])
                             continue;

@@ -65,6 +65,9 @@ struct parameters
     int grace_period;
     int instant_burst;
     int burst_factor;
+    int pred_mode;
+    double alpha;
+    double threshold;
     double interval_time;
     double min_speed;
     double max_speed;

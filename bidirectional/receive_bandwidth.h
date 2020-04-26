@@ -14,7 +14,7 @@ struct recv_bandwidth_args
 };
 
 void stop_receiving_thread();
-void receive_bandwidth(int sk, int predMode, struct sockaddr_in expected_addr, struct parameters params);
+void receive_bandwidth(int sk, struct sockaddr_in expected_addr, struct parameters params);
 void *receive_bandwidth_pthread(void *);
 
 #endif
