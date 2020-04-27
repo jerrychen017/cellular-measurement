@@ -51,7 +51,7 @@ int main(int argc, char **argv)
         {
             if (FD_ISSET(server_send_sk, &read_mask))
             {
-                len = recvfrom(server_send_sk, &buf, sizeof(buf), 0,
+                len = recvfrom(server_send_sk, buf, sizeof(buf), 0,
                                (struct sockaddr *)&server_send_addr, &server_send_len);
                 if (len < 0)
                 {
@@ -74,7 +74,7 @@ int main(int argc, char **argv)
             }
             if (FD_ISSET(server_recv_sk, &read_mask))
             {
-                len = recvfrom(server_recv_sk, &buf, sizeof(buf), 0,
+                len = recvfrom(server_recv_sk, buf, sizeof(buf), 0,
                                (struct sockaddr *)&server_recv_addr, &server_recv_len);
                 if (len < 0)
                 {

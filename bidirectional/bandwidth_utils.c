@@ -85,7 +85,7 @@ void deserializeStruct(start_packet *recv_pkt, char* buf){
 }
 
 // manually serialize to ensure no extra struct paddting
-void serializeStruct(start_packet *send_pkt, char* buf){
+int serializeStruct(start_packet *send_pkt, char* buf){
     int offset = 0;
     memcpy(buf + offset, &send_pkt->type, sizeof(send_pkt->type));
     offset += sizeof(send_pkt->type);
@@ -113,4 +113,6 @@ void serializeStruct(start_packet *send_pkt, char* buf){
     offset += sizeof(send_pkt->params.max_speed);
     memcpy(buf + offset , &send_pkt->params.start_speed, sizeof(send_pkt->params.start_speed));
     offset += sizeof(send_pkt->params.start_speed);
+
+    return offset;
 }

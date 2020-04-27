@@ -9,6 +9,6 @@ struct timeval speed_to_interval(double speed);
 double interval_to_speed(struct timeval interval, int num_packets);
 
 void deserializeStruct(start_packet *recv_pkt, char* buf);
-void serializeStruct(start_packet *send_pkt, char* buf);
+int serializeStruct(start_packet *send_pkt, char* buf);
 
 #endif 
