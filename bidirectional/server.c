@@ -104,7 +104,7 @@ int main(int argc, char **argv)
         if (got_send_addr && got_recv_addr)
         {
 
-            deserializeStruct(&recv_pkt, &buf);
+            deserializeStruct(&recv_pkt, buf);
 
             struct parameters recv_params;
             recv_params = recv_pkt.params;
