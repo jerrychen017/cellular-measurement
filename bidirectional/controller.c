@@ -141,9 +141,10 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                 }
 
                 // Start burst
-                if (/*INTERVAL_TIME */ 0 != 0)
+                if (INTERVAL_TIME)
                 {
-                    if (seq - last_burst >= INTERVAL_SIZE /*calculate*/)
+
+                    if (seq - last_burst >= INTERVAL_TIME * rate / (8.0 * PACKET_SIZE))
                     {
                         burst_seq_recv = 0;
                         last_burst = seq;
