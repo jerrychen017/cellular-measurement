@@ -59,8 +59,6 @@ int main(int argc, char **argv)
                     exit(1);
                 }
 
-                deserializeStruct(&recv_pkt, &buf);
-
                 if (recv_pkt.type == NETWORK_START)
                 {
                     got_send_addr = true;
@@ -84,8 +82,6 @@ int main(int argc, char **argv)
                     exit(1);
                 }
 
-                deserializeStruct(&recv_pkt, &buf);
-
                 if (recv_pkt.type == NETWORK_START)
                 {
                     got_recv_addr = true;
@@ -107,6 +103,8 @@ int main(int argc, char **argv)
 
         if (got_send_addr && got_recv_addr)
         {
+
+            deserializeStruct(&recv_pkt, &buf);
 
             struct parameters recv_params;
             recv_params = recv_pkt.params;
