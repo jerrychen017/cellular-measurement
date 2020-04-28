@@ -104,6 +104,7 @@ typedef struct start_packet_
     struct parameters params;
 } start_packet;
 
+#pragma pack(1)
 typedef struct packet_header_
 {
     int type;
@@ -111,11 +112,14 @@ typedef struct packet_header_
     int burst_start;
     double rate;
 } packet_header;
+#pragma pack(0)
 
+#pragma pack(1)
 typedef struct data_packet_
 {
     packet_header hdr;
     char data[PACKET_SIZE - sizeof(packet_header)];
 } data_packet;
+#pragma pack(0)
 
 #endif
