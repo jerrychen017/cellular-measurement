@@ -2,6 +2,8 @@
 #include "feedbackLogger.h"
 #include "net_utils.h"
 
+#define FEEDBACK_FREQ_USEC 200000
+
 static bool kill_thread = false;
 
 void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sockaddr_un data_addr, socklen_t data_len, struct parameters params);
@@ -95,6 +97,8 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
     int burst_seq_send = -1; // index of burst we have sent
     struct timeval tmNow;
     struct timeval tmPrev;
+    struct timeval tm_last_feedback;
+    gettimeofday(&tm_last_feedback, NULL);
 
     data_packet pkt_buffer[BURST_SIZE];
 
@@ -119,6 +123,15 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                    (struct sockaddr *)&send_addr, sizeof(send_addr));
             return;
         }
+
+        struct timeval tm_now_feedback;
+        gettimeofday(&tm_now_feedback, NULL);
+        struct timeval tm_diff_feedback = diffTime(tm_now_feedback, tm_last_feedback);
+        if (tm_diff_feedback.tv_sec * 1000000 + tm_diff_feedback.tv_usec > FEEDBACK_FREQ_USEC) {
+            sendFeedbackUpload(rate);
+            tm_last_feedback = tm_now_feedback;
+        }
+
         read_mask = mask;
         // printf("TIMEOUT %.4f\n", timeout.tv_usec / 1000.0);
         num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
@@ -218,11 +231,6 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                         }
                         burst_seq_send = -1;
                     }
-                }
-
-
-                if (seq % INTERVAL_SIZE == INTERVAL_SIZE / 2) {
-                    sendFeedbackUpload(rate);
                 }
 
                 seq++;

@@ -3,6 +3,7 @@
 
 #define RECV_TIMEOUT_SEC 5
 #define RECV_TIMEOUT_USEC 0
+#define FEEDBACK_FREQ_USEC 200000
 static bool kill_thread = false;
 
 void stop_receiving_thread()
@@ -41,6 +42,9 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
     fd_set mask;
     fd_set read_mask;
     struct timeval timeout;
+    struct timeval tm_last_feedback;
+    struct timeval tm_now;
+    gettimeofday(&tm_last_feedback, NULL);
     int num;
     int len;
 
@@ -144,6 +148,14 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
                     return;
                 }
 
+                gettimeofday(&tm_now, NULL);
+
+                struct timeval tm_diff_feedback = diffTime(tm_now, tm_last_feedback);
+                if (tm_diff_feedback.tv_sec * 1000000 + tm_diff_feedback.tv_usec > FEEDBACK_FREQ_USEC) {
+                    sendFeedbackDownload(data_pkt.hdr.rate);
+                    tm_last_feedback = tm_now;
+                }
+
                 double expectedRate = data_pkt.hdr.rate;
                 int currSeq = data_pkt.hdr.seq_num;
 
@@ -245,10 +257,6 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
                         calculated_speed = interval_to_speed(tm_diff, BURST_SIZE - 1);
                         calcRate = calculated_speed; //Figure out threshold
                         // printf("Computed sending rate of %.4f Mbps\n", calcRate);
-                        if (currSeq % INTERVAL_SIZE == INTERVAL_SIZE / 2)
-                        {
-                            sendFeedbackDownload(data_pkt.hdr.rate);
-                        }
                     }
 
                     // Send report packet if we are under 90 percent of expected rate
