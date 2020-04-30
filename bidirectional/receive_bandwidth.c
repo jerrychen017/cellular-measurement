@@ -152,8 +152,10 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
 
                 struct timeval tm_diff_feedback = diffTime(tm_now, tm_last_feedback);
                 if (tm_diff_feedback.tv_sec * 1000000 + tm_diff_feedback.tv_usec > FEEDBACK_FREQ_USEC) {
-                    sendFeedbackDownload(data_pkt.hdr.rate);
-                    tm_last_feedback = tm_now;
+                    if (data_pkt.hdr.type == NETWORK_DATA) {
+                        sendFeedbackDownload(data_pkt.hdr.rate);
+                        tm_last_feedback = tm_now;
+                    }
                 }
 
                 double expectedRate = data_pkt.hdr.rate;
@@ -215,7 +217,7 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
                         if (bEnd != bStart)
                         {
                             calculated_speed = interval_to_speed(tm_diff, bEnd - bStart);
-                            printf("Burst calculated speed of %.4f Mbps\n", calculated_speed);
+                            printf("Download: Burst calculated speed of %.4f Mbps\n", calculated_speed);
                             report_pkt.type = NETWORK_BURST_REPORT;
                             report_pkt.rate = calculated_speed;
                             report_pkt.seq_num = currSeq;
