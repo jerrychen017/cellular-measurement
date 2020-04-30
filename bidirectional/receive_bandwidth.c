@@ -3,7 +3,7 @@
 
 #define RECV_TIMEOUT_SEC 5
 #define RECV_TIMEOUT_USEC 0
-#define FEEDBACK_FREQ_USEC 200000
+
 static bool kill_thread = false;
 
 void stop_receiving_thread()
@@ -14,11 +14,11 @@ void stop_receiving_thread()
 void *receive_bandwidth_pthread(void *args)
 {
     struct recv_bandwidth_args *recv_args = (struct recv_bandwidth_args *)args;
-    receive_bandwidth(recv_args->sk, recv_args->expected_addr, recv_args->params);
+    receive_bandwidth(recv_args->sk, recv_args->expected_addr, recv_args->params, recv_args->android);
     return NULL;
 }
 
-void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parameters params)
+void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parameters params, bool android)
 {
     // parameter variables
     int BURST_SIZE = params.burst_size;
@@ -151,12 +151,23 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
                 gettimeofday(&tm_now, NULL);
 
                 struct timeval tm_diff_feedback = diffTime(tm_now, tm_last_feedback);
-                if (tm_diff_feedback.tv_sec * 1000000 + tm_diff_feedback.tv_usec > FEEDBACK_FREQ_USEC) {
-                    if (data_pkt.hdr.type == NETWORK_DATA) {
-                        sendFeedbackDownload(data_pkt.hdr.rate);
-                        tm_last_feedback = tm_now;
+
+                if (android) {
+                    if (tm_diff_feedback.tv_sec * 1000000 + tm_diff_feedback.tv_usec > FEEDBACK_FREQ_USEC) {
+                        if (data_pkt.hdr.type == NETWORK_DATA) {
+                            sendFeedbackDownload(data_pkt.hdr.rate);
+                            tm_last_feedback = tm_now;
+                        }
+                    }
+                } else {
+                    if (tm_diff_feedback.tv_sec * 1000000 + tm_diff_feedback.tv_usec > PRINTOUT_FREQ_USEC) {
+                        if (data_pkt.hdr.type == NETWORK_DATA) {
+                            sendFeedbackDownload(data_pkt.hdr.rate);
+                            tm_last_feedback = tm_now;
+                        }
                     }
                 }
+
 
                 double expectedRate = data_pkt.hdr.rate;
                 int currSeq = data_pkt.hdr.seq_num;

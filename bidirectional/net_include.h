@@ -58,6 +58,9 @@
 #define CLIENT_SEND_PORT 4579
 #define CLIENT_RECEIVE_PORT 4578
 
+#define FEEDBACK_FREQ_USEC 200000
+#define PRINTOUT_FREQ_USEC 500000
+
 struct parameters
 {
     int burst_size;    // number of packets in increased speed burst

@@ -11,10 +11,11 @@ struct recv_bandwidth_args
     int pred_mode;
     struct sockaddr_in expected_addr;
     struct parameters params;
+    bool android;
 };
 
 void stop_receiving_thread();
-void receive_bandwidth(int sk, struct sockaddr_in expected_addr, struct parameters params);
+void receive_bandwidth(int sk, struct sockaddr_in expected_addr, struct parameters params, bool android);
 void *receive_bandwidth_pthread(void *);
 
 #endif

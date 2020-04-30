@@ -131,7 +131,7 @@ int main(int argc, char **argv)
             send_args.params = recv_params;
             pthread_create(&tid, NULL, &send_bandwidth_pthread, (void *)&send_args);
 
-            receive_bandwidth(server_recv_sk, server_recv_addr, recv_params);
+            receive_bandwidth(server_recv_sk, server_recv_addr, recv_params, false);
             stop_controller_thread();
             stop_data_generator_thread();
             pthread_join(tid, NULL);

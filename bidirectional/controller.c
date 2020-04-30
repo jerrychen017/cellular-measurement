@@ -2,7 +2,7 @@
 #include "feedbackLogger.h"
 #include "net_utils.h"
 
-#define FEEDBACK_FREQ_USEC 200000
+
 
 static bool kill_thread = false;
 
@@ -127,10 +127,19 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
         struct timeval tm_now_feedback;
         gettimeofday(&tm_now_feedback, NULL);
         struct timeval tm_diff_feedback = diffTime(tm_now_feedback, tm_last_feedback);
-        if (tm_diff_feedback.tv_sec * 1000000 + tm_diff_feedback.tv_usec > FEEDBACK_FREQ_USEC) {
-            sendFeedbackUpload(rate);
-            tm_last_feedback = tm_now_feedback;
+
+        if (android) {
+            if (tm_diff_feedback.tv_sec * 1000000 + tm_diff_feedback.tv_usec > FEEDBACK_FREQ_USEC) {
+                sendFeedbackUpload(rate);
+                tm_last_feedback = tm_now_feedback;
+            }
+        } else {
+            if (tm_diff_feedback.tv_sec * 1000000 + tm_diff_feedback.tv_usec > PRINTOUT_FREQ_USEC) {
+                sendFeedbackUpload(rate);
+                tm_last_feedback = tm_now_feedback;
+            }
         }
+
 
         read_mask = mask;
         // printf("TIMEOUT %.4f\n", timeout.tv_usec / 1000.0);
