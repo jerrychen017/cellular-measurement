@@ -6,7 +6,7 @@
 
 static bool kill_thread = false;
 
-void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sockaddr_un data_addr, socklen_t data_len, struct parameters params);
+void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sockaddr_un data_addr, socklen_t data_len, struct parameters params, bool android);
 
 double adjustRate(double current, double reported, double min, double max, bool burst);
 void handleStartPacket(int s, struct sockaddr_in from, struct sockaddr_in expected);
@@ -49,7 +49,7 @@ int start_controller(bool android, struct sockaddr_in send_addr, int s_server, s
         }
     }
 
-    control(s_server, s_data, send_addr, datagen_addr, datagen_len, params);
+    control(s_server, s_data, send_addr, datagen_addr, datagen_len, params, android);
     close(s_data);
     close(s_server);
     return 0;
@@ -57,7 +57,7 @@ int start_controller(bool android, struct sockaddr_in send_addr, int s_server, s
 
 
 /* Main event loop */
-void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sockaddr_un data_addr, socklen_t data_len, struct parameters params)
+void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sockaddr_un data_addr, socklen_t data_len, struct parameters params, bool android)
 {
     // parameter variables
     int BURST_SIZE = params.burst_size;
@@ -144,12 +144,12 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                 int len = recv(s_data, data_pkt.data, sizeof(data_pkt.data), 0);
                 if (len == 0)
                 {
-                    printf("data stream ended, exiting...\n");
+                    printf("Upload: data stream ended, exiting...\n");
                     return;
                 }
                 if (len != sizeof(data_pkt.data))
                 {
-                    printf("ipc error, size not correct");
+                    printf("Upload: ipc error, size not correct");
                     exit(1);
                 }
 
@@ -181,7 +181,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                 {
                     if (burst_seq_send != -1)
                     {
-                        printf("Error: burst not done, on seq %d\n", burst_seq_send);
+                        printf("Upload Error: burst not done, on seq %d\n", burst_seq_send);
                         exit(1);
                     }
 
@@ -240,7 +240,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                 int len = recvfrom(s_server, &recv_pkt, sizeof(data_packet), 0, (struct sockaddr *)&from_addr, &from_addr_len);
                 if (len <= 0)
                 {
-                    printf("data stream ended, exiting...\n");
+                    printf("Upload: data stream ended, exiting...\n");
                     return;
                 }
 
@@ -268,7 +268,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
 
                     sendto(s_data, &control_pkt, sizeof(control_pkt), 0, (struct sockaddr *)&data_addr, data_len);
                     sendFeedbackUpload(rate);
-                    printf("Adjusted rate to %.4f\n", rate);
+                    printf("Upload: Adjusted rate to %.4f\n", rate);
                 }
             }
         }
@@ -277,13 +277,13 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
             // timeout
             if (burst_seq_send == -1)
             {
-                printf("timeout while sending\n");
+                printf("Upload: timeout while sending\n");
             }
             else
             {
                 if (burst_seq_send >= burst_seq_recv && burst_seq_recv != -1)
                 {
-                    printf("Error: burst trying to send seq not received %d\n", burst_seq_send);
+                    printf("Upload Error: burst trying to send seq not received %d\n", burst_seq_send);
                     continue;
                     //                    exit(1);
                 }

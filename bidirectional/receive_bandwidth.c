@@ -199,7 +199,7 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
 
                     if (bursti >= BURST_SIZE)
                     {
-                        printf("invalid burst index %d\n", bursti);
+                        printf("Download: invalid burst index %d\n", bursti);
                         exit(1);
                     }
                     gettimeofday(&barrivals[bursti], NULL);
@@ -296,7 +296,7 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
         }
         else
         {
-            printf("Stop receiving bandwidth, accepting new connection\n");
+            printf("Download: Stop receiving bandwidth, accepting new connection\n");
             close(s_bw);
             return;
         }

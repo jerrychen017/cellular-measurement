@@ -72,7 +72,7 @@ int interactive_connect(const char name[NAME_LENGTH])
         }
         else
         {
-            printf("interactive_connect: timeout!");
+//            printf("interactive_connect: timeout!");
             // send CONNECT packet to server again
             sendto(sk, (ConnectPacket *)&connect_packet, sizeof(connect_packet), 0,
                    (struct sockaddr *)&interactive_pac_addr, sizeof(interactive_pac_addr));
@@ -92,7 +92,7 @@ int send_interactive_packet(int seq_num, float x, float y)
     // send init packet to rcv
     sendto(sk, (EchoPacket *)&packet_send, sizeof(packet_send), 0,
            (struct sockaddr *)&interactive_pac_addr, sizeof(interactive_pac_addr));
-    printf("interactive packet is sent\n");
+//    printf("interactive packet is sent\n");
     return 0;
 }
 
@@ -125,7 +125,7 @@ InteractivePacket receive_interactive_packet()
     }
     else
     {
-        printf("receive_interactive_packet timeout error!");
+//        printf("receive_interactive_packet timeout error!");
         received_packet.seq = -1;
         return received_packet;
     }
