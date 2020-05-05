@@ -69,6 +69,7 @@ struct parameters
     int instant_burst;
     int burst_factor;
     int pred_mode;
+    int use_tcp; 
     double alpha;
     double threshold;
     double interval_time;

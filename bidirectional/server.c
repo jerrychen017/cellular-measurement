@@ -121,6 +121,7 @@ int main(int argc, char **argv)
             printf("start_speed is %f\n", recv_params.start_speed);
             printf("grace_period is %d\n", recv_params.grace_period);
             printf("pred_mode is %d\n", recv_params.pred_mode);
+            printf("use_tcp is %d\n", recv_params.use_tcp);
             printf("size of params is %d\n", sizeof(recv_params));
 
             pthread_t tid;                        // thread id

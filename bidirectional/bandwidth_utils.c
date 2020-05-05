@@ -70,6 +70,8 @@ void deserializeStruct(start_packet *recv_pkt, char* buf){
     offset += sizeof(recv_pkt->params.burst_factor);
     memcpy(&recv_pkt->params.pred_mode, buf + offset, sizeof(recv_pkt->params.pred_mode));
     offset += sizeof(recv_pkt->params.pred_mode);
+    memcpy(&recv_pkt->params.use_tcp, buf + offset, sizeof(recv_pkt->params.use_tcp));
+    offset += sizeof(recv_pkt->params.use_tcp);
     memcpy(&recv_pkt->params.alpha , buf + offset, sizeof(recv_pkt->params.alpha));
     offset += sizeof(recv_pkt->params.alpha);
     memcpy(&recv_pkt->params.threshold , buf + offset, sizeof(recv_pkt->params.threshold));
@@ -101,6 +103,8 @@ int serializeStruct(start_packet *send_pkt, char* buf){
     offset += sizeof(send_pkt->params.burst_factor);
     memcpy(buf + offset, &send_pkt->params.pred_mode, sizeof(send_pkt->params.pred_mode));
     offset += sizeof(send_pkt->params.pred_mode);
+    memcpy(buf + offset, &send_pkt->params.use_tcp, sizeof(send_pkt->params.use_tcp));
+    offset += sizeof(send_pkt->params.use_tcp);
     memcpy(buf + offset, &send_pkt->params.alpha, sizeof(send_pkt->params.alpha));
     offset += sizeof(send_pkt->params.alpha);
     memcpy(buf + offset, &send_pkt->params.threshold, sizeof(send_pkt->params.threshold));
