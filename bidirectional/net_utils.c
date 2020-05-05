@@ -128,10 +128,9 @@ int setup_tcp_socket_send(const char *hostname, int port)
     memcpy( &h_ent, p_h_ent, sizeof(h_ent));
     memcpy( &host.sin_addr, h_ent.h_addr_list[0], sizeof(host.sin_addr) );
 
-    int ret = connect(s_recv, (struct sockaddr *)&host, sizeof(host) ); /* Connect! */
-    if (ret < 0) {
-        perror( "T_ncp: could not connect to server");
-        exit(1);
+    while(connect(s_recv, (struct sockaddr *)&host, sizeof(host)) < 0) /* Connect! */
+    {
+        printf( "T_ncp: could not connect to server\n");
     }
     return s_recv;
 }
@@ -154,7 +153,7 @@ int setup_tcp_socket_recv(int port) {
 
     name.sin_family = AF_INET;
     name.sin_addr.s_addr = INADDR_ANY;
-    name.sin_port = htons(PORT);
+    name.sin_port = htons(port);
 
     if ( bind( s, (struct sockaddr *)&name, sizeof(name) ) < 0 ) {
         perror("T_rcv: bind");
