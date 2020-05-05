@@ -399,7 +399,7 @@ void receive_bandwidth_tcp(int s_bw, bool android)
                     double ret = total_bytes * 8.0/(usec);
                     calculated_speed = 0.9536743164 * ret;
                     tm_last = tm_now;
-                    printf("received 10 packets with speed %.3f\n", calculated_speed);
+                    printf("received 100 packets with speed %.3f\n", calculated_speed);
                     total_bytes = 0;
                 }
 
