@@ -286,7 +286,8 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
                     // Send report packet if we are under 90 percent of expected rate
                     if (calcRate <= THRESHOLD * expectedRate)
                     {
-                        if (numBelowThreshold == GRACE_PERIOD)
+                        numBelowThreshold++;
+                        if (numBelowThreshold >= GRACE_PERIOD)
                         {
                             report_pkt.type = NETWORK_REPORT;
                             report_pkt.rate = calcRate;
@@ -296,18 +297,10 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
                             // printf("Computed rate %.4f below threshold, actual rate %.4f\n", calcRate, expectedRate);
                             numBelowThreshold = 0;
                         }
-                        else
-                        {
-                            numBelowThreshold++;
-                        }
                     }
                     else
                     {
                         // reset numBelowThreshold when received non-delayed packet within the grace period
-                        if (numBelowThreshold != 0)
-                        {
-                            // printf("num threshold is %d\n", numBelowThreshold);
-                        }
                         numBelowThreshold = 0;
                     }
                 }
