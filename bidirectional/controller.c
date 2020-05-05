@@ -141,8 +141,8 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                 tm_last_feedback = tm_now_feedback;
                 // send an ECHO packet to android
                 data_pkt.hdr.type = NETWORK_ECHO;
-                memcpy(data_pkt.data, tm_now_feedback.tv_sec, sizeof(tm_now_feedback.tv_sec));
-                memcpy(data_pkt.data + sizeof(tm_now_feedback.tv_sec), tm_now_feedback.tv_usec, sizeof(tm_now_feedback.tv_usec));
+                memcpy(data_pkt.data, &tm_now_feedback.tv_sec, sizeof(tm_now_feedback.tv_sec));
+                memcpy(data_pkt.data + sizeof(tm_now_feedback.tv_sec), &tm_now_feedback.tv_usec, sizeof(tm_now_feedback.tv_usec));
                 sendto_dbg(s_server, &data_pkt, sizeof(data_pkt), 0,
                            (struct sockaddr *)&send_addr, sizeof(send_addr));
             }
@@ -293,8 +293,8 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     struct timeval tm_now_latency;
                     gettimeofday(&tm_now_latency, NULL);
                     struct timeval tm_last_latency;
-                    memcpy(&tm_last_latency.tv_sec, recv_pkt.data, sizeof(tm_last_latency.tv_sec));
-                    memcpy(&tm_last_latency.tv_usec, recv_pkt.data + sizeof(tm_last_latency.tv_sec), sizeof(tm_last_latency.tv_usec));
+                    memcpy(&(tm_last_latency.tv_sec), recv_pkt.data, sizeof(tm_last_latency.tv_sec));
+                    memcpy(&(tm_last_latency.tv_usec), recv_pkt.data + sizeof(tm_last_latency.tv_sec), sizeof(tm_last_latency.tv_usec));
                     struct timeval tm_diff_latency = diffTime(tm_now_latency, tm_last_latency);
                     sendFeedbackLatency(tm_diff_latency.tv_sec * 1000 + tm_diff_latency.tv_usec / 1000.0);
                 }
