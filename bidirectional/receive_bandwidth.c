@@ -147,27 +147,38 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
                     close(s_bw);
                     return;
                 }
+                else if (android && data_pkt.hdr.type == NETWORK_ECHO)
+                {
+                    sendto_dbg(s_bw, &data_pkt, sizeof(data_pkt), 0,
+                               (struct sockaddr *)&from_addr, from_len);
+                }
 
                 gettimeofday(&tm_now, NULL);
 
                 struct timeval tm_diff_feedback = diffTime(tm_now, tm_last_feedback);
 
-                if (android) {
-                    if (tm_diff_feedback.tv_sec * 1000000 + tm_diff_feedback.tv_usec > FEEDBACK_FREQ_USEC) {
-                        if (data_pkt.hdr.type == NETWORK_DATA) {
-                            sendFeedbackDownload(data_pkt.hdr.rate);
-                            tm_last_feedback = tm_now;
-                        }
-                    }
-                } else {
-                    if (tm_diff_feedback.tv_sec * 1000000 + tm_diff_feedback.tv_usec > PRINTOUT_FREQ_USEC) {
-                        if (data_pkt.hdr.type == NETWORK_DATA) {
+                if (android)
+                {
+                    if (tm_diff_feedback.tv_sec * 1000000 + tm_diff_feedback.tv_usec > FEEDBACK_FREQ_USEC)
+                    {
+                        if (data_pkt.hdr.type == NETWORK_DATA)
+                        {
                             sendFeedbackDownload(data_pkt.hdr.rate);
                             tm_last_feedback = tm_now;
                         }
                     }
                 }
-
+                else
+                {
+                    if (tm_diff_feedback.tv_sec * 1000000 + tm_diff_feedback.tv_usec > PRINTOUT_FREQ_USEC)
+                    {
+                        if (data_pkt.hdr.type == NETWORK_DATA)
+                        {
+                            sendFeedbackDownload(data_pkt.hdr.rate);
+                            tm_last_feedback = tm_now;
+                        }
+                    }
+                }
 
                 double expectedRate = data_pkt.hdr.rate;
                 int currSeq = data_pkt.hdr.seq_num;
