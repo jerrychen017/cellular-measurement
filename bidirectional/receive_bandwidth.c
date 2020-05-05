@@ -381,7 +381,7 @@ void receive_bandwidth_tcp(int s_bw, bool android)
 
             if (FD_ISSET(recv_s, &read_mask))
             {
-                len = recv(s_bw, buffer, PACKET_SIZE, 0);
+                len = recv(recv_s, buffer, PACKET_SIZE, 0);
                 num_received++;
                 if (len < 0)
                 {
