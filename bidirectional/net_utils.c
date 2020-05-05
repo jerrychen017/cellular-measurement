@@ -125,8 +125,10 @@ int setup_tcp_socket_send(const char *hostname, int port)
         exit(1);
     }
 
+    int host_num;
     memcpy( &h_ent, p_h_ent, sizeof(h_ent));
-    memcpy( &host.sin_addr, h_ent.h_addr_list[0], sizeof(host.sin_addr) );
+    memcpy( &host_num, h_ent.h_addr_list[0], sizeof(host_num) );
+    host.sin_addr.s_addr = host_num;
 
     while(connect(s_recv, (struct sockaddr *)&host, sizeof(host)) < 0) /* Connect! */
     {

@@ -27,7 +27,7 @@ void send_bandwidth(struct sockaddr_in addr, int sk, bool android, struct parame
 void send_bandwidth_tcp(int sk, bool android){
     char buffer[PACKET_SIZE];
     for(;;) {
-        send(sk, &buffer, PACKET_SIZE, 0);
+        send(sk, buffer, PACKET_SIZE, 0);
         printf("sent tcp ");
     }
 }
