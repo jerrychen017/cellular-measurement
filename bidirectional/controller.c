@@ -2,8 +2,6 @@
 #include "feedbackLogger.h"
 #include "net_utils.h"
 
-
-
 static bool kill_thread = false;
 
 void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sockaddr_un data_addr, socklen_t data_len, struct parameters params, bool android);
@@ -54,7 +52,6 @@ int start_controller(bool android, struct sockaddr_in send_addr, int s_server, s
     close(s_server);
     return 0;
 }
-
 
 /* Main event loop */
 void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sockaddr_un data_addr, socklen_t data_len, struct parameters params, bool android)
@@ -128,18 +125,26 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
         gettimeofday(&tm_now_feedback, NULL);
         struct timeval tm_diff_feedback = diffTime(tm_now_feedback, tm_last_feedback);
 
-        if (android) {
-            if (tm_diff_feedback.tv_sec * 1000000 + tm_diff_feedback.tv_usec > FEEDBACK_FREQ_USEC) {
-                sendFeedbackUpload(rate);
-                tm_last_feedback = tm_now_feedback;
-            }
-        } else {
-            if (tm_diff_feedback.tv_sec * 1000000 + tm_diff_feedback.tv_usec > PRINTOUT_FREQ_USEC) {
+        if (android)
+        {
+            if (tm_diff_feedback.tv_sec * 1000000 + tm_diff_feedback.tv_usec > FEEDBACK_FREQ_USEC)
+            {
                 sendFeedbackUpload(rate);
                 tm_last_feedback = tm_now_feedback;
             }
         }
-
+        else
+        {
+            if (tm_diff_feedback.tv_sec * 1000000 + tm_diff_feedback.tv_usec > PRINTOUT_FREQ_USEC)
+            {
+                sendFeedbackUpload(rate);
+                tm_last_feedback = tm_now_feedback;
+                // send an ECHO packet to android
+                data_pkt.hdr.type = NETWORK_ECHO;
+                sendto_dbg(s_server, &data_pkt, sizeof(data_pkt), 0,
+                           (struct sockaddr *)&send_addr, sizeof(send_addr));
+            }
+        }
 
         read_mask = mask;
         // printf("TIMEOUT %.4f\n", timeout.tv_usec / 1000.0);
@@ -166,7 +171,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                 if (INTERVAL_TIME != 0)
                 {
 
-                    if (seq - last_burst >= INTERVAL_TIME * rate * 1024.0*1024.0 / (8.0 * PACKET_SIZE))
+                    if (seq - last_burst >= INTERVAL_TIME * rate * 1024.0 * 1024.0 / (8.0 * PACKET_SIZE))
                     {
                         burst_seq_recv = 0;
                         last_burst = seq;
@@ -226,7 +231,8 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     {
                         burst_seq_recv = -1;
 
-                        if (INSTANT_BURST) {
+                        if (INSTANT_BURST)
+                        {
                             burst_seq_send = 0;
                         }
 
@@ -278,6 +284,14 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     sendto(s_data, &control_pkt, sizeof(control_pkt), 0, (struct sockaddr *)&data_addr, data_len);
                     sendFeedbackUpload(rate);
                     printf("Upload: Adjusted rate to %.4f\n", rate);
+                }
+
+                if (recv_pkt.hdr.type == NETWORK_ECHO)
+                {
+                    struct timeval tm_now_latency;
+                    gettimeofday(&tm_now_latency, NULL);
+                    struct timeval tm_diff_latency = diffTime(tm_now_latency, tm_now_feedback);
+                    sendFeedbackLatency(tm_diff_latency.tv_sec * 1000 + tm_diff_latency.tv_usec / 1000.0);
                 }
             }
         }
@@ -339,7 +353,6 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
     }
 }
 
-
 /* Given feeback from server, adjust to rate */
 double adjustRate(double current, double reported, double min, double max, bool burst)
 {
@@ -383,7 +396,7 @@ void handleStartPacket(int s, struct sockaddr_in from, struct sockaddr_in expect
     }
 
     sendto(s, &ack_pkt, sizeof(packet_header), 0,
-            (struct sockaddr *)&from, sizeof(from));
+           (struct sockaddr *)&from, sizeof(from));
 }
 
 void stop_controller_thread()

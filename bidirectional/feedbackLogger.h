@@ -12,7 +12,7 @@
 #endif
 EXTERNC void sendFeedbackUpload(double d);
 EXTERNC void sendFeedbackDownload(double d);
+EXTERNC void sendFeedbackLatency(double d);
 #undef EXTERNC
-
 
 #endif //UDP_TOOLS_LOGGER_H

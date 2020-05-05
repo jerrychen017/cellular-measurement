@@ -86,7 +86,8 @@ enum NetworkPacketType
     NETWORK_START,
     NETWORK_START_ACK,
     NETWORK_STOP,
-    NETWORK_BUSY
+    NETWORK_BUSY,
+    NETWORK_ECHO
 };
 
 enum LocalPacketType
