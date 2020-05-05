@@ -7,4 +7,6 @@ int setup_unix_socket(struct sockaddr_un addr, socklen_t len);
 
 struct sockaddr_in addrbyname(const char *hostname, int port);
 int setup_bound_socket(int port);
+int setup_tcp_socket_send(const char *hostname, int port);
+int setup_tcp_socket_recv(int port);
 #endif

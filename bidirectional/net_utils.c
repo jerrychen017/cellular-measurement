@@ -104,3 +104,68 @@ int setup_bound_socket(int port)
     return s_recv;
 }
 
+int setup_tcp_socket_send(const char *hostname, int port)
+{
+    struct sockaddr_in host;
+
+    int s_recv = socket(AF_INET, SOCK_STREAM, 0);  /* socket for receiving (udp) */
+    if (s_recv < 0) {
+        perror("tcp socket recv error\n");
+        exit(1);
+    }
+
+    host.sin_family = AF_INET;
+    host.sin_port = htons(port);
+
+    struct hostent h_ent, *p_h_ent;
+
+    p_h_ent = gethostbyname(hostname);
+    if (p_h_ent == NULL) {
+        printf("gethostbyname error.\n");
+        exit(1);
+    }
+
+    memcpy( &h_ent, p_h_ent, sizeof(h_ent));
+    memcpy( &host.sin_addr, h_ent.h_addr_list[0], sizeof(host.sin_addr) );
+
+    int ret = connect(s_recv, (struct sockaddr *)&host, sizeof(host) ); /* Connect! */
+    if (ret < 0) {
+        perror( "T_ncp: could not connect to server");
+        exit(1);
+    }
+    return s_recv;
+}
+
+int setup_tcp_socket_recv(int port) {
+    int s;
+    struct sockaddr_in name;
+    long on = 1;
+    s = socket(AF_INET, SOCK_STREAM, 0);
+    if (s<0) {
+        perror("T_rcv: socket");
+        exit(1);
+    }
+
+    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0)
+    {
+        perror("T_rcv: setsockopt error \n");
+        exit(1);
+    }
+
+    name.sin_family = AF_INET;
+    name.sin_addr.s_addr = INADDR_ANY;
+    name.sin_port = htons(PORT);
+
+    if ( bind( s, (struct sockaddr *)&name, sizeof(name) ) < 0 ) {
+        perror("T_rcv: bind");
+        exit(1);
+    }
+
+    if (listen(s, 4) < 0) {
+        perror("T_rcv: listen");
+        exit(1);
+    }
+
+    return s;
+}
+

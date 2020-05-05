@@ -317,3 +317,94 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
         }
     }
 }
+
+void receive_bandwidth_tcp(int s_bw, bool android)
+{
+    // parameter variables
+
+    kill_thread = false;
+
+    // Select loop
+    fd_set mask;
+    fd_set read_mask;
+    struct timeval timeout;
+
+    int num;
+    int len;
+
+
+
+
+    // packet buffers
+    data_packet data_pkt;
+    packet_header report_pkt;
+    packet_header ack_pkt;
+
+    memset(&ack_pkt, 0, sizeof(packet_header));
+    memset(&report_pkt, 0, sizeof(packet_header));
+    memset(&data_pkt, 0, sizeof(data_packet));
+
+    // Add file descriptors to fdset
+    FD_ZERO(&mask);
+    FD_SET(s_bw, &mask);
+
+    int recv_s;
+    char buffer[PACKET_SIZE];
+
+    int num_received = 0;
+    struct timeval tm_last;
+    struct timeval tm_now;
+    struct timeval tm_diff;
+    double calculated_speed;
+
+    for (;;)
+    {
+        if (kill_thread)
+        {
+            close(recv_s);
+            close(s_bw);
+            return;
+        }
+        read_mask = mask;
+        timeout.tv_sec = RECV_TIMEOUT_SEC;
+        timeout.tv_usec = RECV_TIMEOUT_USEC;
+
+        num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
+
+        if (num > 0)
+        {
+            if (FD_ISSET(s_bw, &read_mask)) {
+                printf("Establish connection with sender\n");
+                recv_s = accept(s_bw, 0, 0);
+                FD_SET(recv_s, &mask);
+            }
+
+            if (FD_ISSET(recv_s, &read_mask))
+            {
+                len = recv(s_bw, buffer, PACKET_SIZE, 0);
+                num_received++;
+                if (len < 0)
+                {
+                    perror("socket error");
+                    exit(1);
+                }
+
+                if (num_received % 10) {
+                    gettimeofday(&tm_now, NULL);
+                    tm_diff = diffTime(tm_now, tm_last);
+                    calculated_speed = interval_to_speed(tm_diff, 10);
+                    tm_last = tm_now;
+                    printf("received 10 packets with speed %.3f\n", calculated_speed);
+                }
+
+            }
+        }
+        else
+        {
+            printf("Download: Stop receiving bandwidth, accepting new connection\n");
+            close(recv_s);
+            close(s_bw);
+            return;
+        }
+    }
+}

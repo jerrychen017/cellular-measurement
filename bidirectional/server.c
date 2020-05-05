@@ -126,16 +126,25 @@ int main(int argc, char **argv)
 
             pthread_t tid;                        // thread id
             struct send_bandwidth_args send_args; // arguments to be passed to send_bandwidth
-            send_args.addr = server_send_addr;
-            send_args.sk = server_send_sk;
-            send_args.android = false;
-            send_args.params = recv_params;
-            pthread_create(&tid, NULL, &send_bandwidth_pthread, (void *)&send_args);
+            if (recv_params.use_tcp) {
+                close(server_send_sk);
+                close(server_recv_sk);
+                server_recv_sk = setup_tcp_socket_recv(SERVER_RECEIVE_PORT);
+                receive_bandwidth_tcp(server_recv_sk, false);
+            } else {
+                send_args.addr = server_send_addr;
+                send_args.sk = server_send_sk;
+                send_args.android = false;
+                send_args.params = recv_params;
+                pthread_create(&tid, NULL, &send_bandwidth_pthread, (void *)&send_args);
 
-            receive_bandwidth(server_recv_sk, server_recv_addr, recv_params, false);
-            stop_controller_thread();
-            stop_data_generator_thread();
-            pthread_join(tid, NULL);
+                receive_bandwidth(server_recv_sk, server_recv_addr, recv_params, false);
+                stop_controller_thread();
+                stop_data_generator_thread();
+                pthread_join(tid, NULL);
+            }
+
+
             // re-open socket that was closed by controller process
             server_send_sk = setup_bound_socket(SERVER_SEND_PORT);
             server_recv_sk = setup_bound_socket(SERVER_RECEIVE_PORT);
