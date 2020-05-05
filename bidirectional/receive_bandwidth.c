@@ -352,6 +352,7 @@ void receive_bandwidth_tcp(int s_bw, bool android)
     char buffer[PACKET_SIZE];
 
     int num_received = 0;
+    long total_bytes = 0;
     struct timeval tm_last;
     struct timeval tm_now;
     struct timeval tm_diff;
@@ -383,16 +384,19 @@ void receive_bandwidth_tcp(int s_bw, bool android)
             {
                 len = recv(recv_s, buffer, PACKET_SIZE, 0);
                 num_received++;
+                total_bytes += len;
                 if (len < 0)
                 {
                     perror("socket error");
                     exit(1);
                 }
 
-                if (num_received % 10) {
+                if (num_received % 100) {
                     gettimeofday(&tm_now, NULL);
                     tm_diff = diffTime(tm_now, tm_last);
-                    calculated_speed = interval_to_speed(tm_diff, 10);
+                    long usec = tm_diff.tv_usec + tm_diff.tv_sec * 1000000l;
+                    double ret = len * 8.0/(usec);
+                    calculated_speed = 0.9536743164 * ret;
                     tm_last = tm_now;
                     printf("received 10 packets with speed %.3f\n", calculated_speed);
                 }
