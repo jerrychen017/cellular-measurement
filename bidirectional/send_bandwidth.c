@@ -27,6 +27,7 @@ void send_bandwidth(struct sockaddr_in addr, int sk, bool android, struct parame
 }
 
 void send_bandwidth_tcp(int sk, bool android){
+    kill_thread = false;
     char buffer[PACKET_SIZE];
     data_packet data_pkt;
     data_pkt.hdr.type = NETWORK_DATA;
