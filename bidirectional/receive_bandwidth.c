@@ -350,12 +350,6 @@ void receive_bandwidth_tcp(int s_bw, bool android)
 
     for (;;)
     {
-        if (kill_thread)
-        {
-            close(recv_s);
-            close(s_bw);
-            return;
-        }
         read_mask = mask;
         timeout.tv_sec = RECV_TIMEOUT_SEC;
         timeout.tv_usec = RECV_TIMEOUT_USEC;
@@ -373,32 +367,26 @@ void receive_bandwidth_tcp(int s_bw, bool android)
             if (FD_ISSET(recv_s, &read_mask))
             {
                 len = recv(recv_s, &data_pkt, sizeof(data_pkt), 0);
-                num_received++;
-                total_bytes += len;
-                if (len < 0)
-                {
-                    perror("socket error");
-                    exit(1);
-                }
+                if (len > 0) {
+                    num_received++;
+                    total_bytes += len;
 
-                if (data_pkt.hdr.type == NETWORK_STOP) {
+                    if (num_received % 100 == 0) {
+                        gettimeofday(&tm_now, NULL);
+                        tm_diff = diffTime(tm_now, tm_last);
+                        long usec = tm_diff.tv_usec + tm_diff.tv_sec * 1000000l;
+                        double ret = total_bytes * 8.0/(usec);
+                        calculated_speed = 0.9536743164 * ret;
+                        tm_last = tm_now;
+                        printf("received 100 packets with speed %.3f\n", calculated_speed);
+                        total_bytes = 0;
+                    }
+                } else {
                     close(recv_s);
                     close(s_bw);
-                    printf("received NETWORK_STOP on TCP\n");
+                    printf("TCP disconnected\n");
                     return;
                 }
-
-                if (num_received % 100 == 0) {
-                    gettimeofday(&tm_now, NULL);
-                    tm_diff = diffTime(tm_now, tm_last);
-                    long usec = tm_diff.tv_usec + tm_diff.tv_sec * 1000000l;
-                    double ret = total_bytes * 8.0/(usec);
-                    calculated_speed = 0.9536743164 * ret;
-                    tm_last = tm_now;
-                    printf("received 100 packets with speed %.3f\n", calculated_speed);
-                    total_bytes = 0;
-                }
-
             }
         }
         else

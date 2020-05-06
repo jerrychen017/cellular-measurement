@@ -33,11 +33,6 @@ void send_bandwidth_tcp(int sk, bool android){
     for(;;) {
         if (kill_thread)
         {
-            packet_header signal_pkt;
-            memset(&signal_pkt, 0, sizeof(packet_header));
-
-            signal_pkt.type = NETWORK_STOP;
-            send(sk, &signal_pkt, sizeof(packet_header), 0);
             close(sk);
             return;
         }
