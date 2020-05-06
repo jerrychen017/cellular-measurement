@@ -384,6 +384,7 @@ void receive_bandwidth_tcp(int s_bw, bool android)
                 if (data_pkt.hdr.type == NETWORK_STOP) {
                     close(recv_s);
                     close(s_bw);
+                    printf("received NETWORK_STOP on TCP\n");
                     return;
                 }
 
