@@ -16,7 +16,8 @@ struct recv_bandwidth_args
 
 void stop_receiving_thread();
 void receive_bandwidth(int sk, struct sockaddr_in expected_addr, struct parameters params, bool android);
-void receive_bandwidth_tcp(int sk, bool android);
+void server_receive_bandwidth_tcp(int sk);
+void client_receive_bandwidth_tcp(int sk);
 void *receive_bandwidth_pthread(void *);
 
 #endif

@@ -129,10 +129,13 @@ int main(int argc, char **argv)
                 close(server_send_sk);
                 close(server_recv_sk);
                 server_recv_sk = setup_tcp_socket_recv(SERVER_RECEIVE_PORT);
-//                server_send_sk = setup_tcp_socket_recv(SERVER_SEND_PORT);
-//                send
+                server_send_sk = setup_tcp_socket_recv(SERVER_SEND_PORT);
 
-                receive_bandwidth_tcp(server_recv_sk, false);
+
+                send_args.sk = server_send_sk;
+                pthread_create(&tid, NULL, &server_send_bandwidth_tcp_pthread, (void *)&send_args);
+
+                server_receive_bandwidth_tcp(server_recv_sk, false);
             } else {
                 send_args.addr = server_send_addr;
                 send_args.sk = server_send_sk;

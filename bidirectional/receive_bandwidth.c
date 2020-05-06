@@ -317,10 +317,88 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
     }
 }
 
-void receive_bandwidth_tcp(int s_bw, bool android)
+void server_receive_bandwidth_tcp(int s_bw)
 {
     // parameter variables
 
+    // Select loop
+    fd_set mask;
+    fd_set read_mask;
+    struct timeval timeout;
+
+    int num;
+    int len;
+
+    // packet buffers
+    data_packet data_pkt;
+    memset(&data_pkt, 0, sizeof(data_packet));
+
+    // Add file descriptors to fdset
+    FD_ZERO(&mask);
+    FD_SET(s_bw, &mask);
+
+    int recv_s;
+
+    int num_received = 0;
+    long total_bytes = 0;
+    struct timeval tm_last;
+    gettimeofday(&tm_last, NULL);
+    struct timeval tm_now;
+    struct timeval tm_diff;
+    double calculated_speed;
+
+    for (;;)
+    {
+        read_mask = mask;
+        timeout.tv_sec = RECV_TIMEOUT_SEC;
+        timeout.tv_usec = RECV_TIMEOUT_USEC;
+
+        num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
+
+        if (num > 0)
+        {
+            if (FD_ISSET(s_bw, &read_mask)) {
+                printf("Establish connection with sender\n");
+                recv_s = accept(s_bw, 0, 0);
+                FD_SET(recv_s, &mask);
+            }
+
+            if (FD_ISSET(recv_s, &read_mask))
+            {
+                len = recv(recv_s, &data_pkt, sizeof(data_pkt), 0);
+                if (len > 0) {
+                    num_received++;
+                    total_bytes += len;
+
+                    if (num_received % 100 == 0) {
+                        gettimeofday(&tm_now, NULL);
+                        tm_diff = diffTime(tm_now, tm_last);
+                        long usec = tm_diff.tv_usec + tm_diff.tv_sec * 1000000l;
+                        double ret = total_bytes * 8.0/(usec);
+                        calculated_speed = 0.9536743164 * ret;
+                        tm_last = tm_now;
+                        printf("received 100 packets with speed %.3f\n", calculated_speed);
+                        total_bytes = 0;
+                    }
+                } else {
+                    close(recv_s);
+                    close(s_bw);
+                    printf("TCP disconnected\n");
+                    return;
+                }
+            }
+        }
+        else
+        {
+            printf("Download: Stop receiving bandwidth, accepting new connection\n");
+            close(recv_s);
+            close(s_bw);
+            return;
+        }
+    }
+}
+
+void client_receive_bandwidth_tcp(int s_bw) {
     // Select loop
     fd_set mask;
     fd_set read_mask;
