@@ -3,6 +3,8 @@
 #include "data_generator.h"
 #include "net_utils.h"
 
+static bool kill_thread = false;
+
 void *send_bandwidth_pthread(void *args)
 {
     struct send_bandwidth_args *recv_args = (struct send_bandwidth_args *)args;
@@ -26,9 +28,24 @@ void send_bandwidth(struct sockaddr_in addr, int sk, bool android, struct parame
 
 void send_bandwidth_tcp(int sk, bool android){
     char buffer[PACKET_SIZE];
+    data_packet data_pkt;
+    data_pkt.hdr.type = NETWORK_DATA;
     for(;;) {
-        send(sk, buffer, PACKET_SIZE, 0);
-        printf("sent tcp ");
+        if (kill_thread)
+        {
+            packet_header signal_pkt;
+            memset(&signal_pkt, 0, sizeof(packet_header));
+
+            signal_pkt.type = NETWORK_STOP;
+            send(sk, &signal_pkt, sizeof(packet_header), 0);
+            close(sk);
+            return;
+        }
+        send(sk, &data_pkt, sizeof(data_pkt), 0);
     }
+}
+
+void stop_tcp_thread() {
+    kill_thread = true;
 }
 

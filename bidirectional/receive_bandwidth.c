@@ -322,8 +322,6 @@ void receive_bandwidth_tcp(int s_bw, bool android)
 {
     // parameter variables
 
-    kill_thread = false;
-
     // Select loop
     fd_set mask;
     fd_set read_mask;
@@ -332,16 +330,8 @@ void receive_bandwidth_tcp(int s_bw, bool android)
     int num;
     int len;
 
-
-
-
     // packet buffers
     data_packet data_pkt;
-    packet_header report_pkt;
-    packet_header ack_pkt;
-
-    memset(&ack_pkt, 0, sizeof(packet_header));
-    memset(&report_pkt, 0, sizeof(packet_header));
     memset(&data_pkt, 0, sizeof(data_packet));
 
     // Add file descriptors to fdset
@@ -349,7 +339,6 @@ void receive_bandwidth_tcp(int s_bw, bool android)
     FD_SET(s_bw, &mask);
 
     int recv_s;
-    char buffer[PACKET_SIZE];
 
     int num_received = 0;
     long total_bytes = 0;
@@ -383,13 +372,19 @@ void receive_bandwidth_tcp(int s_bw, bool android)
 
             if (FD_ISSET(recv_s, &read_mask))
             {
-                len = recv(recv_s, buffer, PACKET_SIZE, 0);
+                len = recv(recv_s, &data_pkt, sizeof(data_pkt), 0);
                 num_received++;
                 total_bytes += len;
                 if (len < 0)
                 {
                     perror("socket error");
                     exit(1);
+                }
+
+                if (data_pkt.hdr.type == NETWORK_STOP) {
+                    close(recv_s);
+                    close(s_bw);
+                    return;
                 }
 
                 if (num_received % 100 == 0) {
