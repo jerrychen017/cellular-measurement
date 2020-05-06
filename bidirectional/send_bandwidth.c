@@ -34,15 +34,6 @@ void client_send_bandwidth_tcp(int s_bw){
     data_packet recv_pkt;
     data_pkt.hdr.type = NETWORK_DATA;
 
-//    for(;;) {
-//        if (kill_thread)
-//        {
-//            close(sk);
-//            return;
-//        }
-//        send(sk, &data_pkt, sizeof(data_pkt), 0);
-//    }
-
     // Select loop
     fd_set mask;
     fd_set read_mask;
@@ -78,12 +69,6 @@ void client_send_bandwidth_tcp(int s_bw){
                 }
             }
         }
-//        else
-//        {
-//            printf("Download: Stop receiving bandwidth, accepting new connection\n");
-//            close(s_bw);
-//            return;
-//        }
     }
 }
 
