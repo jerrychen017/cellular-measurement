@@ -2,6 +2,7 @@
 #include "send_bandwidth.h"
 #include "net_utils.h"
 #include "sendto_dbg.h"
+#include "feedbackLogger.h"
 
 /**
  * Bidirectional server main function
@@ -148,6 +149,8 @@ int main(int argc, char **argv)
                 stop_data_generator_thread();
             }
             pthread_join(tid, NULL);
+
+            clear_file_pointers();
 
             // re-open socket that was closed by controller process
             server_send_sk = setup_bound_socket(SERVER_SEND_PORT);

@@ -46,6 +46,12 @@ void sendFeedbackDownload(double d)
     }
 }
 
+void clear_file_pointers() {
+    upload_fd = NULL;
+    download_fd = NULL;
+    latency_fd = NULL;
+}
+
 void javaStartBandwidth()
 {
 }
