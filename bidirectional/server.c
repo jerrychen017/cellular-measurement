@@ -136,6 +136,7 @@ int main(int argc, char **argv)
                 pthread_create(&tid, NULL, &server_send_bandwidth_tcp_pthread, (void *)&send_args);
 
                 server_receive_bandwidth_tcp(server_recv_sk);
+                printf("current session terminated\n");
             } else {
                 send_args.addr = server_send_addr;
                 send_args.sk = server_send_sk;
@@ -146,8 +147,8 @@ int main(int argc, char **argv)
                 receive_bandwidth(server_recv_sk, server_recv_addr, recv_params, false);
                 stop_controller_thread();
                 stop_data_generator_thread();
-                pthread_join(tid, NULL);
             }
+            pthread_join(tid, NULL);
 
             // re-open socket that was closed by controller process
             server_send_sk = setup_bound_socket(SERVER_SEND_PORT);

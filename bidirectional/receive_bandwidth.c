@@ -409,6 +409,7 @@ void server_receive_bandwidth_tcp(int s_bw)
 }
 
 void client_receive_bandwidth_tcp(int s_bw) {
+    kill_thread = false;
     // Select loop
     fd_set mask;
     fd_set read_mask;
@@ -425,8 +426,6 @@ void client_receive_bandwidth_tcp(int s_bw) {
     FD_ZERO(&mask);
     FD_SET(s_bw, &mask);
 
-    int recv_s;
-
     int num_received = 0;
     long total_bytes = 0;
     struct timeval tm_last;
@@ -440,6 +439,12 @@ void client_receive_bandwidth_tcp(int s_bw) {
 
     for (;;)
     {
+        if (kill_thread)
+        {
+            close(s_bw);
+            return;
+        }
+
         read_mask = mask;
         timeout.tv_sec = RECV_TIMEOUT_SEC;
         timeout.tv_usec = RECV_TIMEOUT_USEC;
@@ -464,7 +469,6 @@ void client_receive_bandwidth_tcp(int s_bw) {
                         double ret = total_bytes * 8.0/(usec);
                         calculated_speed = 0.9536743164 * ret;
                         tm_last = tm_now;
-//                        printf("received 100 packets with speed %.3f\n", calculated_speed);
                         total_bytes = 0;
 
                         sendFeedbackDownload(calculated_speed);
@@ -484,4 +488,8 @@ void client_receive_bandwidth_tcp(int s_bw) {
             return;
         }
     }
+}
+
+void stop_tcp_recv_thread() {
+    kill_thread = true;
 }

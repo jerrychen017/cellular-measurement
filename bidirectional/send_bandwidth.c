@@ -74,7 +74,7 @@ void client_send_bandwidth_tcp(int s_bw){
             if (FD_ISSET(s_bw, &read_mask)) {
                 len = recv(s_bw, &recv_pkt, sizeof(recv_pkt), 0);
                 if (len > 0) {
-                    sendFeedbackUpload(data_pkt.hdr.rate);
+                    sendFeedbackUpload(recv_pkt.hdr.rate);
                 }
             }
         }
@@ -155,7 +155,7 @@ void * server_send_bandwidth_tcp_pthread(void * args) {
     return NULL;
 }
 
-void stop_tcp_thread() {
+void stop_tcp_send_thread() {
     kill_thread = true;
 }
 
