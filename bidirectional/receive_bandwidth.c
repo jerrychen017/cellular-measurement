@@ -25,7 +25,6 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
     int INTERVAL_SIZE = params.interval_size;
     double INTERVAL_TIME = params.interval_time;
     int INSTANT_BURST = params.instant_burst;
-    int BURST_FACTOR = params.burst_factor;
     double MIN_SPEED = params.min_speed;
     double MAX_SPEED = params.max_speed;
     double START_SPEED = params.start_speed;

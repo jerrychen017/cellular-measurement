@@ -52,11 +52,11 @@
 #define NUM_SEND 10
 #define NAME_LENGTH 100
 
-#define SERVER_RECEIVE_PORT 4579 // client sends and server listens on this port 4579
-#define SERVER_SEND_PORT 4578    // server sends and client listens on this port 4578
+#define SERVER_RECEIVE_PORT 4577 // client sends and server listens on this port 4579
+#define SERVER_SEND_PORT 4576    // server sends and client listens on this port 4578
 #define SERVER_INTERACTIVE_PORT 4578
-#define CLIENT_SEND_PORT 4579
-#define CLIENT_RECEIVE_PORT 4578
+#define CLIENT_SEND_PORT 4577
+#define CLIENT_RECEIVE_PORT 4576
 
 #define FEEDBACK_FREQ_USEC 200000
 #define PRINTOUT_FREQ_USEC 1000000
@@ -67,7 +67,6 @@ struct parameters
     int interval_size; // one burst per INTERVAL_SIZE packets, should make this a multiple of BURST_SIZE
     int grace_period;
     int instant_burst;
-    int burst_factor;
     int pred_mode;
     int use_tcp; 
     double alpha;

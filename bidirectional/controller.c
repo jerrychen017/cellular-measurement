@@ -2,6 +2,7 @@
 #include "feedbackLogger.h"
 #include "net_utils.h"
 
+#define BURST_FACTOR 2
 static bool kill_thread = false;
 
 void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sockaddr_un data_addr, socklen_t data_len, struct parameters params, bool android);
@@ -61,7 +62,6 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
     int INTERVAL_SIZE = params.interval_size;
     double INTERVAL_TIME = params.interval_time;
     int INSTANT_BURST = params.instant_burst;
-    int BURST_FACTOR = params.burst_factor;
     double MIN_SPEED = params.min_speed;
     double MAX_SPEED = params.max_speed;
     double START_SPEED = params.start_speed;
