@@ -136,7 +136,6 @@ int main(int argc, char **argv)
                 pthread_create(&tid, NULL, &server_send_bandwidth_tcp_pthread, (void *)&send_args);
 
                 server_receive_bandwidth_tcp(server_recv_sk);
-                printf("current session terminated\n");
             } else {
                 send_args.addr = server_send_addr;
                 send_args.sk = server_send_sk;

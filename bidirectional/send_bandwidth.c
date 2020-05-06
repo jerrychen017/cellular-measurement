@@ -115,6 +115,8 @@ void server_send_bandwidth_tcp(int s_bw) {
     struct timeval tm_now;
     struct timeval tm_diff;
     double calculated_speed;
+    int ret;
+    char c;
 
     for (;;)
     {
@@ -130,12 +132,14 @@ void server_send_bandwidth_tcp(int s_bw) {
                 printf("Establish connection with android receiver\n");
                 recv_s = accept(s_bw, 0, 0);
                 for(;;) {
-                    if (kill_thread)
-                    {
+                    ret = recv(s_bw, &c, 1, MSG_PEEK);
+                    send(recv_s, &data_pkt, sizeof(data_pkt), 0);
+                    if (ret < 0) {
                         close(recv_s);
+                        close(s_bw);
                         return;
                     }
-                    send(recv_s, &data_pkt, sizeof(data_pkt), 0);
+
                 }
             }
         }
