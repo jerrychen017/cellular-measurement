@@ -388,6 +388,7 @@ void server_receive_bandwidth_tcp(int s_bw)
                         send_pkt.hdr.rate = calculated_speed;
                         send(recv_s, &send_pkt, sizeof(send_pkt), 0);
                         total_bytes = 0;
+                        tm_last_feedback = tm_now_feedback;
                     }
                 } else {
                     close(recv_s);
