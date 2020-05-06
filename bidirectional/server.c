@@ -115,7 +115,6 @@ int main(int argc, char **argv)
             printf("interval_size is %d\n", recv_params.interval_size);
             printf("interval_time is %f\n", recv_params.interval_time);
             printf("instant_burst is %d\n", recv_params.instant_burst);
-            printf("burst_factor is %d\n", recv_params.burst_factor);
             printf("min_speed is %f\n", recv_params.min_speed);
             printf("max_speed is %f\n", recv_params.max_speed);
             printf("start_speed is %f\n", recv_params.start_speed);
