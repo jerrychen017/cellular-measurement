@@ -1,6 +1,7 @@
 #include "send_bandwidth.h"
 #include "controller.h"
 #include "data_generator.h"
+#include "feedbackLogger.h"
 #include "net_utils.h"
 
 static bool kill_thread = false;
@@ -26,18 +27,63 @@ void send_bandwidth(struct sockaddr_in addr, int sk, bool android, struct parame
     return;
 }
 
-void client_send_bandwidth_tcp(int sk){
+void client_send_bandwidth_tcp(int s_bw){
     kill_thread = false;
     char buffer[PACKET_SIZE];
     data_packet data_pkt;
+    data_packet recv_pkt;
     data_pkt.hdr.type = NETWORK_DATA;
-    for(;;) {
+
+//    for(;;) {
+//        if (kill_thread)
+//        {
+//            close(sk);
+//            return;
+//        }
+//        send(sk, &data_pkt, sizeof(data_pkt), 0);
+//    }
+
+    // Select loop
+    fd_set mask;
+    fd_set read_mask;
+    struct timeval timeout;
+
+    int num;
+    int len;
+
+    // Add file descriptors to fdset
+    FD_ZERO(&mask);
+    FD_SET(s_bw, &mask);
+
+    for (;;)
+    {
         if (kill_thread)
         {
-            close(sk);
+            close(s_bw);
             return;
         }
-        send(sk, &data_pkt, sizeof(data_pkt), 0);
+        read_mask = mask;
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 0;
+
+        send(s_bw, &data_pkt, sizeof(data_pkt), 0);
+        num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
+
+        if (num > 0)
+        {
+            if (FD_ISSET(s_bw, &read_mask)) {
+                len = recv(s_bw, &recv_pkt, sizeof(recv_pkt), 0);
+                if (len > 0) {
+                    sendFeedbackUpload(data_pkt.hdr.rate);
+                }
+            }
+        }
+//        else
+//        {
+//            printf("Download: Stop receiving bandwidth, accepting new connection\n");
+//            close(s_bw);
+//            return;
+//        }
     }
 }
 

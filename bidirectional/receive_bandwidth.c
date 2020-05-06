@@ -339,13 +339,18 @@ void server_receive_bandwidth_tcp(int s_bw)
 
     int recv_s;
 
-    int num_received = 0;
     long total_bytes = 0;
     struct timeval tm_last;
     gettimeofday(&tm_last, NULL);
     struct timeval tm_now;
     struct timeval tm_diff;
     double calculated_speed;
+
+    struct timeval tm_last_feedback;
+    gettimeofday(&tm_last_feedback, NULL);
+
+    data_packet send_pkt;
+    send_pkt.hdr.type = NETWORK_REPORT;
 
     for (;;)
     {
@@ -367,10 +372,12 @@ void server_receive_bandwidth_tcp(int s_bw)
             {
                 len = recv(recv_s, &data_pkt, sizeof(data_pkt), 0);
                 if (len > 0) {
-                    num_received++;
                     total_bytes += len;
 
-                    if (num_received % 100 == 0) {
+                    struct timeval tm_now_feedback;
+                    gettimeofday(&tm_now_feedback, NULL);
+                    struct timeval tm_diff_feedback = diffTime(tm_now_feedback, tm_last_feedback);
+                    if (tm_diff_feedback.tv_sec * 1000000 + tm_diff_feedback.tv_usec > FEEDBACK_FREQ_USEC) {
                         gettimeofday(&tm_now, NULL);
                         tm_diff = diffTime(tm_now, tm_last);
                         long usec = tm_diff.tv_usec + tm_diff.tv_sec * 1000000l;
@@ -378,6 +385,8 @@ void server_receive_bandwidth_tcp(int s_bw)
                         calculated_speed = 0.9536743164 * ret;
                         tm_last = tm_now;
                         printf("received 100 packets with speed %.3f\n", calculated_speed);
+                        send_pkt.hdr.rate = calculated_speed;
+                        send(recv_s, &send_pkt, sizeof(send_pkt), 0);
                         total_bytes = 0;
                     }
                 } else {
@@ -425,6 +434,9 @@ void client_receive_bandwidth_tcp(int s_bw) {
     struct timeval tm_diff;
     double calculated_speed;
 
+    struct timeval tm_last_feedback;
+    gettimeofday(&tm_last_feedback, NULL);
+
     for (;;)
     {
         read_mask = mask;
@@ -436,30 +448,28 @@ void client_receive_bandwidth_tcp(int s_bw) {
         if (num > 0)
         {
             if (FD_ISSET(s_bw, &read_mask)) {
-                printf("Establish connection with sender\n");
-                recv_s = accept(s_bw, 0, 0);
-                FD_SET(recv_s, &mask);
-            }
-
-            if (FD_ISSET(recv_s, &read_mask))
-            {
-                len = recv(recv_s, &data_pkt, sizeof(data_pkt), 0);
+                len = recv(s_bw, &data_pkt, sizeof(data_pkt), 0);
                 if (len > 0) {
                     num_received++;
                     total_bytes += len;
 
-                    if (num_received % 100 == 0) {
+                    struct timeval tm_now_feedback;
+                    gettimeofday(&tm_now_feedback, NULL);
+                    struct timeval tm_diff_feedback = diffTime(tm_now_feedback, tm_last_feedback);
+                    if (tm_diff_feedback.tv_sec * 1000000 + tm_diff_feedback.tv_usec > FEEDBACK_FREQ_USEC) {
                         gettimeofday(&tm_now, NULL);
                         tm_diff = diffTime(tm_now, tm_last);
                         long usec = tm_diff.tv_usec + tm_diff.tv_sec * 1000000l;
                         double ret = total_bytes * 8.0/(usec);
                         calculated_speed = 0.9536743164 * ret;
                         tm_last = tm_now;
-                        printf("received 100 packets with speed %.3f\n", calculated_speed);
+//                        printf("received 100 packets with speed %.3f\n", calculated_speed);
                         total_bytes = 0;
+
+                        sendFeedbackDownload(calculated_speed);
+                        tm_last_feedback = tm_now_feedback;
                     }
                 } else {
-                    close(recv_s);
                     close(s_bw);
                     printf("TCP disconnected\n");
                     return;
@@ -469,7 +479,6 @@ void client_receive_bandwidth_tcp(int s_bw) {
         else
         {
             printf("Download: Stop receiving bandwidth, accepting new connection\n");
-            close(recv_s);
             close(s_bw);
             return;
         }
