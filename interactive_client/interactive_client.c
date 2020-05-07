@@ -127,6 +127,9 @@ InteractivePacket receive_interactive_packet()
             latency = diffTime(now, received_packet.send_time);
             received_packet.latency = latency.tv_sec * 1000 + ((double) latency.tv_usec) / 1000;
             return received_packet;
+        } else {
+            received_packet.seq = -1;
+            return received_packet;
         }
     }
     else
