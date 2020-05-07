@@ -1,15 +1,9 @@
-//
-// Created by Jerry Chen on 4/22/20.
-//
-
 #ifndef UDP_TOOLS_INTERACTIVE_NET_INCLUDE_H
 #define UDP_TOOLS_INTERACTIVE_NET_INCLUDE_H
 
 #include <stdbool.h>
 #include <stdio.h>
-
 #include <stdlib.h>
-
 #include <limits.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -22,9 +16,7 @@
 #include <time.h>
 #include <float.h>
 #include <math.h>
-
 #include <errno.h>
-
 #include <sys/time.h>
 
 #define TIMEOUT_SEC 1
@@ -33,22 +25,20 @@
 
 
 // Constants for interactive application
-#define PORT 9008
 #define BUFF_SIZE 1000
 #define INTERACTIVE_TIMEOUT_SEC 3
 #define INTERACTIVE_TIMEOUT_USEC 0
 #define PACKET_SIZE 1400
-#define NUM_SEND 10
 #define NAME_LENGTH 100
 
 
 enum PacketType
 {
-    TIMING,      // 0
-    REPORT,      // 1
-    ECHO,        // 2
-    INTERACTIVE, // 3
-    CONNECT      // 4
+    TIMING,
+    REPORT,
+    ECHO,
+    INTERACTIVE,
+    CONNECT
 };
 
 enum ConnnectError

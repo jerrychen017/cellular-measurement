@@ -4,6 +4,9 @@ static FILE *upload_fd = NULL;
 static FILE *download_fd = NULL;
 static FILE *latency_fd = NULL;
 
+/**
+ * Send upload speed to Android or print to stdout if run on command line
+ */
 void sendFeedbackUpload(double d)
 {
     printf("Upload speed %f Mbps\n", d);
@@ -18,6 +21,9 @@ void sendFeedbackUpload(double d)
     }
 }
 
+/**
+ * Send latency to Android or print to stdout if run on command line
+ */
 void sendFeedbackLatency(double d)
 {
     printf("Latency %.3f ms\n", d);
@@ -32,6 +38,9 @@ void sendFeedbackLatency(double d)
     }
 }
 
+/**
+ * Send download speed to Android or print to stdout if run on command line
+ */
 void sendFeedbackDownload(double d)
 {
     printf("Download speed %f Mbps\n", d);
@@ -46,6 +55,11 @@ void sendFeedbackDownload(double d)
     }
 }
 
-void javaStartBandwidth()
-{
+/**
+ * Sets all static FILE pointers to NULL
+ */
+void clear_file_pointers() {
+    upload_fd = NULL;
+    download_fd = NULL;
+    latency_fd = NULL;
 }

@@ -1,7 +1,14 @@
 #include "data_generator.h"
 #include "net_utils.h"
 
+/**
+ * static variable used for Android client to terminate threads
+ */
 static bool stop_thread = false;
+
+/**
+ * Calls start_generator with given arguments. Used in pthread_create.
+ */
 void *start_generator_pthread(void *args)
 {
     struct data_generator_args *received_args = (struct data_generator_args *)args;
@@ -9,6 +16,10 @@ void *start_generator_pthread(void *args)
     start_generator(android);
     return NULL;
 }
+
+/**
+ * starts data generator
+ */
 void start_generator(bool android)
 {
 
@@ -85,11 +96,6 @@ void start_generator(bool android)
                         perror("negative speed &\n");
                         exit(1);
                     }
-                    // if (speed > MAX_SPEED) {
-                    //     perror("exceed max speed\n");
-                    //     exit(1);
-                    // }
-                    // expectedTimeout = diffTime(speed_to_interval(speed), timeout);
                 }
             }
         }
@@ -139,9 +145,11 @@ void start_generator(bool android)
             timeout = expectedTimeout;
         }
     }
-    return;
 }
 
+/**
+ * Breaks out data generator select loop and stops data generator thread
+ */
 void stop_data_generator_thread()
 {
     stop_thread = true;

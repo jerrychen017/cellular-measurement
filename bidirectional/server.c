@@ -1,7 +1,7 @@
 #include "receive_bandwidth.h"
 #include "send_bandwidth.h"
 #include "net_utils.h"
-#include "sendto_dbg.h"
+#include "feedbackLogger.h"
 
 /**
  * Bidirectional server main function
@@ -69,7 +69,7 @@ int main(int argc, char **argv)
                     ack_pkt.rate = 0;
                     ack_pkt.seq_num = 0;
                     ack_pkt.burst_start = 0;
-                    sendto_dbg(server_send_sk, &ack_pkt, sizeof(packet_header), 0,
+                    sendto(server_send_sk, &ack_pkt, sizeof(packet_header), 0,
                                (struct sockaddr *)&server_send_addr, server_send_len);
                     printf("sending send ack\n");
                 }
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
                     ack_pkt.type = NETWORK_START_ACK;
                     ack_pkt.rate = 0;
                     ack_pkt.seq_num = 0;
-                    sendto_dbg(server_recv_sk, &ack_pkt, sizeof(packet_header), 0,
+                    sendto(server_recv_sk, &ack_pkt, sizeof(packet_header), 0,
                                (struct sockaddr *)&server_recv_addr, server_recv_len);
                     printf("sending recv ack\n");
                 }
@@ -115,26 +115,42 @@ int main(int argc, char **argv)
             printf("interval_size is %d\n", recv_params.interval_size);
             printf("interval_time is %f\n", recv_params.interval_time);
             printf("instant_burst is %d\n", recv_params.instant_burst);
-            printf("burst_factor is %d\n", recv_params.burst_factor);
             printf("min_speed is %f\n", recv_params.min_speed);
             printf("max_speed is %f\n", recv_params.max_speed);
             printf("start_speed is %f\n", recv_params.start_speed);
             printf("grace_period is %d\n", recv_params.grace_period);
             printf("pred_mode is %d\n", recv_params.pred_mode);
+            printf("use_tcp is %d\n", recv_params.use_tcp);
             printf("size of params is %d\n", sizeof(recv_params));
 
             pthread_t tid;                        // thread id
             struct send_bandwidth_args send_args; // arguments to be passed to send_bandwidth
-            send_args.addr = server_send_addr;
-            send_args.sk = server_send_sk;
-            send_args.android = false;
-            send_args.params = recv_params;
-            pthread_create(&tid, NULL, &send_bandwidth_pthread, (void *)&send_args);
+            if (recv_params.use_tcp) {
+                close(server_send_sk);
+                close(server_recv_sk);
+                server_recv_sk = setup_tcp_socket_recv(SERVER_RECEIVE_PORT);
+                server_send_sk = setup_tcp_socket_recv(SERVER_SEND_PORT);
 
-            receive_bandwidth(server_recv_sk, server_recv_addr, recv_params, false);
-            stop_controller_thread();
-            stop_data_generator_thread();
+
+                send_args.sk = server_send_sk;
+                pthread_create(&tid, NULL, &server_send_bandwidth_tcp_pthread, (void *)&send_args);
+
+                server_receive_bandwidth_tcp(server_recv_sk);
+            } else {
+                send_args.addr = server_send_addr;
+                send_args.sk = server_send_sk;
+                send_args.android = false;
+                send_args.params = recv_params;
+                pthread_create(&tid, NULL, &send_bandwidth_pthread, (void *)&send_args);
+
+                receive_bandwidth(server_recv_sk, server_recv_addr, recv_params, false);
+                stop_controller_thread();
+                stop_data_generator_thread();
+            }
             pthread_join(tid, NULL);
+
+            clear_file_pointers();
+
             // re-open socket that was closed by controller process
             server_send_sk = setup_bound_socket(SERVER_SEND_PORT);
             server_recv_sk = setup_bound_socket(SERVER_RECEIVE_PORT);
@@ -142,6 +158,4 @@ int main(int argc, char **argv)
             got_recv_addr = false;
         }
     }
-
-    return 0;
 }

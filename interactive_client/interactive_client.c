@@ -18,8 +18,9 @@ static int num;
 
 static InteractivePacket packet_send;
 
-// send CONNECT packet to interactive server
-// returns an id
+/**
+ * send CONNECT packet to interactive server and returns an ID
+ */
 int interactive_connect(const char name[NAME_LENGTH])
 {
     // initialize starting packet and echo_packet
@@ -80,6 +81,12 @@ int interactive_connect(const char name[NAME_LENGTH])
     }
 }
 
+/**
+ * send an interactive packet to the server and returns the sequence number
+ * @param x x_coordinate
+ * @param y y_coordinate
+ * @return status code
+ */
 int send_interactive_packet(int seq_num, float x, float y)
 {
     // initialize starting packet and echo_packet
@@ -92,7 +99,6 @@ int send_interactive_packet(int seq_num, float x, float y)
     // send init packet to rcv
     sendto(sk, (EchoPacket *)&packet_send, sizeof(packet_send), 0,
            (struct sockaddr *)&interactive_pac_addr, sizeof(interactive_pac_addr));
-//    printf("interactive packet is sent\n");
     return 0;
 }
 
@@ -121,6 +127,9 @@ InteractivePacket receive_interactive_packet()
             latency = diffTime(now, received_packet.send_time);
             received_packet.latency = latency.tv_sec * 1000 + ((double) latency.tv_usec) / 1000;
             return received_packet;
+        } else {
+            received_packet.seq = -1;
+            return received_packet;
         }
     }
     else
@@ -131,9 +140,11 @@ InteractivePacket receive_interactive_packet()
     }
 }
 
+/**
+ * Setup UDP socket and bind
+ */
 void init_socket(const char *address, int port)
 {
-
     // socket both for sending and receiving
     sk = socket(AF_INET, SOCK_DGRAM, 0);
     if (sk < 0)

@@ -1,5 +1,8 @@
 #include "echo_client.h"
 
+/**
+ * Setup a UDP socket and binds the socket
+ */
 int client_bind(const char* address, int port) {
 
     // server socket address
@@ -25,6 +28,9 @@ int client_bind(const char* address, int port) {
     return 0;
 }
 
+/**
+ * Sends an UDP echo packet to the interactive server
+ */
 char * echo_send(const char* address, int port, int sequence) {
     char * out = malloc(sizeof(char) * 300);
 // initialize starting packet and echo_packet
@@ -117,5 +123,4 @@ for (;;) {
         return out;
     }
 }
-return 0;
 }

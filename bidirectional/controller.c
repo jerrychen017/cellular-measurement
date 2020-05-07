@@ -2,13 +2,32 @@
 #include "feedbackLogger.h"
 #include "net_utils.h"
 
+#define BURST_FACTOR 2 // cannot be changed since our protocol depends on it
+
+/**
+ * static variable used for Android client to terminate threads
+ */
 static bool kill_thread = false;
 
+/**
+ * Controller select loop to receive data from data generator and forward data to the server.
+ * Controller sends control signals to data generator and receives report packet from the server.
+ */
 void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sockaddr_un data_addr, socklen_t data_len, struct parameters params, bool android);
 
+/**
+ * Adjust rate based on the given feedback from the server
+ */
 double adjustRate(double current, double reported, double min, double max, bool burst);
+
+/**
+ * Reply to extraneous NETWORK_START packet
+ */
 void handleStartPacket(int s, struct sockaddr_in from, struct sockaddr_in expected);
 
+/**
+ * starts controller and connects to data generator
+ */
 int start_controller(bool android, struct sockaddr_in send_addr, int s_server, struct parameters params)
 {
     kill_thread = false;
@@ -53,7 +72,10 @@ int start_controller(bool android, struct sockaddr_in send_addr, int s_server, s
     return 0;
 }
 
-/* Main event loop */
+/**
+ * Controller select loop to receive data from data generator and forward data to the server.
+ * Controller sends control signals to data generator and receives report packet from the server.
+ */
 void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sockaddr_un data_addr, socklen_t data_len, struct parameters params, bool android)
 {
     // parameter variables
@@ -61,7 +83,6 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
     int INTERVAL_SIZE = params.interval_size;
     double INTERVAL_TIME = params.interval_time;
     int INSTANT_BURST = params.instant_burst;
-    int BURST_FACTOR = params.burst_factor;
     double MIN_SPEED = params.min_speed;
     double MAX_SPEED = params.max_speed;
     double START_SPEED = params.start_speed;
@@ -143,7 +164,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                 data_pkt.hdr.type = NETWORK_ECHO;
                 memcpy(data_pkt.data, &tm_now_feedback.tv_sec, sizeof(tm_now_feedback.tv_sec));
                 memcpy(data_pkt.data + sizeof(tm_now_feedback.tv_sec), &tm_now_feedback.tv_usec, sizeof(tm_now_feedback.tv_usec));
-                sendto_dbg(s_server, &data_pkt, sizeof(data_pkt), 0,
+                sendto(s_server, &data_pkt, sizeof(data_pkt), 0,
                            (struct sockaddr *)&send_addr, sizeof(send_addr));
             }
         }
@@ -202,7 +223,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     }
 
                     // Pass to server during normal operation
-                    sendto_dbg(s_server, &data_pkt, sizeof(data_pkt), 0,
+                    sendto(s_server, &data_pkt, sizeof(data_pkt), 0,
                                (struct sockaddr *)&send_addr, sizeof(send_addr));
                     //                    printf("send data to server\n");
                 }
@@ -217,7 +238,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                     {
                         burst_seq_send = 0;
 
-                        sendto_dbg(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
+                        sendto(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
                                    (struct sockaddr *)&send_addr, sizeof(send_addr));
                         burst_seq_send++;
 
@@ -242,7 +263,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                         while (burst_seq_send != -1 && burst_seq_send < BURST_SIZE)
                         {
                             // printf("sending packet at end %d of burst\n", burst_seq_send);
-                            sendto_dbg(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
+                            sendto(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
                                        (struct sockaddr *)&send_addr, sizeof(send_addr));
                             burst_seq_send++;
                         }
@@ -318,7 +339,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
 
                 // printf("sending packet %d of burst\n", burst_seq_send);
 
-                sendto_dbg(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
+                sendto(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
                            (struct sockaddr *)&send_addr, sizeof(send_addr));
                 burst_seq_send++;
 
@@ -330,7 +351,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
                 while (gtTime(tmExtra, baseTimeout) && burst_seq_send < BURST_SIZE && burst_seq_send < burst_seq_recv)
                 {
                     // printf("sending makeup packet %d of burst\n", burst_seq_send);
-                    sendto_dbg(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
+                    sendto(s_server, &pkt_buffer[burst_seq_send], sizeof(data_pkt), 0,
                                (struct sockaddr *)&send_addr, sizeof(send_addr));
                     tmExtra = diffTime(tmExtra, baseTimeout);
                     burst_seq_send++;
@@ -358,7 +379,9 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
     }
 }
 
-/* Given feeback from server, adjust to rate */
+/**
+ * Adjust rate based on the given feedback from the server
+ */
 double adjustRate(double current, double reported, double min, double max, bool burst)
 {
     double newRate = current;
@@ -385,7 +408,9 @@ double adjustRate(double current, double reported, double min, double max, bool 
     return newRate;
 }
 
-/* Reply to extraneous NETWORK_START packet */
+/**
+ * Reply to extraneous NETWORK_START packet
+ */
 void handleStartPacket(int s, struct sockaddr_in from, struct sockaddr_in expected)
 {
     packet_header ack_pkt;
@@ -404,6 +429,9 @@ void handleStartPacket(int s, struct sockaddr_in from, struct sockaddr_in expect
            (struct sockaddr *)&from, sizeof(from));
 }
 
+/**
+ * Breaks out controller select loop and stops controller thread
+ */
 void stop_controller_thread()
 {
     kill_thread = true;
