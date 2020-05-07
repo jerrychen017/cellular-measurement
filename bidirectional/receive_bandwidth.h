@@ -7,7 +7,6 @@
 struct recv_bandwidth_args
 {
     int sk;
-    int pred_mode;
     struct sockaddr_in expected_addr;
     struct parameters params;
     bool android;

@@ -8,7 +8,7 @@
  * @param address server address
  * @param params parameters
  */
-void start_client(const char *address, int pred_mode, struct parameters params)
+void start_client(const char *address, struct parameters params)
 {
 
     int client_send_sk = setup_bound_socket(CLIENT_SEND_PORT);
@@ -26,37 +26,41 @@ void start_client(const char *address, int pred_mode, struct parameters params)
     struct timeval timeout;
     int num, len;
 
+    start_packet start_pkt;
     data_packet data_pkt;
-    data_packet send_pkt;
     struct sockaddr_in from_addr;
     socklen_t from_len = sizeof(from_addr);
+    char buf[sizeof(start_pkt)]; //buffer to serialize struct
 
     bool got_send_ack = false;
     bool got_recv_ack = false;
 
-    // initialize send packet
-    send_pkt.hdr.type = NETWORK_START;
-    send_pkt.hdr.rate = 0;
-    send_pkt.hdr.seq_num = 0;
-    send_pkt.hdr.burst_start = 0;
-    memcpy(send_pkt.data, &params, sizeof(struct parameters));
+    // initiate handshake packet and send to the server
+    start_pkt.type = NETWORK_START;
+    start_pkt.params = params;
+
+    int buf_len = serializeStruct(&start_pkt, buf);
 
     for (;;)
     {
         read_mask = mask;
-        timeout.tv_sec = TIMEOUT_SEC;
-        timeout.tv_usec = TIMEOUT_USEC;
+        timeout.tv_sec = 1;
+        timeout.tv_usec = 0;
 
+        // re-send NETWORK_START packets when timeout
         if (!got_send_ack)
         {
-            sendto(client_send_sk, &send_pkt, sizeof(data_packet), 0,
-                       (struct sockaddr *)&client_send_addr, sizeof(client_send_addr));
+            sendto(client_send_sk, buf, buf_len, 0,
+                   (struct sockaddr *)&client_send_addr, sizeof(client_send_addr));
         }
+
         if (!got_recv_ack)
         {
-            sendto(client_recv_sk, &send_pkt, sizeof(data_packet), 0,
-                       (struct sockaddr *)&client_recv_addr, sizeof(client_recv_addr));
+            sendto(client_recv_sk, buf, buf_len, 0,
+                   (struct sockaddr *)&client_recv_addr, sizeof(client_recv_addr));
         }
+
+        printf("re-sending NETWORK_START\n");
 
         num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
 
@@ -69,18 +73,21 @@ void start_client(const char *address, int pred_mode, struct parameters params)
                 if (len < 0)
                 {
                     perror("socket error");
-                    exit(1);
+                    return;
                 }
 
                 if (data_pkt.hdr.type == NETWORK_START_ACK)
                 {
                     printf("got send ack\n");
                     got_send_ack = true;
+                    FD_CLR(client_send_sk, &mask);
                 }
 
                 if (data_pkt.hdr.type == NETWORK_BUSY)
                 {
-                    // exit the server is busy
+                    printf("server is busy\n");
+                    close(client_send_sk);
+                    close(client_recv_sk);
                     return;
                 }
             }
@@ -98,11 +105,14 @@ void start_client(const char *address, int pred_mode, struct parameters params)
                 {
                     printf("got recv ack\n");
                     got_recv_ack = true;
+                    FD_CLR(client_recv_sk, &mask);
                 }
 
                 if (data_pkt.hdr.type == NETWORK_BUSY)
                 {
-                    // exit the server is busy
+                    printf("server is busy\n");
+                    close(client_recv_sk);
+                    close(client_send_sk);
                     return;
                 }
             }
@@ -111,6 +121,12 @@ void start_client(const char *address, int pred_mode, struct parameters params)
         {
             printf(".");
             fflush(0);
+
+            if (num < 0)
+            {
+                perror("num is negative\n");
+                exit(1);
+            }
         }
 
         if (got_recv_ack && got_send_ack)
@@ -119,9 +135,9 @@ void start_client(const char *address, int pred_mode, struct parameters params)
             pthread_t tid; // thread id
             struct recv_bandwidth_args send_args;
             send_args.sk = client_recv_sk;
-            send_args.pred_mode = pred_mode;
             send_args.expected_addr = client_recv_addr;
             send_args.params = params;
+            send_args.android = true;
             pthread_create(&tid, NULL, &receive_bandwidth_pthread, (void *)&send_args);
 
             send_bandwidth(client_send_addr, client_send_sk, false, params);
