@@ -1,7 +1,6 @@
 #include "receive_bandwidth.h"
 #include "send_bandwidth.h"
 #include "net_utils.h"
-#include "sendto_dbg.h"
 #include "feedbackLogger.h"
 
 /**
@@ -70,7 +69,7 @@ int main(int argc, char **argv)
                     ack_pkt.rate = 0;
                     ack_pkt.seq_num = 0;
                     ack_pkt.burst_start = 0;
-                    sendto_dbg(server_send_sk, &ack_pkt, sizeof(packet_header), 0,
+                    sendto(server_send_sk, &ack_pkt, sizeof(packet_header), 0,
                                (struct sockaddr *)&server_send_addr, server_send_len);
                     printf("sending send ack\n");
                 }
@@ -94,7 +93,7 @@ int main(int argc, char **argv)
                     ack_pkt.type = NETWORK_START_ACK;
                     ack_pkt.rate = 0;
                     ack_pkt.seq_num = 0;
-                    sendto_dbg(server_recv_sk, &ack_pkt, sizeof(packet_header), 0,
+                    sendto(server_recv_sk, &ack_pkt, sizeof(packet_header), 0,
                                (struct sockaddr *)&server_recv_addr, server_recv_len);
                     printf("sending recv ack\n");
                 }
@@ -159,6 +158,4 @@ int main(int argc, char **argv)
             got_recv_addr = false;
         }
     }
-
-    return 0;
 }

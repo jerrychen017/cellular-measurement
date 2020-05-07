@@ -1,5 +1,8 @@
 #include "net_utils.h"
 
+/**
+ * Gets the data generator local addr based on if running on Android
+ */
 struct sockaddr_un get_datagen_addr(bool android, socklen_t *len)
 {
     struct sockaddr_un addr;
@@ -20,6 +23,9 @@ struct sockaddr_un get_datagen_addr(bool android, socklen_t *len)
     return addr;
 }
 
+/**
+ * Gets the controller local addr based on if running on Android
+ */
 struct sockaddr_un get_controller_addr(bool android, socklen_t *len)
 {
     struct sockaddr_un addr;
@@ -40,7 +46,9 @@ struct sockaddr_un get_controller_addr(bool android, socklen_t *len)
     return addr;
 }
 
-/* Setup unix socket, binds/connects to addr */
+/**
+ * Setup unix socket, binds and connects to addr
+ */
 int setup_unix_socket(struct sockaddr_un addr, socklen_t len)
 {
     int s;
@@ -59,6 +67,9 @@ int setup_unix_socket(struct sockaddr_un addr, socklen_t len)
     return s;
 }
 
+/**
+ * given host name and port, get address
+ */
 struct sockaddr_in addrbyname(const char *hostname, int port)
 {
     int host_num;
@@ -82,6 +93,9 @@ struct sockaddr_in addrbyname(const char *hostname, int port)
     return addr;
 }
 
+/**
+ * Setup UDP socket and bind
+ */
 int setup_bound_socket(int port)
 {
     struct sockaddr_in name;
@@ -104,6 +118,9 @@ int setup_bound_socket(int port)
     return s_recv;
 }
 
+/**
+ * Setup TCP socket and connect to the host
+ */
 int setup_tcp_socket_send(const char *hostname, int port)
 {
     struct sockaddr_in host;
@@ -137,6 +154,9 @@ int setup_tcp_socket_send(const char *hostname, int port)
     return s_recv;
 }
 
+/**
+ * Setup TCP socket, bind and listen
+ */
 int setup_tcp_socket_recv(int port) {
     int s;
     struct sockaddr_in name;

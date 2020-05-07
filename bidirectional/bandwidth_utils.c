@@ -1,14 +1,13 @@
 #include "net_include.h"
 #include "bandwidth_utils.h"
 
-/* 
+/**
  * Returns interval to send packets of size PACKET_SIZE
  * to acheive flow of speed Mbps (megabits per seconds)
  */
 struct timeval speed_to_interval(double speed)
 {
     struct timeval ret;
-//    long long usec = 1000000l * PACKET_SIZE * 8l / (speed * 1024 * 1024);
     // we use 0.9536743164 for 1000000/1024/1024 to avoid long overflow
     long usec = 0.9536743164 * PACKET_SIZE * 8l / (speed);
     ret.tv_sec = usec / 1000000;
@@ -16,7 +15,7 @@ struct timeval speed_to_interval(double speed)
     return ret;
 }
 
-/* 
+/**
  * Given the interval to receive num_packets of size
  * PACKET_SIZE, returns a calculated speed in Mbps
  */
@@ -42,18 +41,24 @@ struct timeval diffTime(struct timeval left, struct timeval right)
     }
     if (diff.tv_sec < 0)
     {
-//        printf("WARNING: diffTime has negative result, returning 0!\n");
+        printf("WARNING: diffTime has negative result!\n");
         diff.tv_sec = diff.tv_usec = 0;
     }
     return diff;
 }
 
+/**
+ * Checks if the left timeval is greater than the second timeval
+ */
 int gtTime(struct timeval left, struct timeval right) 
 {
     return (left.tv_sec > right.tv_sec) ||
         (left.tv_sec == right.tv_sec && left.tv_usec > right.tv_usec);
 }
 
+/**
+ * deserialize struct fields from the buffer and put then in the struct
+ */
 void deserializeStruct(start_packet *recv_pkt, char* buf){
     int offset = 0;
     memcpy(&recv_pkt->type, buf + offset, sizeof(recv_pkt->type));
@@ -84,7 +89,9 @@ void deserializeStruct(start_packet *recv_pkt, char* buf){
     offset += sizeof(recv_pkt->params.start_speed);
 }
 
-// manually serialize to ensure no extra struct paddting
+/**
+ * manually serialize to ensure no extra struct padding
+ */
 int serializeStruct(start_packet *send_pkt, char* buf){
     int offset = 0;
     memcpy(buf + offset, &send_pkt->type, sizeof(send_pkt->type));

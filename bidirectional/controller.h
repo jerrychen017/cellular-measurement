@@ -3,12 +3,15 @@
 
 #include "net_include.h"
 #include "bandwidth_utils.h"
-#include "sendto_dbg.h"
 
 /**
- * start_controller is called in android ndk to run controller 
+ * starts controller and connects to data generator
  */
 int start_controller(bool android, struct sockaddr_in send_addr, int s_server, struct parameters params);
+
+/**
+ * Breaks out controller select loop and stops controller thread
+ */
 void stop_controller_thread();
 
 #endif

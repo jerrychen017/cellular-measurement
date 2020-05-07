@@ -5,16 +5,26 @@
 
 #define DATA_SIZE (PACKET_SIZE - sizeof(packet_header))
 
+/**
+ * Used to pass parameters through pthread_create.
+ */
 struct data_generator_args {
     bool android; 
 };
 
-
-void * start_generator_pthread(void * args);
 /**
- * start_generator is called in android ndk to run data generator 
+ * Calls start_generator with given arguments. Used in pthread_create.
+ */
+void * start_generator_pthread(void * args);
+
+/**
+ * starts data generator
  */
 void start_generator(bool android);
+
+/**
+ * Breaks out data generator select loop and stops data generator thread
+ */
 void stop_data_generator_thread();
 
 #endif

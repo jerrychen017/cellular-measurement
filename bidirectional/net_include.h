@@ -3,9 +3,7 @@
 
 #include <stdbool.h>
 #include <stdio.h>
-
 #include <stdlib.h>
-
 #include <limits.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -19,9 +17,7 @@
 #include <time.h>
 #include <float.h>
 #include <math.h>
-
 #include <errno.h>
-
 #include <sys/time.h>
 
 #define TIMEOUT_SEC 1
@@ -29,36 +25,50 @@
 #define PACKET_SIZE 1400
 
 // controller constants
-// #define BURST_SIZE 10 // number of packets in increased speed burst
-// #define BURST_FACTOR 2
-// #define INTERVAL_SIZE 500 // one burst per INTERVAL_SIZE packets, should make this a multiple of BURST_SIZE
-// #define MIN_SPEED 0.1   // 100 Kbps
-// #define MAX_SPEED 10 // 10 Mbps
-// #define START_SPEED 1.0 // 1.0 Mbps
-// #define GRACE_PERIOD 10 // number of tolerated delayed packets
+/**
+ * Parameters we used in our protocol:
+ * BURST_SIZE 10 // number of packets in increased speed burst
+ * BURST_FACTOR 2
+ * INTERVAL_SIZE 500 // one burst per INTERVAL_SIZE packets, should make this a multiple of BURST_SIZE
+ * INTERVAL_TIME 1 // overrides and uses INTERVAL_TIME instead of INTERVAL_SIZE if it's not 0
+ * MIN_SPEED 0.1   // 100 Kbps
+ * MAX_SPEED 10 // 10 Mbps
+ * START_SPEED 1.0 // 1.0 Mbps
+ * GAMMA 10 // number of packets tolerated with measured rate below threshold
+ * INSTANT_BURST 0
+ * THRESHOLD 0.95
+ * ALPHA 0.1
+ * PRED_MODE 1 // 0 for EWMA and 1 for running average
+ * USE_TCP 0 // use TCP if 1, use UDP if 0
+ */
 
+/**
+ * UNIX socket for running on computers
+ */
 #define SOCK_CONTROLLER "/tmp/controller"
 #define SOCK_DATAGEN "/tmp/datagenerator"
-
+/**
+ * UNIX socket for running on Android
+ */
 #define ANDROID_SOCK_DATAGEN "\0local.datagenerator"
 #define ANDROID_SOCK_CONTROLLER "\0local.controller"
 
 // Constants for interactive application
-#define PORT 9008
 #define BUFF_SIZE 1000
 #define INTERACTIVE_TIMEOUT_SEC 3
 #define INTERACTIVE_TIMEOUT_USEC 0
 #define PACKET_SIZE 1400
-#define NUM_SEND 10
 #define NAME_LENGTH 100
 
-#define SERVER_RECEIVE_PORT 4577 // client sends and server listens on this port 4579
-#define SERVER_SEND_PORT 4576    // server sends and client listens on this port 4578
-#define SERVER_INTERACTIVE_PORT 4578
+// SERVER_INTERACTIVE_PORT 4578
+#define SERVER_RECEIVE_PORT 4577
+#define SERVER_SEND_PORT 4576
 #define CLIENT_SEND_PORT 4577
 #define CLIENT_RECEIVE_PORT 4576
 
+// send upload/download rates to the Android app every 200 ms
 #define FEEDBACK_FREQ_USEC 200000
+// printout to stdout every 1 s
 #define PRINTOUT_FREQ_USEC 1000000
 
 struct parameters

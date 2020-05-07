@@ -3,6 +3,9 @@
 #include "interactive_net_include.h"
 #include "../bidirectional/bandwidth_utils.h"
 
+/**
+ * send CONNECT packet to interactive server and returns an ID
+ */
 int interactive_connect(const char name[NAME_LENGTH]);
 
 /**
@@ -19,6 +22,9 @@ int send_interactive_packet(int seq_num, float x, float y);
  */
 InteractivePacket receive_interactive_packet();
 
+/**
+ * Setup UDP socket and bind
+ */
 void init_socket(const char *address, int port);
 
 #endif //UDP_TOOLS_ECHO_CLIENT_H

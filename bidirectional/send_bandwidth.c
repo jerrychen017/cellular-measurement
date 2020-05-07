@@ -4,8 +4,14 @@
 #include "feedbackLogger.h"
 #include "net_utils.h"
 
+/**
+ * static variable used for Android client to terminate threads
+ */
 static bool kill_thread = false;
 
+/**
+ * Calls send_bandwidth() with given arguments. Used to match signatures for pthread_create.
+ */
 void *send_bandwidth_pthread(void *args)
 {
     struct send_bandwidth_args *recv_args = (struct send_bandwidth_args *)args;
@@ -14,6 +20,9 @@ void *send_bandwidth_pthread(void *args)
     return NULL;
 }
 
+/**
+ * Starts data generator on a new thread and runs controller.
+ */
 void send_bandwidth(struct sockaddr_in addr, int sk, bool android, struct parameters params)
 {
     struct data_generator_args send_args;
@@ -27,6 +36,9 @@ void send_bandwidth(struct sockaddr_in addr, int sk, bool android, struct parame
     return;
 }
 
+/**
+ * Sends data stream to the receiver over TCP on the client side
+ */
 void client_send_bandwidth_tcp(int s_bw){
     kill_thread = false;
     char buffer[PACKET_SIZE];
@@ -72,6 +84,9 @@ void client_send_bandwidth_tcp(int s_bw){
     }
 }
 
+/**
+ * Sends data stream to the receiver over TCP on the server side
+ */
 void server_send_bandwidth_tcp(int s_bw) {
 // parameter variables
 
@@ -137,12 +152,18 @@ void server_send_bandwidth_tcp(int s_bw) {
     }
 }
 
+/**
+ * Calls server_send_bandwidth_tcp() with given arguments. Used to match signatures for pthread_create.
+ */
 void * server_send_bandwidth_tcp_pthread(void * args) {
     struct send_bandwidth_args * recv_args = (struct send_bandwidth_args *) args;
     server_send_bandwidth_tcp(recv_args->sk);
     return NULL;
 }
 
+/**
+ * Breaks out client_send_bandwidth_tcp() select for loop and stops the thread
+ */
 void stop_tcp_send_thread() {
     kill_thread = true;
 }

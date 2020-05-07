@@ -4,13 +4,22 @@
 #define RECV_TIMEOUT_SEC 5
 #define RECV_TIMEOUT_USEC 0
 
+/**
+ * static variable used for Android client to terminate threads
+ */
 static bool kill_thread = false;
 
+/**
+ * Breaks out receive_bandwidth() select for loop and stops controller thread
+ */
 void stop_receiving_thread()
 {
     kill_thread = true;
 }
 
+/**
+ * Calls receive_bandwidth() with given arguments. Used to match signatures for pthread_create.
+ */
 void *receive_bandwidth_pthread(void *args)
 {
     struct recv_bandwidth_args *recv_args = (struct recv_bandwidth_args *)args;
@@ -18,6 +27,9 @@ void *receive_bandwidth_pthread(void *args)
     return NULL;
 }
 
+/**
+ * Receives data packets from the controller (sender) and sends reports packets to the sender.
+ */
 void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parameters params, bool android)
 {
     // parameter variables
@@ -100,7 +112,7 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
             report_pkt.rate = 0;
             report_pkt.seq_num = 0;
 
-            sendto_dbg(s_bw, &report_pkt, sizeof(report_pkt), 0,
+            sendto(s_bw, &report_pkt, sizeof(report_pkt), 0,
                        (struct sockaddr *)&expected_addr, sizeof(expected_addr));
             close(s_bw);
             return;
@@ -137,7 +149,7 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
                     }
                     ack_pkt.rate = 0;
                     ack_pkt.seq_num = 0;
-                    sendto_dbg(s_bw, &ack_pkt, sizeof(packet_header), 0,
+                    sendto(s_bw, &ack_pkt, sizeof(packet_header), 0,
                                (struct sockaddr *)&from_addr, from_len);
                     continue;
                 }
@@ -148,7 +160,7 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
                 }
                 else if (android && data_pkt.hdr.type == NETWORK_ECHO)
                 {
-                    sendto_dbg(s_bw, &data_pkt, sizeof(data_pkt), 0,
+                    sendto(s_bw, &data_pkt, sizeof(data_pkt), 0,
                                (struct sockaddr *)&from_addr, from_len);
                 }
 
@@ -243,7 +255,7 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
                             report_pkt.rate = calculated_speed;
                             report_pkt.seq_num = currSeq;
 
-                            sendto_dbg(s_bw, &report_pkt, sizeof(report_pkt), 0,
+                            sendto(s_bw, &report_pkt, sizeof(report_pkt), 0,
                                        (struct sockaddr *)&from_addr, from_len);
 
                             // Reset burst stuff
@@ -291,7 +303,7 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
                             report_pkt.type = NETWORK_REPORT;
                             report_pkt.rate = calcRate;
                             report_pkt.seq_num = currSeq;
-                            sendto_dbg(s_bw, &report_pkt, sizeof(report_pkt), 0,
+                            sendto(s_bw, &report_pkt, sizeof(report_pkt), 0,
                                        (struct sockaddr *)&from_addr, from_len);
                             // printf("Computed rate %.4f below threshold, actual rate %.4f\n", calcRate, expectedRate);
                             numBelowThreshold = 0;
@@ -317,6 +329,9 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
     }
 }
 
+/**
+ * Receives bandwidth data stream over TCP on the server side and send back report packets to the controller
+ */
 void server_receive_bandwidth_tcp(int s_bw)
 {
     // parameter variables
@@ -408,6 +423,9 @@ void server_receive_bandwidth_tcp(int s_bw)
     }
 }
 
+/**
+ * Receives bandwidth data stream over TCP on the client side and send back report packets to the controller
+ */
 void client_receive_bandwidth_tcp(int s_bw) {
     kill_thread = false;
     // Select loop
@@ -490,6 +508,9 @@ void client_receive_bandwidth_tcp(int s_bw) {
     }
 }
 
+/**
+ * Breaks out TCP receive bandwidth select loop and stops the thread
+ */
 void stop_tcp_recv_thread() {
     kill_thread = true;
 }
