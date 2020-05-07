@@ -4,13 +4,22 @@
 #define RECV_TIMEOUT_SEC 5
 #define RECV_TIMEOUT_USEC 0
 
+/**
+ * static variable used for Android client to terminate threads
+ */
 static bool kill_thread = false;
 
+/**
+ * Breaks out receive_bandwidth() select for loop and stops controller thread
+ */
 void stop_receiving_thread()
 {
     kill_thread = true;
 }
 
+/**
+ * Calls receive_bandwidth() with given arguments. Used to match signatures for pthread_create.
+ */
 void *receive_bandwidth_pthread(void *args)
 {
     struct recv_bandwidth_args *recv_args = (struct recv_bandwidth_args *)args;
@@ -18,6 +27,9 @@ void *receive_bandwidth_pthread(void *args)
     return NULL;
 }
 
+/**
+ * Receives data packets from the controller (sender) and sends reports packets to the sender.
+ */
 void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parameters params, bool android)
 {
     // parameter variables
@@ -25,7 +37,6 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
     int INTERVAL_SIZE = params.interval_size;
     double INTERVAL_TIME = params.interval_time;
     int INSTANT_BURST = params.instant_burst;
-    int BURST_FACTOR = params.burst_factor;
     double MIN_SPEED = params.min_speed;
     double MAX_SPEED = params.max_speed;
     double START_SPEED = params.start_speed;
@@ -101,7 +112,7 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
             report_pkt.rate = 0;
             report_pkt.seq_num = 0;
 
-            sendto_dbg(s_bw, &report_pkt, sizeof(report_pkt), 0,
+            sendto(s_bw, &report_pkt, sizeof(report_pkt), 0,
                        (struct sockaddr *)&expected_addr, sizeof(expected_addr));
             close(s_bw);
             return;
@@ -138,7 +149,7 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
                     }
                     ack_pkt.rate = 0;
                     ack_pkt.seq_num = 0;
-                    sendto_dbg(s_bw, &ack_pkt, sizeof(packet_header), 0,
+                    sendto(s_bw, &ack_pkt, sizeof(packet_header), 0,
                                (struct sockaddr *)&from_addr, from_len);
                     continue;
                 }
@@ -149,7 +160,7 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
                 }
                 else if (android && data_pkt.hdr.type == NETWORK_ECHO)
                 {
-                    sendto_dbg(s_bw, &data_pkt, sizeof(data_pkt), 0,
+                    sendto(s_bw, &data_pkt, sizeof(data_pkt), 0,
                                (struct sockaddr *)&from_addr, from_len);
                 }
 
@@ -244,7 +255,7 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
                             report_pkt.rate = calculated_speed;
                             report_pkt.seq_num = currSeq;
 
-                            sendto_dbg(s_bw, &report_pkt, sizeof(report_pkt), 0,
+                            sendto(s_bw, &report_pkt, sizeof(report_pkt), 0,
                                        (struct sockaddr *)&from_addr, from_len);
 
                             // Reset burst stuff
@@ -292,7 +303,7 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
                             report_pkt.type = NETWORK_REPORT;
                             report_pkt.rate = calcRate;
                             report_pkt.seq_num = currSeq;
-                            sendto_dbg(s_bw, &report_pkt, sizeof(report_pkt), 0,
+                            sendto(s_bw, &report_pkt, sizeof(report_pkt), 0,
                                        (struct sockaddr *)&from_addr, from_len);
                             // printf("Computed rate %.4f below threshold, actual rate %.4f\n", calcRate, expectedRate);
                             numBelowThreshold = 0;
@@ -316,4 +327,190 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
             return;
         }
     }
+}
+
+/**
+ * Receives bandwidth data stream over TCP on the server side and send back report packets to the controller
+ */
+void server_receive_bandwidth_tcp(int s_bw)
+{
+    // parameter variables
+
+    // Select loop
+    fd_set mask;
+    fd_set read_mask;
+    struct timeval timeout;
+
+    int num;
+    int len;
+
+    // packet buffers
+    data_packet data_pkt;
+    memset(&data_pkt, 0, sizeof(data_packet));
+
+    // Add file descriptors to fdset
+    FD_ZERO(&mask);
+    FD_SET(s_bw, &mask);
+
+    int recv_s;
+
+    long total_bytes = 0;
+    struct timeval tm_last;
+    gettimeofday(&tm_last, NULL);
+    struct timeval tm_now;
+    struct timeval tm_diff;
+    double calculated_speed;
+
+    struct timeval tm_last_feedback;
+    gettimeofday(&tm_last_feedback, NULL);
+
+    data_packet send_pkt;
+    send_pkt.hdr.type = NETWORK_REPORT;
+
+    for (;;)
+    {
+        read_mask = mask;
+        timeout.tv_sec = RECV_TIMEOUT_SEC;
+        timeout.tv_usec = RECV_TIMEOUT_USEC;
+
+        num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
+
+        if (num > 0)
+        {
+            if (FD_ISSET(s_bw, &read_mask)) {
+                printf("Establish connection with sender\n");
+                recv_s = accept(s_bw, 0, 0);
+                FD_SET(recv_s, &mask);
+            }
+
+            if (FD_ISSET(recv_s, &read_mask))
+            {
+                len = recv(recv_s, &data_pkt, sizeof(data_pkt), 0);
+                if (len > 0) {
+                    total_bytes += len;
+
+                    struct timeval tm_now_feedback;
+                    gettimeofday(&tm_now_feedback, NULL);
+                    struct timeval tm_diff_feedback = diffTime(tm_now_feedback, tm_last_feedback);
+                    if (tm_diff_feedback.tv_sec * 1000000 + tm_diff_feedback.tv_usec > FEEDBACK_FREQ_USEC) {
+                        gettimeofday(&tm_now, NULL);
+                        tm_diff = diffTime(tm_now, tm_last);
+                        long usec = tm_diff.tv_usec + tm_diff.tv_sec * 1000000l;
+                        double ret = total_bytes * 8.0/(usec);
+                        calculated_speed = 0.9536743164 * ret;
+                        tm_last = tm_now;
+                        printf("received 100 packets with speed %.3f\n", calculated_speed);
+                        send_pkt.hdr.rate = calculated_speed;
+                        send(recv_s, &send_pkt, sizeof(send_pkt), 0);
+                        total_bytes = 0;
+                        tm_last_feedback = tm_now_feedback;
+                    }
+                } else {
+                    close(recv_s);
+                    close(s_bw);
+                    printf("TCP disconnected\n");
+                    return;
+                }
+            }
+        }
+        else
+        {
+            printf("Download: Stop receiving bandwidth, accepting new connection\n");
+            close(recv_s);
+            close(s_bw);
+            return;
+        }
+    }
+}
+
+/**
+ * Receives bandwidth data stream over TCP on the client side and send back report packets to the controller
+ */
+void client_receive_bandwidth_tcp(int s_bw) {
+    kill_thread = false;
+    // Select loop
+    fd_set mask;
+    fd_set read_mask;
+    struct timeval timeout;
+
+    int num;
+    int len;
+
+    // packet buffers
+    data_packet data_pkt;
+    memset(&data_pkt, 0, sizeof(data_packet));
+
+    // Add file descriptors to fdset
+    FD_ZERO(&mask);
+    FD_SET(s_bw, &mask);
+
+    int num_received = 0;
+    long total_bytes = 0;
+    struct timeval tm_last;
+    gettimeofday(&tm_last, NULL);
+    struct timeval tm_now;
+    struct timeval tm_diff;
+    double calculated_speed;
+
+    struct timeval tm_last_feedback;
+    gettimeofday(&tm_last_feedback, NULL);
+
+    for (;;)
+    {
+        if (kill_thread)
+        {
+            close(s_bw);
+            return;
+        }
+
+        read_mask = mask;
+        timeout.tv_sec = RECV_TIMEOUT_SEC;
+        timeout.tv_usec = RECV_TIMEOUT_USEC;
+
+        num = select(FD_SETSIZE, &read_mask, NULL, NULL, &timeout);
+
+        if (num > 0)
+        {
+            if (FD_ISSET(s_bw, &read_mask)) {
+                len = recv(s_bw, &data_pkt, sizeof(data_pkt), 0);
+                if (len > 0) {
+                    num_received++;
+                    total_bytes += len;
+
+                    struct timeval tm_now_feedback;
+                    gettimeofday(&tm_now_feedback, NULL);
+                    struct timeval tm_diff_feedback = diffTime(tm_now_feedback, tm_last_feedback);
+                    if (tm_diff_feedback.tv_sec * 1000000 + tm_diff_feedback.tv_usec > FEEDBACK_FREQ_USEC) {
+                        gettimeofday(&tm_now, NULL);
+                        tm_diff = diffTime(tm_now, tm_last);
+                        long usec = tm_diff.tv_usec + tm_diff.tv_sec * 1000000l;
+                        double ret = total_bytes * 8.0/(usec);
+                        calculated_speed = 0.9536743164 * ret;
+                        tm_last = tm_now;
+                        total_bytes = 0;
+
+                        sendFeedbackDownload(calculated_speed);
+                        tm_last_feedback = tm_now_feedback;
+                    }
+                } else {
+                    close(s_bw);
+                    printf("TCP disconnected\n");
+                    return;
+                }
+            }
+        }
+        else
+        {
+            printf("Download: Stop receiving bandwidth, accepting new connection\n");
+            close(s_bw);
+            return;
+        }
+    }
+}
+
+/**
+ * Breaks out TCP receive bandwidth select loop and stops the thread
+ */
+void stop_tcp_recv_thread() {
+    kill_thread = true;
 }

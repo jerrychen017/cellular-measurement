@@ -2,7 +2,13 @@
 #include "receive_bandwidth.h"
 #include "net_utils.h"
 
-void start_client(const char *address, int pred_mode, bool android, struct parameters params)
+/**
+ * CLI start client function. Sends START packet to the server with all parameters and wait for ACKs.
+ * Once connected with the server, run send_bandwidth() in a new thread and call receive_bandwidth()
+ * @param address server address
+ * @param params parameters
+ */
+void start_client(const char *address, int pred_mode, struct parameters params)
 {
 
     int client_send_sk = setup_bound_socket(CLIENT_SEND_PORT);
@@ -43,12 +49,12 @@ void start_client(const char *address, int pred_mode, bool android, struct param
 
         if (!got_send_ack)
         {
-            sendto_dbg(client_send_sk, &send_pkt, sizeof(data_packet), 0,
+            sendto(client_send_sk, &send_pkt, sizeof(data_packet), 0,
                        (struct sockaddr *)&client_send_addr, sizeof(client_send_addr));
         }
         if (!got_recv_ack)
         {
-            sendto_dbg(client_recv_sk, &send_pkt, sizeof(data_packet), 0,
+            sendto(client_recv_sk, &send_pkt, sizeof(data_packet), 0,
                        (struct sockaddr *)&client_recv_addr, sizeof(client_recv_addr));
         }
 
@@ -118,7 +124,7 @@ void start_client(const char *address, int pred_mode, bool android, struct param
             send_args.params = params;
             pthread_create(&tid, NULL, &receive_bandwidth_pthread, (void *)&send_args);
 
-            send_bandwidth(client_send_addr, client_send_sk, android, params);
+            send_bandwidth(client_send_addr, client_send_sk, false, params);
             return;
         }
     }

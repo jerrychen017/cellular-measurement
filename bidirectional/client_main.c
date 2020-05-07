@@ -2,9 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+
 /**
-    CLI Client 
-*/
+ * CLI Client program
+ */
 int main(int argc, char *argv[])
 {
     // args error checking
@@ -18,8 +19,8 @@ int main(int argc, char *argv[])
     // prediction mode
     int pred_mode = atoi(argv[2]);
 
-        struct parameters params;
+    struct parameters params;
 
-    start_client(address, pred_mode, false, params);
+    start_client(address,, params);
     return 0;
 }
