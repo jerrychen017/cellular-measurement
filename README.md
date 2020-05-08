@@ -1,8 +1,7 @@
-# udp_tools
-UDP Tools are used to measure latency and capacity of cellular networks. 
-<Link here> is an android app that contains UDP Tools. 
-
-All packets except Report Packet are 1400 bytes. 
+# Cellular Measurement Tools
+UDP based applications written in C to do bidirectional bandwidth/latency measurements between cellular and server. It also includes 
+a server to manage packets when the interactive application is running.
+You can find the cellular measurement Android application [here][https://github.com/jerrychen017/cellular-measurement-android.git].
 
 Functionalities: 
 #### Echo
