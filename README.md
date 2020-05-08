@@ -16,6 +16,15 @@ You can find the cellular measurement Android application [here](https://github.
 * The server echoes back the tapped coordinates on the Android application canvas
 * The Android application will then draw circles based on the send back coordinates.
 
+## Instructions for running
+
+### Bidirectional
+* inside `/bidirectional` run a `make` and then `./server <port>` (this will start the server application)
+* `./client` to start the client CLI application
+
+### Interactive
+* Inside `interactive_server` run `./interactive_server <port>`
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
