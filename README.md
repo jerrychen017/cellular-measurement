@@ -65,6 +65,12 @@ Once the `interactive_server` is running, you can do `Echo` tests by clicking on
 3. Click on `Connect`. (Please note that there's a limit for the number of connected users)
 4. Touch/click on the canvas and move your ball. 
 
+## Authors
+
+* **[Jerry Chen](https://github.com/jerrychen017)**
+* **[Jason Zhang](https://github.com/jz1242)**
+* **[Daniel Qian](https://github.com/kuhfzgbt)**
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
