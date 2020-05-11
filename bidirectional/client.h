@@ -9,6 +9,6 @@
  * @param address server address
  * @param params parameters
  */
-void start_client(const char * address, struct parameters params);
+void start_client(const char * address, struct parameters params, int client_send_port, int client_receive_port);
 
 #endif

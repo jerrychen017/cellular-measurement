@@ -8,7 +8,7 @@
  * @param address server address
  * @param params parameters
  */
-void start_client(const char *address, struct parameters params)
+void start_client(const char *address, struct parameters params, int CLIENT_SEND_PORT, int CLIENT_RECEIVE_PORT)
 {
 
     int client_send_sk = setup_bound_socket(CLIENT_SEND_PORT);

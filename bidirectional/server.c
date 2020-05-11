@@ -8,6 +8,15 @@
  */
 int main(int argc, char **argv)
 {
+    // argc error checking
+    if (argc != 3)
+    {
+        printf("Usage: server <server_send_port> <server_receive_port>\n");
+        exit(0);
+    }
+
+    int SERVER_SEND_PORT = atoi(argv[1]);
+    int SERVER_RECEIVE_PORT = atoi(argv[2]);
     // start handshake process. use two different port for sending and receiving
     int server_send_sk = setup_bound_socket(SERVER_SEND_PORT);
     int server_recv_sk = setup_bound_socket(SERVER_RECEIVE_PORT);

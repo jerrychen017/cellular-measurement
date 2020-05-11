@@ -11,16 +11,18 @@ int main(int argc, char *argv[])
     // args error checking
     if (argc != 5)
     {
-        printf("client usage: client <server_address> <EWMA/RunningAvg> <grace_period> <use_tcp>\n");
+        printf("client usage: client <server_address> <client_send_port> <client_recv_port> <EWMA/RunningAvg> <grace_period> <use_tcp>\n");
         exit(1);
     }
     // address
     char *address = argv[1];
+    int client_send_port = argv[2];
+    int client_recv_port = argv[3];
     struct parameters params;
     // prediction mode
-    int pred_mode = atoi(argv[2]);
-    int grace_period = atoi(argv[3]);
-    int use_tcp = atoi(argv[4]);
+    int pred_mode = atoi(argv[4]);
+    int grace_period = atoi(argv[5]);
+    int use_tcp = atoi(argv[6]);
 
     params.burst_size = 10;
     params.interval_size = 500;
@@ -35,6 +37,6 @@ int main(int argc, char *argv[])
     params.max_speed = 10;
     params.start_speed = 1;
 
-    start_client(address, params);
+    start_client(address, params, client_send_port, client_recv_port);
     return 0;
 }
