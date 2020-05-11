@@ -11,10 +11,10 @@ server: server.o $(COMMON)
 	$(CC) -o bandwidth_server server.o $(COMMON) $(LDFLAGS)
 
 client: client_main.o $(COMMON)
-	$(CC) -o client client_main.o $(COMMON) $(LDFLAGS)
+	$(CC) -o bandwidth_client client_main.o $(COMMON) $(LDFLAGS)
 
 %.o:    %.c
 	$(CC) $(CFLAGS) $*.c
 
 clean:
-	rm *.o bandwidth_server client
+	rm *.o bandwidth_server bandwidth_client
