@@ -9,7 +9,7 @@
 int main(int argc, char *argv[])
 {
     // args error checking
-    if (argc != 5)
+    if (argc != 7)
     {
         printf("client usage: client <server_address> <client_send_port> <client_recv_port> <EWMA/RunningAvg> <grace_period> <use_tcp>\n");
         exit(1);
