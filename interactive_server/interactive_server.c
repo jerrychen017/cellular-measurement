@@ -1,7 +1,6 @@
 #include "net_include.h"
 
-static TimingPacket timing, *recvTiming;
-static ReportPacket report, *recvReport;
+static ReportPacket *recvReport;
 static EchoPacket echo, *recvEcho;
 static InteractivePacket interactive, *recvInteractive;
 static ConnectPacket _connect, *recvConnect;
@@ -47,14 +46,6 @@ int main(int argc, char **argv)
     // socket address of received packet from client
     struct sockaddr_in sockaddr_client_pac;
     socklen_t sockaddr_client_pac_len;
-
-    // packet received from client
-    char init_packet[BUFF_SIZE];
-    // packet to be sent from server
-    char echo_packet[BUFF_SIZE];
-
-    // wait interval for connection requests
-    struct timeval idle_interval;
 
     fd_set mask;
     fd_set read_mask;
