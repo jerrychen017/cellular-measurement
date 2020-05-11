@@ -31,7 +31,7 @@ e.g.
 ```
 ./bandwidth_server 4576 4577
 ```
-#### Please note that `<server_send_port>` should be the same as `<client_recv_port>`; similarly, `<server recv port>` and `<client_send_port>` should be the same. 
+#### Please note that `<server_send_port>` should be the same as `<client_recv_port>`; similarly, `<server_recv_port>` and `<client_send_port>` should be the same. 
 
 2. Run the Android App on your phone or on an Android Studio emulator  
  <img width="200" src="./res/demo-main.png"> <img width="200" src="./res/demo-config.png">
@@ -39,7 +39,7 @@ e.g.
  * `Stop` button stops the bandwidth measurement. 
  * `Configuration` button brings you to the configuration page where you can modify parameters. 
 
-#### Before running `Bandwidth Measurement`, go to `Configuration` and make sure `Upload port` is the same 
+#### Before running `Bandwidth Measurement`, go to `Configuration` and make sure `Upload Port` is the same as `<server_recv_port>` and `Download Port` is the same as `<server_send_port>`
 
 3. (Optional) Run the CLI Client program if you don't have an Android phone or Android studio 
 ```
@@ -47,7 +47,7 @@ e.g.
 ```
 e.g. 
 ```
-./bandwidth_client 123.123.123.123 4577 4576
+./bandwidth_client 123.123.123.123 4577 4576 1 10 0
 ```
 
 ### Interactive Application
