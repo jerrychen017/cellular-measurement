@@ -13,5 +13,4 @@ interactive_server.o: interactive_server.c net_include.h
 	$(CC) $(CFLAGS) interactive_server.c
 
 clean:
-	rm *.o
-	rm interactive_server
+	rm *.o interactive_server

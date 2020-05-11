@@ -8,7 +8,7 @@ COMMON = receive_bandwidth.o send_bandwidth.o net_utils.o bandwidth_utils.o cont
 all: server client
 
 server: server.o $(COMMON)
-	$(CC) -o server server.o $(COMMON) $(LDFLAGS)
+	$(CC) -o bandwidth_server server.o $(COMMON) $(LDFLAGS)
 
 client: client_main.o $(COMMON)
 	$(CC) -o client client_main.o $(COMMON) $(LDFLAGS)
@@ -17,4 +17,4 @@ client: client_main.o $(COMMON)
 	$(CC) $(CFLAGS) $*.c
 
 clean:
-	rm *.o server client
+	rm *.o bandwidth_server client
