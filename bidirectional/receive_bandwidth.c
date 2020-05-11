@@ -34,12 +34,12 @@ void receive_bandwidth(int s_bw, struct sockaddr_in expected_addr, struct parame
 {
     // parameter variables
     int BURST_SIZE = params.burst_size;
-    int INTERVAL_SIZE = params.interval_size;
-    double INTERVAL_TIME = params.interval_time;
-    int INSTANT_BURST = params.instant_burst;
-    double MIN_SPEED = params.min_speed;
-    double MAX_SPEED = params.max_speed;
-    double START_SPEED = params.start_speed;
+//    int INTERVAL_SIZE = params.interval_size;
+//    double INTERVAL_TIME = params.interval_time;
+//    int INSTANT_BURST = params.instant_burst;
+//    double MIN_SPEED = params.min_speed;
+//    double MAX_SPEED = params.max_speed;
+//    double START_SPEED = params.start_speed;
     int GRACE_PERIOD = params.grace_period;
     double THRESHOLD = params.threshold;
     double ALPHA = params.alpha;

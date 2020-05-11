@@ -41,7 +41,7 @@ void send_bandwidth(struct sockaddr_in addr, int sk, bool android, struct parame
  */
 void client_send_bandwidth_tcp(int s_bw){
     kill_thread = false;
-    char buffer[PACKET_SIZE];
+
     data_packet data_pkt;
     data_packet recv_pkt;
     data_pkt.hdr.type = NETWORK_DATA;
@@ -88,15 +88,15 @@ void client_send_bandwidth_tcp(int s_bw){
  * Sends data stream to the receiver over TCP on the server side
  */
 void server_send_bandwidth_tcp(int s_bw) {
-// parameter variables
-
     // Select loop
     fd_set mask;
     fd_set read_mask;
     struct timeval timeout;
-
     int num;
-    int len;
+    int recv_s = -1;
+    struct timeval tm_last;
+    gettimeofday(&tm_last, NULL);
+    int ret;
 
     // packet buffers
     data_packet data_pkt;
@@ -105,18 +105,6 @@ void server_send_bandwidth_tcp(int s_bw) {
     // Add file descriptors to fdset
     FD_ZERO(&mask);
     FD_SET(s_bw, &mask);
-
-    int recv_s;
-
-    int num_received = 0;
-    long total_bytes = 0;
-    struct timeval tm_last;
-    gettimeofday(&tm_last, NULL);
-    struct timeval tm_now;
-    struct timeval tm_diff;
-    double calculated_speed;
-    int ret;
-    char c;
 
     for (;;)
     {
@@ -145,7 +133,9 @@ void server_send_bandwidth_tcp(int s_bw) {
         else
         {
             printf("Download: Stop receiving bandwidth, accepting new connection\n");
-            close(recv_s);
+            if (recv_s != -1) {
+                close(recv_s);
+            }
             close(s_bw);
             return;
         }

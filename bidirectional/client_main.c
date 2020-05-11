@@ -16,8 +16,8 @@ int main(int argc, char *argv[])
     }
     // address
     char *address = argv[1];
-    int client_send_port = argv[2];
-    int client_recv_port = argv[3];
+    int client_send_port = atoi(argv[2]);
+    int client_recv_port = atoi(argv[3]);
     struct parameters params;
     // prediction mode
     int pred_mode = atoi(argv[4]);

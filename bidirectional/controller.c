@@ -86,7 +86,7 @@ void control(int s_server, int s_data, struct sockaddr_in send_addr, struct sock
     double MIN_SPEED = params.min_speed;
     double MAX_SPEED = params.max_speed;
     double START_SPEED = params.start_speed;
-    int GRACE_PERIOD = params.grace_period;
+//    int GRACE_PERIOD = params.grace_period;
 
     struct sockaddr_in from_addr;
     socklen_t from_addr_len = sizeof(from_addr);

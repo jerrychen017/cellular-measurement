@@ -1,5 +1,7 @@
 #include "receive_bandwidth.h"
 #include "send_bandwidth.h"
+#include "controller.h"
+#include "data_generator.h"
 #include "net_utils.h"
 #include "feedbackLogger.h"
 
@@ -44,8 +46,7 @@ int main(int argc, char **argv)
 
     bool got_recv_addr = false;
     bool got_send_addr = false;
-    
-    int offset = 0; // used for parsking the recv buffer
+
     char buf[sizeof(start_packet)]; //Buffer for the serialized struct
 
     for (;;)
@@ -130,7 +131,6 @@ int main(int argc, char **argv)
             printf("grace_period is %d\n", recv_params.grace_period);
             printf("pred_mode is %d\n", recv_params.pred_mode);
             printf("use_tcp is %d\n", recv_params.use_tcp);
-            printf("size of params is %d\n", sizeof(recv_params));
 
             pthread_t tid;                        // thread id
             struct send_bandwidth_args send_args; // arguments to be passed to send_bandwidth
