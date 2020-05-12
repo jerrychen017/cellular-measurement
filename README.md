@@ -65,6 +65,10 @@ Once the `interactive_server` is running, you can do `Echo` tests by clicking on
 3. Click on `Connect`. (Please note that there's a limit for the number of connected users)
 4. Touch/click on the canvas and move your ball. 
 
+## Versioning
+
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/jerrychen017/cellular-measurement/tags). 
+
 ## Authors
 
 * **[Jerry Chen](https://github.com/jerrychen017)**
